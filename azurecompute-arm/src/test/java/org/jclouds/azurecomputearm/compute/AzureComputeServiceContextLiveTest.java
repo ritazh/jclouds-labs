@@ -49,7 +49,7 @@ public class AzureComputeServiceContextLiveTest extends BaseComputeServiceContex
    }
 
    public AzureComputeServiceContextLiveTest() {
-      provider = "azurecompute";
+      provider = "azurecompute-arm";
    }
 
 

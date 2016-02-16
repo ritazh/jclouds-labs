@@ -48,7 +48,7 @@ public class BaseAzureComputeApiMockTest {
    private final String credential;
 
    public BaseAzureComputeApiMockTest() {
-      provider = "azurecompute";
+      provider = "azurecompute-arm";
       // self-signed dummy cert:
       // keytool -genkey -alias test -keyalg RSA -keysize 1024 -validity 5475 -dname "CN=localhost" -keystore azure-test.p12 -storepass azurepass -storetype pkcs12
       identity = this.getClass().getResource("/azure-test.p12").getFile();
