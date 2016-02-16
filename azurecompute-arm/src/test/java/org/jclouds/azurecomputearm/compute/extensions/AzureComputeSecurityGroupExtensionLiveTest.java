@@ -40,7 +40,7 @@ public class AzureComputeSecurityGroupExtensionLiveTest extends BaseSecurityGrou
 
    public AzureComputeSecurityGroupExtensionLiveTest() {
       super();
-      provider = "azurecompute";
+      provider = "azurecompute-arm";
    }
 
    @Override

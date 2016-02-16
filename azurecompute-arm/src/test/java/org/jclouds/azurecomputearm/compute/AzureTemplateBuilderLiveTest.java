@@ -30,7 +30,7 @@ public class AzureTemplateBuilderLiveTest extends BaseTemplateBuilderLiveTest {
    public AzureTemplateBuilderLiveTest() {
       super();
 
-      provider = "azurecompute";
+      provider = "azurecompute-arm";
    }
 
    @Override

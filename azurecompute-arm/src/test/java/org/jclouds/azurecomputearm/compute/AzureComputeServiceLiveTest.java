@@ -33,7 +33,7 @@ public class AzureComputeServiceLiveTest extends BaseComputeServiceLiveTest {
 
    public AzureComputeServiceLiveTest() {
       super();
-      provider = "azurecompute";
+      provider = "azurecompute-arm";
       // this is 30 seconds by default, but Azure will take anyway longer because we need to wait for a non-null
       // Deployment object to be returned: see the end of AzureComputeServiceAdapter#createNodeWithGroupEncodedIntoName
       nonBlockDurationSeconds = 600;

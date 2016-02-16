@@ -40,7 +40,7 @@ public abstract class AbstractAzureComputeApiLiveTest extends BaseApiLiveTest<Az
    protected Predicate<String> operationSucceeded;
 
    public AbstractAzureComputeApiLiveTest() {
-      provider = "azurecompute";
+      provider = "azurecompute-arm";
    }
 
    @Override protected Properties setupProperties() {
