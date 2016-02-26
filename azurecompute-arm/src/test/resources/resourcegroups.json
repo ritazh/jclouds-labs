@@ -1,0 +1,22 @@
+{
+   "value": [
+      {
+         "id": "/subscriptions/04f7ec88-8e28-41ed-8537-5e17766001f5/resourceGroups/amqptest",
+         "name": "amqptest",
+         "location": "westus",
+         "properties": {
+            "provisioningState": "Succeeded"
+         }
+      },
+      {
+         "id": "/subscriptions/04f7ec88-8e28-41ed-8537-5e17766001f5/resourceGroups/anpriceiot",
+         "name": "anpriceiot",
+         "location": "eastus",
+         "tags": {},
+         "properties": {
+            "provisioningState": "Succeeded"
+         }
+      }
+   ],
+   "nextLink": "https://management.azure.com/subscriptions/04f7ec88-8e28-41ed-8537-5e17766001f5/resourceGroups?api-version=2015-11-01&%24top=2&%24skiptoken=eyJuZXh0UGFydGl0aW9uS2V5IjoiMSE4IVJVTkJNalEtIiwibmV4dFJvd0tleSI6IjEhNjghTURSR04wVkRPRGc0UlRJNE5ERkZSRGcxTXpjMVJURTNOelkyTURBeFJqVmZRVTVRVWtsRFJWUkZVMVF0VjBWVFZGVlQifQ%3d%3d"
+}
