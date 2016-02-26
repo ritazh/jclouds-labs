@@ -17,8 +17,11 @@
 package org.jclouds.azurecomputearm.config;
 
 import javax.net.ssl.SSLContext;
+import java.net.URI;
 
 import org.jclouds.azurecomputearm.AzureComputeApi;
+import org.jclouds.azurecomputearm.domain.options.ListOptions;
+import org.jclouds.azurecomputearm.functions.LinkToListOptions;
 import org.jclouds.azurecomputearm.handlers.AzureComputeErrorHandler;
 import org.jclouds.azurecomputearm.suppliers.DelegatingSSLContextSupplier;
 import org.jclouds.http.HttpErrorHandler;
@@ -28,10 +31,12 @@ import org.jclouds.http.annotation.ServerError;
 import org.jclouds.location.config.LocationModule;
 import org.jclouds.location.suppliers.ImplicitLocationSupplier;
 import org.jclouds.location.suppliers.implicit.OnlyLocationOrFirstRegionOptionallyMatchingRegionId;
+import org.jclouds.oauth.v2.config.OAuthScopes;
 import org.jclouds.rest.ConfiguresHttpApi;
 import org.jclouds.rest.config.HttpApiModule;
 
 import com.google.common.base.Supplier;
+import com.google.common.base.Function;
 import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
 
@@ -57,8 +62,8 @@ public class AzureComputeHttpApiModule extends HttpApiModule<AzureComputeApi> {
    protected void configure() {
       install(new AzureComputeParserModule());
       super.configure();
-      bind(new TypeLiteral<Supplier<SSLContext>>() {
-      }).to(new TypeLiteral<DelegatingSSLContextSupplier>() {
-      });
+      bind(OAuthScopes.class).toInstance(OAuthScopes.ReadOrWriteScopes.create("read", "read write"));
+      bind(new TypeLiteral<Function<URI, ListOptions>>() {
+      }).to(LinkToListOptions.class);
    }
 }

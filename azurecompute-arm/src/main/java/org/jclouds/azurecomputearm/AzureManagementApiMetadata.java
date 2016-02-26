@@ -25,13 +25,18 @@ import org.jclouds.apis.ApiMetadata;
 import org.jclouds.azurecomputearm.compute.config.AzureComputeServiceContextModule;
 import org.jclouds.azurecomputearm.config.AzureComputeHttpApiModule;
 import org.jclouds.compute.ComputeServiceContext;
+import org.jclouds.oauth.v2.config.OAuthModule;
+import static org.jclouds.oauth.v2.config.CredentialType.BEARER_TOKEN_CREDENTIALS;
+import static org.jclouds.oauth.v2.config.OAuthProperties.AUDIENCE;
+import static org.jclouds.oauth.v2.config.OAuthProperties.CREDENTIAL_TYPE;
+import static org.jclouds.oauth.v2.config.OAuthProperties.JWS_ALG;
 import org.jclouds.rest.internal.BaseHttpApiMetadata;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Module;
 
 /**
- * Implementation of {@link ApiMetadata} for Microsoft Service Management Service API
+ * Implementation of {@link ApiMetadata} for Microsoft Azure Resource Manager REST API
  */
 public class AzureManagementApiMetadata extends BaseHttpApiMetadata<AzureComputeApi> {
 
@@ -50,6 +55,12 @@ public class AzureManagementApiMetadata extends BaseHttpApiMetadata<AzureCompute
 
    public static Properties defaultProperties() {
       final Properties properties = BaseHttpApiMetadata.defaultProperties();
+
+
+      properties.put("oauth.endpoint", "https://login.windows.net/72f988bf-86f1-41af-91ab-2d7cd011db47/oauth2/token");
+      properties.put(JWS_ALG, "RS256");
+      properties.put(AUDIENCE, "https://cloud.digitalocean.com/v1/oauth/token");
+      properties.put(CREDENTIAL_TYPE, BEARER_TOKEN_CREDENTIALS.toString());
       // Sometimes SSH Authentication failure happens in Azure.
       // It seems that the authorized key is injected after ssh has been started.
       properties.setProperty("jclouds.ssh.max-retries", "15");
@@ -62,17 +73,18 @@ public class AzureManagementApiMetadata extends BaseHttpApiMetadata<AzureCompute
       protected Builder() {
          super();
 
-         id("azurecompute")
-                 .name("Microsoft Azure Service Management Service API")
-                 .version("2014-10-01")
+         id("azurecompute-arm")
+                 .name("Microsoft Azure Resource Manager REST API")
+                 .version("2014-04-01-preview")
                  .identityName("Path to Management Certificate .p12 file, or PEM string")
                  .credentialName("Password to Management Certificate")
-                 .endpointName("Service Management Endpoint ending in your Subscription Id")
+                 .endpointName("Resource Manager Endpoint ending in your Subscription Id")
                  .documentation(URI.create("http://msdn.microsoft.com/en-us/library/ee460799"))
                  .defaultProperties(AzureManagementApiMetadata.defaultProperties())
                  .view(typeToken(ComputeServiceContext.class))
                  .defaultModules(ImmutableSet.<Class<? extends Module>>builder()
                          .add(AzureComputeServiceContextModule.class)
+                         .add(OAuthModule.class)
                          .add(AzureComputeHttpApiModule.class).build());
       }
 

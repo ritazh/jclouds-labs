@@ -68,7 +68,7 @@ public class AzureComputeProviderMetadata extends BaseProviderMetadata {
          id("azurecompute-arm")
                  .name("Azure Resource Management ")
                  .apiMetadata(new AzureManagementApiMetadata())
-                 .endpoint("https://management.azure.com/subscriptions/SUBSCRIPTION_ID")
+                 .endpoint("https://management.azure.com/subscriptions/c36d97d3-3fea-4561-aa2d-e61168908c5b")
                  .homepage(URI.create("https://www.windowsazure.com/"))
                  .console(URI.create("https://windows.azure.com/default.aspx"))
                  .linkedServices("azureblob", "azurequeue", "azuretable")
