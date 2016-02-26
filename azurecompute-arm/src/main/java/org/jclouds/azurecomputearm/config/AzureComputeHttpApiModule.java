@@ -30,6 +30,7 @@ import org.jclouds.location.suppliers.ImplicitLocationSupplier;
 import org.jclouds.location.suppliers.implicit.OnlyLocationOrFirstRegionOptionallyMatchingRegionId;
 import org.jclouds.rest.ConfiguresHttpApi;
 import org.jclouds.rest.config.HttpApiModule;
+import org.jclouds.azurecomputearm.oauth.v2.config.OAuthScopes;
 
 import com.google.common.base.Supplier;
 import com.google.inject.Scopes;
@@ -57,8 +58,6 @@ public class AzureComputeHttpApiModule extends HttpApiModule<AzureComputeApi> {
    protected void configure() {
       install(new AzureComputeParserModule());
       super.configure();
-      bind(new TypeLiteral<Supplier<SSLContext>>() {
-      }).to(new TypeLiteral<DelegatingSSLContextSupplier>() {
-      });
+      bind(OAuthScopes.class).toInstance(OAuthScopes.ReadOrWriteScopes.create("read", "read write"));
    }
 }
