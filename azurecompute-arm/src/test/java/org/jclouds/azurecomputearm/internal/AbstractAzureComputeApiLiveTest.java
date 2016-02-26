@@ -16,6 +16,7 @@
  */
 package org.jclouds.azurecomputearm.internal;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.jclouds.azurecomputearm.config.AzureComputeProperties.OPERATION_POLL_INITIAL_PERIOD;
 import static org.jclouds.azurecomputearm.config.AzureComputeProperties.OPERATION_POLL_MAX_PERIOD;
@@ -52,6 +53,11 @@ public abstract class AbstractAzureComputeApiLiveTest extends BaseApiLiveTest<Az
       properties.setProperty(OPERATION_POLL_MAX_PERIOD, "15");
       properties.setProperty(TCP_RULE_FORMAT, "tcp_%s-%s");
       properties.setProperty(TCP_RULE_REGEXP, "tcp_\\d{1,5}-\\d{1,5}");
+
+      // for oauth
+      AzureLiveTestUtils.defaultProperties(properties);
+      checkNotNull(setIfTestSystemPropertyPresent(properties, "jclouds.oauth.resource"), "test.jclouds.oauth.resource");
+      checkNotNull(setIfTestSystemPropertyPresent(properties, "oauth.endpoint"), "test.oauth.endpoint");
       return properties;
    }
 

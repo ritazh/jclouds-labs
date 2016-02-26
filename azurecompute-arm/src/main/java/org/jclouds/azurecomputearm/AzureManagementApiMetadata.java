@@ -26,9 +26,16 @@ import org.jclouds.azurecomputearm.compute.config.AzureComputeServiceContextModu
 import org.jclouds.azurecomputearm.config.AzureComputeHttpApiModule;
 import org.jclouds.compute.ComputeServiceContext;
 import org.jclouds.rest.internal.BaseHttpApiMetadata;
+import static org.jclouds.azurecomputearm.oauth.v2.config.CredentialType.CLIENT_CREDENTIALS_SECRET;
+import static org.jclouds.azurecomputearm.oauth.v2.config.OAuthProperties.AUDIENCE;
+import static org.jclouds.azurecomputearm.oauth.v2.config.OAuthProperties.RESOURCE;
+import static org.jclouds.azurecomputearm.oauth.v2.config.OAuthProperties.CREDENTIAL_TYPE;
+import static org.jclouds.azurecomputearm.oauth.v2.config.OAuthProperties.JWS_ALG;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Module;
+
+import org.jclouds.azurecomputearm.oauth.v2.config.OAuthModule;
 
 /**
  * Implementation of {@link ApiMetadata} for Microsoft Service Management Service API
@@ -54,6 +61,11 @@ public class AzureManagementApiMetadata extends BaseHttpApiMetadata<AzureCompute
       // It seems that the authorized key is injected after ssh has been started.
       properties.setProperty("jclouds.ssh.max-retries", "15");
       properties.setProperty("jclouds.ssh.retry-auth", "true");
+      properties.put("oauth.endpoint", "https://login.microsoftonline.com/oauth2/token");
+      properties.put(JWS_ALG, "RS256");
+      properties.put(AUDIENCE, "https://login.microsoftonline.com/oauth2/token");
+      properties.put(RESOURCE, "https://management.azure.com");
+      properties.put(CREDENTIAL_TYPE, CLIENT_CREDENTIALS_SECRET.toString());
       return properties;
    }
 
@@ -72,6 +84,7 @@ public class AzureManagementApiMetadata extends BaseHttpApiMetadata<AzureCompute
                  .defaultProperties(AzureManagementApiMetadata.defaultProperties())
                  .view(typeToken(ComputeServiceContext.class))
                  .defaultModules(ImmutableSet.<Class<? extends Module>>builder()
+                         .add(OAuthModule.class)
                          .add(AzureComputeServiceContextModule.class)
                          .add(AzureComputeHttpApiModule.class).build());
       }
