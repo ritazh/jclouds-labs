@@ -40,14 +40,14 @@ public class StorageAccountApiMockTest extends BaseAzureComputeApiMockTest {
 
    public void testList() throws Exception {
       final MockWebServer server = mockAzureManagementServer();
-      server.enqueue(xmlResponse("/storageservices.xml"));
+      server.enqueue(jsonResponse("/storageAccounts.json"));
 
       try {
          final StorageAccountApi api = api(server.getUrl("/")).getStorageAccountApi();
 
          assertEquals(api.list(), ListStorageServiceHandlerTest.expected());
 
-         assertSent(server, "GET", "/services/storageservices");
+         assertSentJSON(server, "GET", "/services/storageservices");
       } finally {
          server.shutdown();
       }

@@ -68,6 +68,10 @@ public class BaseAzureComputeApiMockTest {
       return server;
    }
 
+   protected MockResponse jsonResponse(String resource) {
+      return new MockResponse().addHeader("Content-Type", "application/json").setBody(stringFromResource(resource));
+   }
+
    protected MockResponse xmlResponse(String resource) {
       return new MockResponse().addHeader("Content-Type", "application/xml").setBody(stringFromResource(resource));
    }
@@ -90,6 +94,15 @@ public class BaseAzureComputeApiMockTest {
       assertThat(request.getPath()).isEqualTo(path);
       assertThat(request.getHeader("x-ms-version")).isEqualTo("2014-10-01");
       assertThat(request.getHeader("Accept")).isEqualTo("application/xml");
+      return request;
+   }
+
+   protected RecordedRequest assertSentJSON(MockWebServer server, String method, String path) throws InterruptedException {
+      RecordedRequest request = server.takeRequest();
+      assertThat(request.getMethod()).isEqualTo(method);
+      assertThat(request.getPath()).isEqualTo(path);
+      assertThat(request.getHeader("x-ms-version")).isEqualTo("2014-10-01");
+      assertThat(request.getHeader("Accept")).isEqualTo("application/json");
       return request;
    }
 

@@ -29,6 +29,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import com.google.common.collect.FluentIterable;
 import org.jclouds.Fallbacks;
 import org.jclouds.Fallbacks.NullOnNotFoundOr404;
 import org.jclouds.azurecomputearm.binders.StorageServiceKeyTypeToXML;
@@ -45,12 +46,7 @@ import org.jclouds.azurecomputearm.xml.AvailabilityHandler;
 import org.jclouds.azurecomputearm.xml.ListStorageServicesHandler;
 import org.jclouds.azurecomputearm.xml.StorageServiceHandler;
 import org.jclouds.azurecomputearm.xml.StorageServiceKeysHandler;
-import org.jclouds.rest.annotations.BinderParam;
-import org.jclouds.rest.annotations.Fallback;
-import org.jclouds.rest.annotations.Headers;
-import org.jclouds.rest.annotations.QueryParams;
-import org.jclouds.rest.annotations.ResponseParser;
-import org.jclouds.rest.annotations.XMLResponseParser;
+import org.jclouds.rest.annotations.*;
 
 /**
  * The Service Management API includes operations for managing the storage accounts in your subscription.
@@ -59,8 +55,8 @@ import org.jclouds.rest.annotations.XMLResponseParser;
  */
 @Path("/services/storageservices")
 @Headers(keys = "x-ms-version", values = "{jclouds.api-version}")
-@Produces(MediaType.APPLICATION_XML)
-@Consumes(MediaType.APPLICATION_XML)
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
 public interface StorageAccountApi {
 
    /**
@@ -68,9 +64,10 @@ public interface StorageAccountApi {
     */
    @Named("ListStorageAccounts")
    @GET
-   @XMLResponseParser(ListStorageServicesHandler.class)
+   @Path("/providers/Microsoft.Storage/storageAccounts")
+   @SelectJson("value")
    @Fallback(Fallbacks.EmptyListOnNotFoundOr404.class)
-   List<StorageService> list();
+   FluentIterable<StorageService> list();
 
    /**
     * The Create Storage Account asynchronous operation creates a new storage account in Microsoft Azure.

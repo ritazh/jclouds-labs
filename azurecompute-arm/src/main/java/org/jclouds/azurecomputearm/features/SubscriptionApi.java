@@ -24,12 +24,15 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.MediaType;
 
+import com.google.common.collect.FluentIterable;
 import org.jclouds.Fallbacks.EmptyListOnNotFoundOr404;
-import org.jclouds.azurecomputearm.domain.RoleSize;
+import org.jclouds.azurecomputearm.domain.Subscription;
+import org.jclouds.azurecomputearm.json.SubscriptionParser;
 import org.jclouds.azurecomputearm.xml.ListRoleSizesHandler;
 import org.jclouds.rest.annotations.Fallback;
 import org.jclouds.rest.annotations.Headers;
-import org.jclouds.rest.annotations.XMLResponseParser;
+import org.jclouds.rest.annotations.ResponseParser;
+import org.jclouds.rest.annotations.SelectJson;
 
 /**
  * The Service Management API includes operations for retrieving information about a subscription.
@@ -37,17 +40,18 @@ import org.jclouds.rest.annotations.XMLResponseParser;
  * @see <a href="http://msdn.microsoft.com/en-us/library/gg715315">docs</a>
  */
 @Headers(keys = "x-ms-version", values = "{jclouds.api-version}")
-@Consumes(MediaType.APPLICATION_XML)
+@Consumes(MediaType.APPLICATION_JSON)
 public interface SubscriptionApi {
 
    /**
-    * The List Role Sizes operation lists the role sizes that are available under the specified subscription.
+    * The List Subscriptions operation lists the subscriptions that are available with token.
+    //   @ResponseParser(SubscriptionParser.class)
     */
-   @Named("ListRoleSizes")
+   @Named("ListSubscriptions")
    @GET
-   @Path("/rolesizes")
-   @XMLResponseParser(ListRoleSizesHandler.class)
+   @Path("/subscriptions")
+   @SelectJson("value")
    @Fallback(EmptyListOnNotFoundOr404.class)
-   List<RoleSize> listRoleSizes();
+   FluentIterable<Subscription> listSubscriptions();
 
 }

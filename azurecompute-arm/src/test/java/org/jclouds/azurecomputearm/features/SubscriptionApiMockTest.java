@@ -22,7 +22,7 @@ import static org.testng.Assert.assertTrue;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.MockWebServer;
 import org.jclouds.azurecomputearm.internal.BaseAzureComputeApiMockTest;
-import org.jclouds.azurecomputearm.xml.ListRoleSizesHandlerTest;
+import org.jclouds.azurecomputearm.xml.SubscriptionsHandlerTest;
 import org.testng.annotations.Test;
 
 @Test(groups = "unit", testName = "SubscriptionApiMockTest")
@@ -30,14 +30,11 @@ public class SubscriptionApiMockTest extends BaseAzureComputeApiMockTest {
 
    public void testList() throws Exception {
       final MockWebServer server = mockAzureManagementServer();
-      server.enqueue(xmlResponse("/rolesizes.xml"));
-
+      server.enqueue(jsonResponse("/subscriptions.json"));
       try {
          final SubscriptionApi api = api(server.getUrl("/")).getSubscriptionApi();
-
-         assertEquals(api.listRoleSizes(), ListRoleSizesHandlerTest.expected());
-
-         assertSent(server, "GET", "/rolesizes");
+         assertEquals(api.listSubscriptions(), SubscriptionsHandlerTest.expected());
+         assertSentJSON(server, "GET", "/subscriptions");
       } finally {
          server.shutdown();
       }
@@ -50,9 +47,9 @@ public class SubscriptionApiMockTest extends BaseAzureComputeApiMockTest {
       try {
          final SubscriptionApi api = api(server.getUrl("/")).getSubscriptionApi();
 
-         assertTrue(api.listRoleSizes().isEmpty());
+         assertTrue(api.listSubscriptions().isEmpty());
 
-         assertSent(server, "GET", "/rolesizes");
+         assertSent(server, "GET", "/subscriptions");
       } finally {
          server.shutdown();
       }
