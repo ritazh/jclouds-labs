@@ -29,6 +29,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import com.google.common.collect.FluentIterable;
 import org.jclouds.azurecomputearm.AzureComputeApi;
 import org.jclouds.azurecomputearm.compute.config.AzureComputeServiceContextModule.AzureComputeConstants;
 import org.jclouds.azurecomputearm.compute.options.AzureComputeTemplateOptions;
@@ -129,7 +130,7 @@ public class GetOrCreateStorageServiceAndVirtualNetworkThenCreateNodes
    private StorageService tryFindExistingStorageServiceAccountOrCreate(
            final AzureComputeApi api, final String location, final String storageAccountName, final String type) {
 
-      final List<StorageService> storageServices = api.getStorageAccountApi().list();
+      final FluentIterable<StorageService> storageServices = api.getStorageAccountApi().list();
       logger.debug("Looking for a suitable existing storage account ...");
 
       final Predicate<StorageService> storageServicePredicate = and(
