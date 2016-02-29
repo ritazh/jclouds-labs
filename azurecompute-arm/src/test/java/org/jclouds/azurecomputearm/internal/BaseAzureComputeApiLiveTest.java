@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.Properties;
 
 import org.jclouds.azurecomputearm.AzureTestUtils;
 import org.jclouds.azurecomputearm.AzureTestUtils.SameVirtualNetworkSiteNamePredicate;
@@ -41,9 +42,11 @@ import org.jclouds.azurecomputearm.domain.StorageService;
 import org.jclouds.azurecomputearm.util.ConflictManagementPredicate;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
+import org.jclouds.azurecomputearm.internal.AzureLiveTestUtils;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class BaseAzureComputeApiLiveTest extends AbstractAzureComputeApiLiveTest {
 

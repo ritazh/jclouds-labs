@@ -20,6 +20,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.common.util.concurrent.MoreExecutors.sameThreadExecutor;
 import static org.testng.Assert.assertEquals;
+import static org.jclouds.azurecomputearm.oauth.v2.config.CredentialType.BEARER_TOKEN_CREDENTIALS;
+import static org.jclouds.azurecomputearm.oauth.v2.config.OAuthProperties.CREDENTIAL_TYPE;
 
 import java.io.IOException;
 import java.util.Map;
@@ -64,14 +66,17 @@ public class BaseAzureComputeApiMockTest {
    public void start() throws IOException {
       server = new MockWebServer();
       server.play();
+      Properties properties = new Properties();
+      properties.put(CREDENTIAL_TYPE, BEARER_TOKEN_CREDENTIALS.toString());
       ApiContext<AzureComputeApi> ctx = ContextBuilder.newBuilder("azurecompute-arm")
               .credentials("", MOCK_BEARER_TOKEN)
               .endpoint(url(""))
               .modules(modules)
-              .overrides(overrides())
+              .overrides(properties)
               .build();
       json = ctx.utils().injector().getInstance(Json.class);
       api = ctx.getApi();
+
    }
 
    @AfterMethod(alwaysRun = true)

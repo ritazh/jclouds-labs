@@ -25,12 +25,20 @@ import org.jclouds.apis.ApiMetadata;
 import org.jclouds.azurecomputearm.compute.config.AzureComputeServiceContextModule;
 import org.jclouds.azurecomputearm.config.AzureComputeHttpApiModule;
 import org.jclouds.compute.ComputeServiceContext;
-import org.jclouds.oauth.v2.config.OAuthModule;
-import static org.jclouds.oauth.v2.config.CredentialType.BEARER_TOKEN_CREDENTIALS;
-import static org.jclouds.oauth.v2.config.OAuthProperties.AUDIENCE;
-import static org.jclouds.oauth.v2.config.OAuthProperties.CREDENTIAL_TYPE;
-import static org.jclouds.oauth.v2.config.OAuthProperties.JWS_ALG;
 import org.jclouds.rest.internal.BaseHttpApiMetadata;
+//import org.jclouds.oauth.v2.config.OAuthModule;
+//import static org.jclouds.oauth.v2.config.CredentialType.BEARER_TOKEN_CREDENTIALS;
+//import static org.jclouds.oauth.v2.config.OAuthProperties.AUDIENCE;
+//import static org.jclouds.oauth.v2.config.OAuthProperties.CREDENTIAL_TYPE;
+//import static org.jclouds.oauth.v2.config.OAuthProperties.JWS_ALG;
+
+
+import static org.jclouds.azurecomputearm.oauth.v2.config.CredentialType.CLIENT_CREDENTIALS_SECRET;
+import static org.jclouds.azurecomputearm.oauth.v2.config.OAuthProperties.AUDIENCE;
+import static org.jclouds.azurecomputearm.oauth.v2.config.OAuthProperties.RESOURCE;
+import static org.jclouds.azurecomputearm.oauth.v2.config.OAuthProperties.CREDENTIAL_TYPE;
+import static org.jclouds.azurecomputearm.oauth.v2.config.OAuthProperties.JWS_ALG;
+import org.jclouds.azurecomputearm.oauth.v2.config.OAuthModule;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Module;
@@ -57,10 +65,16 @@ public class AzureManagementApiMetadata extends BaseHttpApiMetadata<AzureCompute
       final Properties properties = BaseHttpApiMetadata.defaultProperties();
 
 
-      properties.put("oauth.endpoint", "https://login.windows.net/72f988bf-86f1-41af-91ab-2d7cd011db47/oauth2/token");
+//      properties.put("oauth.endpoint", "https://login.windows.net/72f988bf-86f1-41af-91ab-2d7cd011db47/oauth2/token");
+//      properties.put(JWS_ALG, "RS256");
+//      properties.put(AUDIENCE, "https://cloud.digitalocean.com/v1/oauth/token");
+//      properties.put(CREDENTIAL_TYPE, BEARER_TOKEN_CREDENTIALS.toString());
+
+      properties.put("oauth.endpoint", "https://login.microsoftonline.com/oauth2/token");
       properties.put(JWS_ALG, "RS256");
-      properties.put(AUDIENCE, "https://cloud.digitalocean.com/v1/oauth/token");
-      properties.put(CREDENTIAL_TYPE, BEARER_TOKEN_CREDENTIALS.toString());
+      properties.put(AUDIENCE, "https://login.microsoftonline.com/oauth2/token");
+      properties.put(RESOURCE, "https://management.azure.com");
+      properties.put(CREDENTIAL_TYPE, CLIENT_CREDENTIALS_SECRET.toString());
       // Sometimes SSH Authentication failure happens in Azure.
       // It seems that the authorized key is injected after ssh has been started.
       properties.setProperty("jclouds.ssh.max-retries", "15");
