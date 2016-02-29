@@ -31,9 +31,10 @@ import org.jclouds.http.annotation.ServerError;
 import org.jclouds.location.config.LocationModule;
 import org.jclouds.location.suppliers.ImplicitLocationSupplier;
 import org.jclouds.location.suppliers.implicit.OnlyLocationOrFirstRegionOptionallyMatchingRegionId;
-import org.jclouds.oauth.v2.config.OAuthScopes;
+
 import org.jclouds.rest.ConfiguresHttpApi;
 import org.jclouds.rest.config.HttpApiModule;
+import org.jclouds.azurecomputearm.oauth.v2.config.OAuthScopes;
 
 import com.google.common.base.Supplier;
 import com.google.common.base.Function;
