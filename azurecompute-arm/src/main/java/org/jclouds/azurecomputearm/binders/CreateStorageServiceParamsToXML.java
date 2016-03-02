@@ -33,7 +33,7 @@ public final class CreateStorageServiceParamsToXML implements Binder {
    @SuppressWarnings("unchecked")
    public <R extends HttpRequest> R bindToRequest(final R request, final Object input) {
       final CreateStorageServiceParams params = CreateStorageServiceParams.class.cast(input);
-
+/*
       try {
          final XMLBuilder builder = XMLBuilder.create(
                  "CreateStorageServiceInput", "http://schemas.microsoft.com/windowsazure").
@@ -71,6 +71,8 @@ public final class CreateStorageServiceParamsToXML implements Binder {
       } catch (Exception e) {
          throw propagate(e);
       }
+      */
+      return null;
    }
 
 }

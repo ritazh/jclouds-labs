@@ -90,7 +90,7 @@ public class VirtualMachineApiLiveTest extends BaseAzureComputeApiLiveTest {
               .name(DEPLOYMENT)
               .os(OSImage.Type.LINUX)
               .sourceImageName(BaseAzureComputeApiLiveTest.IMAGE_NAME)
-              .mediaLink(AzureComputeServiceAdapter.createMediaLink(storageService.serviceName(), DEPLOYMENT))
+              .mediaLink(AzureComputeServiceAdapter.createMediaLink(storageService.name(), DEPLOYMENT))
               .username("test")
               .password("supersecurePassword1!")
               .size(RoleSize.Type.BASIC_A0)

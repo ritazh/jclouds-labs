@@ -21,6 +21,8 @@ import static com.google.common.base.Predicates.and;
 import static com.google.common.base.Predicates.notNull;
 import static com.google.common.collect.Iterables.tryFind;
 import static java.lang.String.format;
+
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -104,14 +106,16 @@ public class GetOrCreateStorageServiceAndVirtualNetworkThenCreateNodes
 
       final StorageService storageService;
       if (storageAccountName != null) {
-         if (api.getStorageAccountApi().get(storageAccountName) == null) {
+         // TODO: Get subscription id
+         // TODO: Get resource group
+         /*if (api.getStorageAccountApi().get(storageAccountName) == null) {
             String message = String.format("storageAccountName %s specified via AzureComputeTemplateOptions doesn't exist", storageAccountName);
             logger.error(message);
             throw new IllegalStateException(message);
-         }
+         }*/
       } else { // get suitable or create storage service
          storageService = tryFindExistingStorageServiceAccountOrCreate(api, location, generateStorageServiceName(DEFAULT_STORAGE_ACCOUNT_PREFIX), storageAccountType);
-         templateOptions.storageAccountName(storageService.serviceName());
+         templateOptions.storageAccountName(storageService.name());
       }
 
       if (virtualNetworkName != null && templateOptions.getSubnetNames().isEmpty()) {
@@ -129,8 +133,10 @@ public class GetOrCreateStorageServiceAndVirtualNetworkThenCreateNodes
     */
    private StorageService tryFindExistingStorageServiceAccountOrCreate(
            final AzureComputeApi api, final String location, final String storageAccountName, final String type) {
-
-      final FluentIterable<StorageService> storageServices = api.getStorageAccountApi().list();
+      // TODO: Get subscription id
+      // TODO: Get resource group
+      /*
+      final com.google.common.collect.ImmutableList<StorageService> storageServices = api.getStorageAccountApi().list();
       logger.debug("Looking for a suitable existing storage account ...");
 
       final Predicate<StorageService> storageServicePredicate = and(
@@ -153,13 +159,10 @@ public class GetOrCreateStorageServiceAndVirtualNetworkThenCreateNodes
                     + "Please, try by choosing a different `storageAccountName` in templateOptions and try again", storageAccountName));
          }
          logger.debug("Creating a storage service account '%s' in location '%s' ...", storageAccountName, location);
-         final String createStorageServiceRequestId = api.getStorageAccountApi().create(
-                 CreateStorageServiceParams.builder()
-                 .serviceName(storageAccountName)
-                 .label(storageAccountName)
-                 .location(location)
-                 .accountType(StorageService.AccountType.valueOf(type))
-                 .build());
+         Map<String, String> properties = new HashMap<String,String>();
+         properties.put("accountType", type);
+         final String createStorageServiceRequestId = api.getStorageAccountApi().create(storageAccountName,
+                location, null, properties);
          if (!operationSucceededPredicate.apply(createStorageServiceRequestId)) {
             final String warnMessage = format("Create storage service account has not been completed within %sms.",
                     azureComputeConstants.operationTimeout());
@@ -169,11 +172,14 @@ public class GetOrCreateStorageServiceAndVirtualNetworkThenCreateNodes
             throw new IllegalStateException(illegalStateExceptionMessage);
          }
          return api.getStorageAccountApi().get(storageAccountName);
-      }
+      }*/
+      return null;
    }
 
    private boolean checkAvailability(final String name) {
-      return api.getStorageAccountApi().isAvailable(name).result();
+      // TODO: Get subscription id
+      // TODO: Get resource group
+      return false; // api.getStorageAccountApi().isAvailable(name).result();
    }
 
    private static String generateStorageServiceName(final String prefix) {

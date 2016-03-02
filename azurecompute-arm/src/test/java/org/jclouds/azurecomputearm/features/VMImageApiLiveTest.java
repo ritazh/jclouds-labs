@@ -86,7 +86,7 @@ public class VMImageApiLiveTest extends BaseAzureComputeApiLiveTest {
                 .name(DEPLOYMENT)
                 .os(OSImage.Type.LINUX)
                 .sourceImageName(BaseAzureComputeApiLiveTest.IMAGE_NAME)
-                .mediaLink(AzureComputeServiceAdapter.createMediaLink(storageService.serviceName(), DEPLOYMENT))
+                .mediaLink(AzureComputeServiceAdapter.createMediaLink(storageService.name(), DEPLOYMENT))
                 .username("test")
                 .password("supersecurePassword1!")
                 .size(RoleSize.Type.BASIC_A2)
@@ -110,7 +110,7 @@ public class VMImageApiLiveTest extends BaseAzureComputeApiLiveTest {
                         VMImageParams.OSDiskConfigurationParams.OSState.SPECIALIZED,
                         image.osDiskConfiguration().os(),
                         URI.create(
-                                "https://" + storageService.serviceName()
+                                "https://" + storageService.name()
                                         + ".blob.core.windows.net/vhds/" + CAPTURED_IMAGE_NAME + "-os-" + dateFormat.format(date) + ".vhd"),
                         30,
                         "Standard");

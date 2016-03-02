@@ -34,7 +34,7 @@ public class SubscriptionApiMockTest extends BaseAzureComputeApiMockTest {
       try {
          final SubscriptionApi api = api(server.getUrl("/")).getSubscriptionApi();
          assertEquals(api.listSubscriptions(), SubscriptionsHandlerTest.expected());
-         assertSentJSON(server, "GET", "/subscriptions");
+         assertSentJSON(server, "GET", "/subscriptions?api-version=2015-06-15");
       } finally {
          server.shutdown();
       }
@@ -49,7 +49,7 @@ public class SubscriptionApiMockTest extends BaseAzureComputeApiMockTest {
 
          assertTrue(api.listSubscriptions().isEmpty());
 
-         assertSent(server, "GET", "/subscriptions");
+         assertSentJSON(server, "GET", "/subscriptions?api-version=2015-06-15");
       } finally {
          server.shutdown();
       }

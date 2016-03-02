@@ -19,6 +19,8 @@ package org.jclouds.azurecomputearm.internal;
 import static com.google.common.collect.Iterables.find;
 import static com.google.common.collect.Iterables.tryFind;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 import java.util.List;
@@ -28,6 +30,7 @@ import java.util.logging.Logger;
 
 import java.util.Properties;
 
+import com.google.common.collect.ImmutableMap;
 import org.jclouds.azurecomputearm.AzureTestUtils;
 import org.jclouds.azurecomputearm.AzureTestUtils.SameVirtualNetworkSiteNamePredicate;
 import org.jclouds.azurecomputearm.domain.CloudService;
@@ -40,7 +43,9 @@ import org.jclouds.azurecomputearm.domain.NetworkConfiguration.Subnet;
 import org.jclouds.azurecomputearm.domain.NetworkConfiguration.VirtualNetworkConfiguration;
 import org.jclouds.azurecomputearm.domain.NetworkConfiguration.VirtualNetworkSite;
 import org.jclouds.azurecomputearm.domain.StorageService;
+import org.jclouds.azurecomputearm.features.StorageAccountApi;
 import org.jclouds.azurecomputearm.util.ConflictManagementPredicate;
+import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 
@@ -60,7 +65,7 @@ public class BaseAzureComputeApiLiveTest extends AbstractAzureComputeApiLiveTest
 
    public static final String DEFAULT_SUBNET_NAME = "jclouds-1";
 
-   public static final String LOCATION = "West Europe";
+   public static final String LOCATION = "westus";
 
    public static final String IMAGE_NAME
            = "b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-14_04_1-LTS-amd64-server-20150123-en-us-30GB";
@@ -72,10 +77,12 @@ public class BaseAzureComputeApiLiveTest extends AbstractAzureComputeApiLiveTest
    private String storageServiceName = null;
 
    protected String getStorageServiceName() {
+
       if (storageServiceName == null) {
          storageServiceName = String.format("%3.24s",
                  System.getProperty("user.name") + RAND + this.getClass().getSimpleName()).toLowerCase();
       }
+
       return storageServiceName;
    }
 
@@ -87,10 +94,9 @@ public class BaseAzureComputeApiLiveTest extends AbstractAzureComputeApiLiveTest
       operationSucceeded = new ConflictManagementPredicate(api, 600, 5, 5, SECONDS);
 
       final CreateStorageServiceParams params = CreateStorageServiceParams.builder().
-              serviceName(getStorageServiceName()).
-              label(getStorageServiceName()).
               location(LOCATION).
-              accountType(StorageService.AccountType.Standard_LRS).
+              tags(ImmutableMap.of("property_name", "property_value")).
+              properties(ImmutableMap.of("accountType", StorageService.AccountType.Standard_LRS.toString())).
               build();
       storageService = getOrCreateStorageService(getStorageServiceName(), params);
    }
@@ -100,15 +106,7 @@ public class BaseAzureComputeApiLiveTest extends AbstractAzureComputeApiLiveTest
    protected void tearDown() {
       super.tearDown();
 
-      assertTrue(new ConflictManagementPredicate(api) {
-         @Override
-         protected String operation() {
-            return api.getStorageAccountApi().delete(getStorageServiceName());
-         }
-      }.apply(getStorageServiceName()));
-
-
-
+      api.getStorageAccountApi(getSubscriptionId(), getResourceGroup()).delete(getStorageServiceName());
    }
 
    protected CloudService getOrCreateCloudService(final String cloudServiceName, final String location) {
@@ -147,15 +145,36 @@ public class BaseAzureComputeApiLiveTest extends AbstractAzureComputeApiLiveTest
       return deployment;
    }
 
+   protected String getSubscriptionId() {
+      String subscriptionId = null;
+      if(System.getProperties().containsKey("test.azurecompute-arm.subscriptionid"))
+         subscriptionId = System.getProperty("test.azurecompute-arm.subscriptionid");
+      Assert.assertNotNull(subscriptionId);
+      return subscriptionId;
+   }
+
+   protected String getResourceGroup() {
+      String resourceGroup = null;
+      if(System.getProperties().containsKey("test.azurecompute-arm.resourcegroup"))
+         resourceGroup = System.getProperty("test.azurecompute-arm.resourcegroup");
+      Assert.assertNotNull(resourceGroup);
+      return resourceGroup;
+   }
+
    protected StorageService getOrCreateStorageService(String storageServiceName, CreateStorageServiceParams params) {
-      StorageService ss = api.getStorageAccountApi().get(storageServiceName);
+      StorageAccountApi storageApi = api.getStorageAccountApi(getSubscriptionId(), getResourceGroup());
+      StorageService ss = storageApi.get(storageServiceName);
       if (ss != null) {
          return ss;
       }
-      String requestId = api.getStorageAccountApi().create(params);
-      assertTrue(operationSucceeded.apply(requestId), requestId);
-      Logger.getAnonymousLogger().log(Level.INFO, "operation succeeded: {0}", requestId);
-      ss = api.getStorageAccountApi().get(storageServiceName);
+      CreateStorageServiceParams response = storageApi.create(storageServiceName,params.location(), params.tags(),
+              params.properties());
+      while (response == null) {
+         response = storageApi.create(storageServiceName,params.location(), params.tags(),
+                 params.properties());
+      }
+      assertEquals(response.location(), LOCATION);
+      ss = storageApi.get(storageServiceName);
 
       Logger.getAnonymousLogger().log(Level.INFO, "created storageService: {0}", ss);
       return ss;

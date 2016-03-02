@@ -62,7 +62,7 @@ public class AzureComputeProviderMetadata extends BaseProviderMetadata {
       properties.put("oauth.endpoint", "https://login.microsoftonline.com/oauth2/token");
       properties.put(JWS_ALG, "RS256");
       properties.put(AUDIENCE, "https://login.microsoftonline.com/oauth2/token");
-      properties.put(RESOURCE, "https://management.azure.com");
+      properties.put(RESOURCE, "https://management.core.azure.com/");
       properties.put(CREDENTIAL_TYPE, CLIENT_CREDENTIALS_SECRET.toString());
       return properties;
    }

@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 import org.jclouds.azurecomputearm.domain.StorageService.AccountType;
 import org.jclouds.javax.annotation.Nullable;
+import org.jclouds.json.SerializedNames;
 
 @AutoValue
 public abstract class CreateStorageServiceParams {
@@ -29,37 +30,13 @@ public abstract class CreateStorageServiceParams {
    } // For AutoValue only!
 
    /**
-    * A name for the storage account that is unique within Azure. Storage account names must be between 3 and 24
-    * characters in length and use numbers and lower-case letters only.
-    */
-   public abstract String serviceName();
-
-   /**
-    * A description for the storage account. The description may be up to 1024 characters in length.
-    */
-   @Nullable
-   public abstract String description();
-
-   /**
-    * A label for the storage account specified as a base64-encoded string. The label may be up to 100 characters in
-    * length. The label can be used identify the storage account for your tracking purposes.
-    */
-   public abstract String label();
-
-   /**
-    * Required if AffinityGroup is not specified. The location where the storage account is created.
+    * A location for the storage account
     */
    @Nullable
    public abstract String location();
 
    /**
-    * Required if Location is not specified. The name of an existing affinity group in the specified subscription.
-    */
-   @Nullable
-   public abstract String affinityGroup();
-
-   /**
-    * Represents the name of an extended cloud service property. Each extended property must have both a defined name
+    * Represents the name of tags. Each tag property must have both a defined name
     * and value. You can have a maximum of 50 extended property name/value pairs.
     *
     * <p/>
@@ -68,13 +45,20 @@ public abstract class CreateStorageServiceParams {
     * characters.
     */
    @Nullable
-   public abstract Map<String, String> extendedProperties();
+   public abstract Map<String, String> tags();
 
    /**
-    * Specifies whether the account supports locally-redundant storage, geo-redundant storage, zone-redundant storage,
-    * or read access geo-redundant storage.
+    * Represents the name of an cloud service property. Each property must have both a defined name
+    * and value. You can have a maximum of 50 extended property name/value pairs.
+    *
+    * <p/>
+    * The maximum length of the Name element is 64 characters, only alphanumeric characters and underscores are valid in
+    * the Name, and the name must start with a letter. Each extended property value has a maximum length of 255
+    * characters.
     */
-   public abstract AccountType accountType();
+   @Nullable
+   public abstract Map<String, String> properties();
+
 
    public Builder toBuilder() {
       return builder().fromCreateStorageServiceParams(this);
@@ -86,76 +70,42 @@ public abstract class CreateStorageServiceParams {
 
    public static final class Builder {
 
-      private String serviceName;
-
-      private String description;
-
-      private String label;
-
       private String location;
 
-      private String affinityGroup;
+      private Map<String, String> tags;
 
-      private Map<String, String> extendedProperties;
-
-      private AccountType accountType;
-
-      public Builder serviceName(final String serviceName) {
-         this.serviceName = serviceName;
-         return this;
-      }
-
-      public Builder description(final String description) {
-         this.description = description;
-         return this;
-      }
-
-      public Builder label(final String label) {
-         this.label = label;
-         return this;
-      }
+      private Map<String, String> properties;
 
       public Builder location(final String location) {
          this.location = location;
          return this;
       }
 
-      public Builder affinityGroup(final String affinityGroup) {
-         this.affinityGroup = affinityGroup;
+      public Builder tags(final Map<String, String> tags) {
+         this.tags = tags;
          return this;
       }
 
-      public Builder extendedProperties(final Map<String, String> extendedProperties) {
-         this.extendedProperties = extendedProperties;
-         return this;
-      }
-
-      public Builder accountType(final AccountType accountType) {
-         this.accountType = accountType;
+      public Builder properties(final Map<String, String> properties) {
+         this.properties = properties;
          return this;
       }
 
       public CreateStorageServiceParams build() {
-         return CreateStorageServiceParams.create(serviceName, description, label, location, affinityGroup,
-                 extendedProperties, accountType);
+         return CreateStorageServiceParams.create(location, tags, properties);
       }
 
       public Builder fromCreateStorageServiceParams(final CreateStorageServiceParams storageServiceParams) {
-         return serviceName(storageServiceParams.serviceName()).
-                 description(storageServiceParams.description()).
-                 label(storageServiceParams.label()).
-                 location(storageServiceParams.location()).
-                 affinityGroup(storageServiceParams.affinityGroup()).
-                 extendedProperties(storageServiceParams.extendedProperties()).
-                 accountType(storageServiceParams.accountType());
+         return location(storageServiceParams.location()).
+                  tags(storageServiceParams.tags()).
+                  properties(storageServiceParams.properties());
       }
    }
 
+   @SerializedNames({"location","tags","properties"})
    private static CreateStorageServiceParams create(
-           final String serviceName, final String description, final String label, final String location,
-           final String affinityGroup, final Map<String, String> extendedProperties, final AccountType accountType) {
+           final String location, final Map<String, String> tags, final Map<String, String> properties) {
 
-      return new AutoValue_CreateStorageServiceParams(serviceName, description, label, location, affinityGroup,
-              extendedProperties == null ? null : ImmutableMap.copyOf(extendedProperties), accountType);
+      return new AutoValue_CreateStorageServiceParams(location, tags, properties);
    }
 }

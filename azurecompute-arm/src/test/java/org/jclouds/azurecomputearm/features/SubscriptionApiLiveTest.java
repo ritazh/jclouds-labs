@@ -33,11 +33,6 @@ public class SubscriptionApiLiveTest extends AbstractAzureComputeApiLiveTest {
       }
    }
 
-   private void checkLocation(final RoleSize roleSize) {
-      assertNotNull(roleSize.name(), "Name cannot be null for a Location.");
-      assertNotNull(roleSize.label(), "Label cannot be null for: " + roleSize);
-      assertNotNull(roleSize.cores(), "Cores cannot be null for: " + roleSize.name());
-   }
 
    private SubscriptionApi api() {
       return api.getSubscriptionApi();

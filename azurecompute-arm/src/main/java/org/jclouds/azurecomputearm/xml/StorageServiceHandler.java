@@ -60,10 +60,10 @@ public class StorageServiceHandler extends ParseSax.HandlerForGeneratedRequestWi
 
    @Override
    public StorageService getResult() {
-      final StorageService result = StorageService.create(
-              url, serviceName, storageServiceProperties, extendedProperties, capability);
-      resetState(); // handler is called in a loop.
-      return result;
+//      final StorageService result = StorageService.create(
+//              url, serviceName, storageServiceProperties, extendedProperties, capability);
+//      resetState(); // handler is called in a loop.
+      return null;
    }
 
    private void resetState() {
