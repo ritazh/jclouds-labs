@@ -19,6 +19,8 @@ package org.jclouds.azurecomputearm.internal;
 import static com.google.common.base.Charsets.UTF_8;
 import static com.google.common.util.concurrent.MoreExecutors.sameThreadExecutor;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.jclouds.azurecomputearm.oauth.v2.config.CredentialType.BEARER_TOKEN_CREDENTIALS;
+import static org.jclouds.azurecomputearm.oauth.v2.config.OAuthProperties.CREDENTIAL_TYPE;
 
 import java.io.IOException;
 import java.net.URL;
@@ -47,6 +49,8 @@ public class BaseAzureComputeApiMockTest {
 
    private final String credential;
 
+   private static final String MOCK_BEARER_TOKEN = "c5401990f0c24135e8d6b5d260603fc71696d4738da9aa04a720229a01a2521d";
+
    public BaseAzureComputeApiMockTest() {
       provider = "azurecompute-arm";
       // self-signed dummy cert:
@@ -57,9 +61,14 @@ public class BaseAzureComputeApiMockTest {
 
    public AzureComputeApi api(URL url) {
       Properties properties = new Properties();
+      properties.put(CREDENTIAL_TYPE, BEARER_TOKEN_CREDENTIALS.toString());
       //properties.setProperty(SUBSCRIPTION_ID, "1234-1234-1234");
-      return ContextBuilder.newBuilder(provider).credentials(identity, credential).endpoint(url.toString())
-              .modules(modules).overrides(properties).buildApi(AzureComputeApi.class);
+      return ContextBuilder.newBuilder(provider)
+                           .credentials("", MOCK_BEARER_TOKEN)
+                           .endpoint(url.toString())
+                           .modules(modules)
+                           .overrides(properties)
+                           .buildApi(AzureComputeApi.class);
    }
 
    protected static MockWebServer mockAzureManagementServer() throws IOException {
