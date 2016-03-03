@@ -19,10 +19,11 @@ package org.jclouds.azurecomputearm.features;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
+import com.google.common.collect.ImmutableList;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.MockWebServer;
+import org.jclouds.azurecomputearm.domain.Subscription;
 import org.jclouds.azurecomputearm.internal.BaseAzureComputeApiMockTest;
-import org.jclouds.azurecomputearm.xml.SubscriptionsHandlerTest;
 import org.testng.annotations.Test;
 
 @Test(groups = "unit", testName = "SubscriptionApiMockTest")
@@ -33,7 +34,10 @@ public class SubscriptionApiMockTest extends BaseAzureComputeApiMockTest {
       server.enqueue(jsonResponse("/subscriptions.json"));
       try {
          final SubscriptionApi api = api(server.getUrl("/")).getSubscriptionApi();
-         assertEquals(api.listSubscriptions(), SubscriptionsHandlerTest.expected());
+         assertEquals(api.listSubscriptions(), ImmutableList.of(
+                 Subscription.create("/subscriptions/626f67f6-8fd0-4cc3-bc02-e3ce95f7dfec",
+                         "626f67f6-8fd0-4cc3-bc02-e3ce95f7dfec","Free Trial","Enabled")
+         ));
          assertSentJSON(server, "GET", "/subscriptions?api-version=2015-06-15");
       } finally {
          server.shutdown();

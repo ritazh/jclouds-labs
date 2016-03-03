@@ -44,7 +44,8 @@ import java.util.Map;
 public interface StorageAccountApi {
 
    /**
-    * The List Storage Accounts operation lists the storage accounts that are available in the specified subscription. https://msdn.microsoft.com/en-us/library/mt163559.aspx
+    * The List Storage Accounts operation lists the storage accounts that are available in the specified subscription.
+    * https://msdn.microsoft.com/en-us/library/mt163559.aspx
     */
    @Named("ListStorageAccounts")
    @Path("/providers/Microsoft.Storage/storageAccounts")
@@ -54,7 +55,8 @@ public interface StorageAccountApi {
    List<StorageService> list();
 
    /**
-    * The Create Storage Account asynchronous operation creates a new storage account in Microsoft Azure. https://msdn.microsoft.com/en-us/library/mt163564.aspx
+    * The Create Storage Account asynchronous operation creates a new storage account in Microsoft Azure.
+    * https://msdn.microsoft.com/en-us/library/mt163564.aspx
     * PUT
     */
    @Named("CreateStorageAccount")
@@ -62,7 +64,8 @@ public interface StorageAccountApi {
    @Path("/resourcegroups/{resourceGroup}/providers/Microsoft.Storage/storageAccounts/{storageAccountName}")
    @MapBinder(BindToJsonPayload.class)
    @PUT
-   CreateStorageServiceParams create(@PathParam("storageAccountName") String storageAccountName, @PayloadParam("location") String location,
+   CreateStorageServiceParams create(@PathParam("storageAccountName") String storageAccountName,
+                                     @PayloadParam("location") String location,
                  @PayloadParam("tags") Map<String,String> tags,
                  @PayloadParam("properties") Map<String,String> properties );
 
@@ -78,7 +81,8 @@ public interface StorageAccountApi {
    Availability isAvailable(@PayloadParam("name") String storageAccountName);
 
    /**
-    * The Get Storage Account Properties operation returns system properties for the specified storage account. https://msdn.microsoft.com/en-us/library/mt163553.aspx
+    * The Get Storage Account Properties operation returns system properties for the specified storage account.
+    * https://msdn.microsoft.com/en-us/library/mt163553.aspx
     */
    @Named("GetStorageAccountProperties")
    @GET
@@ -87,7 +91,8 @@ public interface StorageAccountApi {
    StorageService get(@PathParam("storageAccountName") String storageAccountName);
 
    /**
-    * The Get Storage Keys operation returns the primary and secondary access keys for the specified storage account. https://msdn.microsoft.com/en-us/library/mt163589.aspx
+    * The Get Storage Keys operation returns the primary and secondary access keys for the specified storage account.
+    * https://msdn.microsoft.com/en-us/library/mt163589.aspx
     * POST
     */
    @Named("GetStorageAccountKeys")
@@ -103,8 +108,9 @@ public interface StorageAccountApi {
    @Named("RegenerateStorageAccountKeys")
    @POST
    @Payload("%7B\"keyName\":\"{keyName}\"%7D")
-   @Path("/resourcegroups/{resourceGroup}/providers/Microsoft.Storage/storageAccounts/{storageAccountName}/regenerateKey")
-   StorageServiceKeys regenerateKeys(@PathParam("storageAccountName") String storageAccountName, @PayloadParam("keyName") String keyName);
+   @Path("/resourcegroups/{resourceGroup}/providers/Microsoft.Storage/storageAccounts/{storageAccount}/regenerateKey")
+   StorageServiceKeys regenerateKeys(@PathParam("storageAccount") String storageAccount,
+                                     @PayloadParam("keyName") String keyName);
 
    /**
     * The Update Storage Account asynchronous operation updates the label, the description, and enables or disables the
