@@ -187,7 +187,7 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
 
    @Override
    public Iterable<RoleSize> listHardwareProfiles() {
-      // TODO: (jtjk) Is this needed?
+      // TODO: (jtjk) where to get these?
       return null; //api.getSubscriptionApi().listRoleSizes();
    }
 
@@ -261,9 +261,19 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
                               image.eula());
    }
 
+   // TODO: This should be done some other way....
+   private String getSubscriptionId() {
+      String subscriptionId = null;
+      if(System.getProperties().containsKey("test.azurecompute-arm.subscriptionid"))
+         subscriptionId = System.getProperty("test.azurecompute-arm.subscriptionid");
+      assert(subscriptionId == null);
+      return subscriptionId;
+   }
+
    @Override
    public Iterable<Location> listLocations() {
-      return api.getLocationApi().list();
+      // TODO: (jtjk) Get subscription id properly
+      return api.getLocationApi(getSubscriptionId()).list();
    }
 
    @Override

@@ -22,6 +22,7 @@ import java.util.List;
 
 import com.google.auto.value.AutoValue;
 import org.jclouds.javax.annotation.Nullable;
+import org.jclouds.json.SerializedNames;
 
 /**
  * A data center location that is valid for your subscription.
@@ -31,6 +32,11 @@ public abstract class Location {
 
    Location() {
    } // For AutoValue only!
+
+   /**
+    * The id of the data center.
+    */
+   public abstract String id();
 
    /**
     * The name of the data center location. Ex. {@code West Europe}.
@@ -43,19 +49,19 @@ public abstract class Location {
    public abstract String displayName();
 
    /**
-    * Indicates the services available at this location. Ex. {@code Compute}.
+    * The longitude of the datacenter
     */
-   public abstract List<String> availableServices();
+   public abstract double longitude();
 
    /**
-    * Specifies the roles sizes that are available for deployments in the location.
+    * The latitude of the datacenter
     */
-   @Nullable
-   public abstract ComputeCapabilities computeCapabilities();
+   public abstract double latitude();
 
-   public static Location create(final String name, final String displayName, final List<String> availableServices,
-           final ComputeCapabilities computeCapabilities) {
+   @SerializedNames({"id", "name", "displayName", "longitude", "latitude"})
+   public static Location create(final String id, final String name, final String displayName, final double longitude,
+           final double latitude) {
 
-      return new AutoValue_Location(name, displayName, copyOf(availableServices), computeCapabilities);
+      return new AutoValue_Location(id, name, displayName, longitude, latitude);
    }
 }

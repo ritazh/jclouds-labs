@@ -30,6 +30,7 @@ import org.jclouds.apis.BaseApiLiveTest;
 import org.jclouds.azurecomputearm.AzureComputeApi;
 import org.jclouds.azurecomputearm.util.ConflictManagementPredicate;
 import org.jclouds.compute.config.ComputeServiceProperties;
+import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 
 import com.google.common.base.Predicate;
@@ -66,4 +67,22 @@ public abstract class AbstractAzureComputeApiLiveTest extends BaseApiLiveTest<Az
       super.setup();
       operationSucceeded = new ConflictManagementPredicate(api, 600, 5, 5, SECONDS);
    }
+
+   protected String getSubscriptionId() {
+      String subscriptionId = null;
+      if(System.getProperties().containsKey("test.azurecompute-arm.subscriptionid"))
+         subscriptionId = System.getProperty("test.azurecompute-arm.subscriptionid");
+      Assert.assertNotNull(subscriptionId);
+      return subscriptionId;
+   }
+
+   protected String getResourceGroup() {
+      String resourceGroup = null;
+      if(System.getProperties().containsKey("test.azurecompute-arm.resourcegroup"))
+         resourceGroup = System.getProperty("test.azurecompute-arm.resourcegroup");
+      Assert.assertNotNull(resourceGroup);
+      return resourceGroup;
+   }
+
+
 }

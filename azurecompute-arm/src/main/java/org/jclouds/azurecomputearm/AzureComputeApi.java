@@ -68,7 +68,7 @@ public interface AzureComputeApi extends Closeable {
     * @see <a href="http://msdn.microsoft.com/en-us/library/gg441299">docs</a>
     */
    @Delegate
-   LocationApi getLocationApi();
+   LocationApi getLocationApi(@PathParam("subscriptionId") String subscriptionId);
 
    /**
     * The Service Management API includes operations for managing the cloud services beneath your subscription.
@@ -142,7 +142,8 @@ public interface AzureComputeApi extends Closeable {
     * @see <a href="https://msdn.microsoft.com/en-us/library/mt163683.aspx">docs</a>
     */
    @Delegate
-   StorageAccountApi getStorageAccountApi(@PathParam("subscriptionId") String subscriptionId, @PathParam("resourceGroup") String resourceGroup);
+   StorageAccountApi getStorageAccountApi(@PathParam("subscriptionId") String subscriptionId,
+                                          @PathParam("resourceGroup") String resourceGroup);
 
    /**
     * The Service Management API includes operations for managing the Network Security Groups in your subscription.

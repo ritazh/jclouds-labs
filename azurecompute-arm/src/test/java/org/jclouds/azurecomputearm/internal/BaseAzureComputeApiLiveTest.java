@@ -147,22 +147,6 @@ public class BaseAzureComputeApiLiveTest extends AbstractAzureComputeApiLiveTest
       return deployment;
    }
 
-   protected String getSubscriptionId() {
-      String subscriptionId = null;
-      if(System.getProperties().containsKey("test.azurecompute-arm.subscriptionid"))
-         subscriptionId = System.getProperty("test.azurecompute-arm.subscriptionid");
-      Assert.assertNotNull(subscriptionId);
-      return subscriptionId;
-   }
-
-   protected String getResourceGroup() {
-      String resourceGroup = null;
-      if(System.getProperties().containsKey("test.azurecompute-arm.resourcegroup"))
-         resourceGroup = System.getProperty("test.azurecompute-arm.resourcegroup");
-      Assert.assertNotNull(resourceGroup);
-      return resourceGroup;
-   }
-
    protected StorageService getOrCreateStorageService(String storageServiceName, CreateStorageServiceParams params) {
       StorageAccountApi storageApi = api.getStorageAccountApi(getSubscriptionId(), getResourceGroup());
       StorageService ss = storageApi.get(storageServiceName);
