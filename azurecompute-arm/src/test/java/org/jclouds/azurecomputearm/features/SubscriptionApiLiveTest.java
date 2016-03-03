@@ -17,6 +17,7 @@
 package org.jclouds.azurecomputearm.features;
 
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
 
 import org.jclouds.azurecomputearm.domain.RoleSize;
 import org.jclouds.azurecomputearm.domain.Subscription;
@@ -29,8 +30,9 @@ public class SubscriptionApiLiveTest extends AbstractAzureComputeApiLiveTest {
    @Test
    public void testList() {
       for (Subscription subscription : api().listSubscriptions()) {
-         //checkLocation(roleSize);
+          assertTrue(!subscription.getSubscriptionId().isEmpty());
       }
+      assertTrue(!api().listSubscriptions().isEmpty());
    }
 
 
