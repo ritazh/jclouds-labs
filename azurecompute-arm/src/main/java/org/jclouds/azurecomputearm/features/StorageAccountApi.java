@@ -102,8 +102,9 @@ public interface StorageAccountApi {
     */
    @Named("RegenerateStorageAccountKeys")
    @POST
+   @Payload("%7B\"keyName\":\"{keyName}\"%7D")
    @Path("/resourcegroups/{resourceGroup}/providers/Microsoft.Storage/storageAccounts/{storageAccountName}/regenerateKey")
-   StorageServiceKeys regenerateKeys(@PayloadParam("keyName") String keyName);
+   StorageServiceKeys regenerateKeys(@PathParam("storageAccountName") String storageAccountName, @PayloadParam("keyName") String keyName);
 
    /**
     * The Update Storage Account asynchronous operation updates the label, the description, and enables or disables the
@@ -112,11 +113,13 @@ public interface StorageAccountApi {
     */
    @Named("UpdateStorageAccount")
    @PATCH
+   @Payload("%7B\"tags\":{tags},\"properties\":{properties}%7D")
+   @MapBinder(BindToJsonPayload.class)
    @Path("/resourcegroups/{resourceGroup}/providers/Microsoft.Storage/storageAccounts/{storageAccountName}")
-   String update(
+   StorageServiceUpdateParams update(
            @PathParam("storageAccountName") String storageAccountName,
-           @PayloadParam("location") String location, @PayloadParam("tags") Map<String,String> tags,
-           @PayloadParam("properties") Map<String,String> properties );
+           @PayloadParam("properties") StorageServiceUpdateParams.StorageServiceUpdateProperties properties,
+           @PayloadParam("tags") Map<String, String> tags);
 
    /**
     * https://msdn.microsoft.com/en-us/library/mt163652.aspx

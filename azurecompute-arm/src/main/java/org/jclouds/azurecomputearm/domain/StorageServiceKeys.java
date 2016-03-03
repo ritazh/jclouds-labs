@@ -17,6 +17,8 @@
 package org.jclouds.azurecomputearm.domain;
 
 import com.google.auto.value.AutoValue;
+import org.jclouds.json.SerializedNames;
+
 import java.net.URL;
 
 @AutoValue
@@ -36,6 +38,7 @@ public abstract class StorageServiceKeys {
     */
    public abstract String key2();
 
+   @SerializedNames({"key1", "key2"})
    public static StorageServiceKeys create(final String key1, final String key2) {
       return new AutoValue_StorageServiceKeys(key1, key2);
    }

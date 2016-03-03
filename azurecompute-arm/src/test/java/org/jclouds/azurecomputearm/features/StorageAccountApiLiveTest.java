@@ -22,10 +22,7 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableMap;
-import org.jclouds.azurecomputearm.domain.CreateStorageServiceParams;
-import org.jclouds.azurecomputearm.domain.StorageService;
-import org.jclouds.azurecomputearm.domain.StorageServiceKeys;
-import org.jclouds.azurecomputearm.domain.UpdateStorageServiceParams;
+import org.jclouds.azurecomputearm.domain.*;
 import org.jclouds.azurecomputearm.internal.BaseAzureComputeApiLiveTest;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
@@ -63,8 +60,8 @@ public class StorageAccountApiLiveTest extends BaseAzureComputeApiLiveTest {
 
    @Test(dependsOnMethods = "testIsAvailable")
    public void testCreate() {
-      CreateStorageServiceParams storage = api().create(NAME,LOCATION, ImmutableMap.of("property_name", "property_value"),
-              ImmutableMap.of("accountType", StorageService.AccountType.Standard_ZRS.toString()));
+      CreateStorageServiceParams storage = api().create(NAME,LOCATION, ImmutableMap.of("property_name",
+              "property_value"), ImmutableMap.of("accountType", StorageService.AccountType.Standard_ZRS.toString()));
       while (storage == null) {
          storage = api().create(NAME,LOCATION, ImmutableMap.of("property_name", "property_value"),
                  ImmutableMap.of("accountType", StorageService.AccountType.Standard_ZRS.toString()));
@@ -92,15 +89,19 @@ public class StorageAccountApiLiveTest extends BaseAzureComputeApiLiveTest {
 
    @Test(dependsOnMethods = "testCreate")
    public void testRegenerateKeys() {
-      api().regenerateKeys(NAME);
-      //assertTrue(operationSucceeded.apply(requestId), requestId);
+      StorageServiceKeys keys = api().regenerateKeys(NAME, "key1");
+      assertFalse(keys.key1().isEmpty());
+      assertFalse(keys.key2().isEmpty());
    }
 
    @Test(dependsOnMethods = "testCreate")
    public void testUpdate() {
-      final String requestId = api().update(NAME, null, null,
+      StorageServiceUpdateParams.StorageServiceUpdateProperties props =
+              StorageServiceUpdateParams.StorageServiceUpdateProperties.create(null,null,null,null,
+                      null,null,null,null,null);
+      final StorageServiceUpdateParams params = api().update(NAME, props,
               ImmutableMap.of("another_property_name", "another_property_value"));
-      assertTrue(operationSucceeded.apply(requestId), requestId);
+      assertTrue(params.tags().containsKey("another_property_name"));
    }
 
    @AfterClass(alwaysRun = true)
