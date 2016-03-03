@@ -36,11 +36,8 @@ public class StorageServiceKeysHandler extends ParseSax.HandlerForGeneratedReque
 
    @Override
    public StorageServiceKeys getResult() {
-      final StorageServiceKeys result = StorageServiceKeys.create(url, primary, secondary);
-      url = null;
-      primary = null;
-      secondary = null;
-      return result;
+
+      return null;
    }
 
    @Override

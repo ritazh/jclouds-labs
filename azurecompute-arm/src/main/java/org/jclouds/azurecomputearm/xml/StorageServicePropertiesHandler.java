@@ -84,6 +84,7 @@ public class StorageServicePropertiesHandler
 
    @Override
    public StorageService.StorageServiceProperties getResult() {
+      /*
       final StorageService.StorageServiceProperties result = StorageService.StorageServiceProperties.create(
               description, affinityGroup, location, label, status, endpoints,
               geoPrimaryRegion, statusOfPrimary, lastGeoFailoverTime, geoSecondaryRegion, statusOfSecondary,
@@ -101,8 +102,8 @@ public class StorageServicePropertiesHandler
       customDomains.clear();
       secondaryEndpoints.clear();
       accountType = null;
-
-      return result;
+*/
+      return null;
    }
 
    @Override

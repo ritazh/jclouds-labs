@@ -187,7 +187,8 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
 
    @Override
    public Iterable<RoleSize> listHardwareProfiles() {
-      return api.getSubscriptionApi().listRoleSizes();
+      // TODO: (jtjk) Is this needed?
+      return null; //api.getSubscriptionApi().listRoleSizes();
    }
 
    @Override

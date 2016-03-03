@@ -65,13 +65,13 @@
       <artifactId>auto-value</artifactId>
       <scope>provided</scope>
     </dependency>
-
     <dependency>
       <groupId>org.apache.jclouds</groupId>
       <artifactId>jclouds-core</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
+<<<<<<< HEAD
       <groupId>org.apache.jclouds</groupId>
       <artifactId>jclouds-core</artifactId>
       <version>${project.version}</version>
@@ -80,6 +80,8 @@
     </dependency>
 
     <dependency>
+=======
+>>>>>>> newbranch
       <groupId>org.apache.jclouds.api</groupId>
       <artifactId>oauth</artifactId>
       <version>${project.version}</version>
@@ -106,8 +108,27 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+<<<<<<< HEAD
       <groupId>org.apache.jclouds.driver</groupId>
       <artifactId>jclouds-slf4j</artifactId>
+      <version>${project.version}</version>
+=======
+      <groupId>org.apache.jclouds</groupId>
+      <artifactId>jclouds-core</artifactId>
+      <version>${project.version}</version>
+      <type>test-jar</type>
+>>>>>>> newbranch
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.jclouds.driver</groupId>
+      <artifactId>jclouds-slf4j</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.jclouds.driver</groupId>
+      <artifactId>jclouds-sshj</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
@@ -118,15 +139,9 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-    <groupId>ch.qos.logback</groupId>
-    <artifactId>logback-classic</artifactId>
-    <scope>test</scope>
-  </dependency>
-    <dependency>
-      <groupId>org.apache.jclouds.driver</groupId>
-      <artifactId>jclouds-sshj</artifactId>
-      <version>${project.parent.version}</version>
-      <scope>test</scope>
+     <groupId>ch.qos.logback</groupId>
+     <artifactId>logback-classic</artifactId>
+     <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>com.squareup.okhttp</groupId>

@@ -21,7 +21,7 @@ import static org.jclouds.util.SaxUtils.currentOrNull;
 import org.jclouds.azurecomputearm.domain.Availability;
 import org.jclouds.http.functions.ParseSax;
 
-public class AvailabilityHandler extends ParseSax.HandlerForGeneratedRequestWithResult<Availability> {
+public class AvailabilityHandler  {
 
    private Boolean result;
 
@@ -29,26 +29,4 @@ public class AvailabilityHandler extends ParseSax.HandlerForGeneratedRequestWith
 
    private final StringBuilder currentText = new StringBuilder();
 
-   @Override
-   public Availability getResult() {
-      return Availability.create(result, reason);
-   }
-
-   @Override
-   public void endElement(String ignoredUri, String ignoredName, String qName) {
-      if (qName.equals("Result")) {
-         String resultText = currentOrNull(currentText);
-         if (resultText != null) {
-            result = Boolean.valueOf(resultText);
-         }
-      } else if (qName.equals("Reason")) {
-         reason = currentOrNull(currentText);
-      }
-      currentText.setLength(0);
-   }
-
-   @Override
-   public void characters(char ch[], int start, int length) {
-      currentText.append(ch, start, length);
-   }
 }

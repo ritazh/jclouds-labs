@@ -16,125 +16,124 @@
  */
 package org.jclouds.azurecomputearm.features;
 
-import java.util.List;
-
 import javax.inject.Named;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
 import org.jclouds.Fallbacks;
 import org.jclouds.Fallbacks.NullOnNotFoundOr404;
-import org.jclouds.azurecomputearm.binders.StorageServiceKeyTypeToXML;
-import org.jclouds.azurecomputearm.binders.CreateStorageServiceParamsToXML;
-import org.jclouds.azurecomputearm.binders.UpdateStorageServiceParamsToXML;
-import org.jclouds.azurecomputearm.domain.Availability;
-import org.jclouds.azurecomputearm.domain.StorageService;
-import org.jclouds.azurecomputearm.domain.StorageServiceKeys;
-import org.jclouds.azurecomputearm.domain.StorageServiceKeys.KeyType;
-import org.jclouds.azurecomputearm.domain.CreateStorageServiceParams;
-import org.jclouds.azurecomputearm.domain.UpdateStorageServiceParams;
-import org.jclouds.azurecomputearm.functions.ParseRequestIdHeader;
-import org.jclouds.azurecomputearm.xml.AvailabilityHandler;
-import org.jclouds.azurecomputearm.xml.ListStorageServicesHandler;
-import org.jclouds.azurecomputearm.xml.StorageServiceHandler;
-import org.jclouds.azurecomputearm.xml.StorageServiceKeysHandler;
-import org.jclouds.rest.annotations.BinderParam;
-import org.jclouds.rest.annotations.Fallback;
-import org.jclouds.rest.annotations.Headers;
-import org.jclouds.rest.annotations.QueryParams;
-import org.jclouds.rest.annotations.ResponseParser;
-import org.jclouds.rest.annotations.XMLResponseParser;
+import org.jclouds.azurecomputearm.domain.*;
+import org.jclouds.azurecomputearm.oauth.v2.filters.OAuthFilter;
+import org.jclouds.rest.annotations.*;
+import org.jclouds.rest.binders.BindToJsonPayload;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * The Service Management API includes operations for managing the storage accounts in your subscription.
  *
  * @see <a href="http://msdn.microsoft.com/en-us/library/azure/ee460790">docs</a>
  */
-@Path("/services/storageservices")
 @Headers(keys = "x-ms-version", values = "{jclouds.api-version}")
-@Produces(MediaType.APPLICATION_XML)
-@Consumes(MediaType.APPLICATION_XML)
+@Path("/subscriptions/{subscriptionId}")
+@RequestFilters(OAuthFilter.class)
+@QueryParams(keys = "api-version", values = "2015-06-15")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
 public interface StorageAccountApi {
 
    /**
     * The List Storage Accounts operation lists the storage accounts that are available in the specified subscription.
+    * https://msdn.microsoft.com/en-us/library/mt163559.aspx
     */
    @Named("ListStorageAccounts")
+   @Path("/providers/Microsoft.Storage/storageAccounts")
    @GET
-   @XMLResponseParser(ListStorageServicesHandler.class)
+   @SelectJson("value")
    @Fallback(Fallbacks.EmptyListOnNotFoundOr404.class)
    List<StorageService> list();
 
    /**
     * The Create Storage Account asynchronous operation creates a new storage account in Microsoft Azure.
+    * https://msdn.microsoft.com/en-us/library/mt163564.aspx
+    * PUT
     */
    @Named("CreateStorageAccount")
-   @POST
-   @ResponseParser(ParseRequestIdHeader.class)
-   String create(@BinderParam(CreateStorageServiceParamsToXML.class) CreateStorageServiceParams storageServiceParams);
+   @Payload("%7B\"location\":\"{location}\",\"tags\":{tags},\"properties\":{properties}%7D")
+   @Path("/resourcegroups/{resourceGroup}/providers/Microsoft.Storage/storageAccounts/{storageAccountName}")
+   @MapBinder(BindToJsonPayload.class)
+   @PUT
+   CreateStorageServiceParams create(@PathParam("storageAccountName") String storageAccountName,
+                                     @PayloadParam("location") String location,
+                 @PayloadParam("tags") Map<String,String> tags,
+                 @PayloadParam("properties") Map<String,String> properties );
 
    /**
     * The Check Storage Account Name Availability operation checks to see if the specified storage account name is
-    * available, or if it has already been taken.
+    * available, or if it has already been taken. https://msdn.microsoft.com/en-us/library/mt163642.aspx
+    * POST
     */
    @Named("CheckStorageAccountNameAvailability")
    @GET
-   @Path("/operations/isavailable/{storageAccountName}")
-   @XMLResponseParser(AvailabilityHandler.class)
-   Availability isAvailable(@PathParam("storageAccountName") String storageAccountName);
+   @Payload("%7B\"name\":\"{name}\",\"type\":\"Microsoft.Storage/storageAccounts\"%7D")
+   @Path("/providers/Microsoft.Storage/checkNameAvailability")
+   Availability isAvailable(@PayloadParam("name") String storageAccountName);
 
    /**
     * The Get Storage Account Properties operation returns system properties for the specified storage account.
+    * https://msdn.microsoft.com/en-us/library/mt163553.aspx
     */
    @Named("GetStorageAccountProperties")
    @GET
-   @Path("/{storageAccountName}")
-   @XMLResponseParser(StorageServiceHandler.class)
+   @Path("/resourcegroups/{resourceGroup}/providers/Microsoft.Storage/storageAccounts/{storageAccountName}")
    @Fallback(NullOnNotFoundOr404.class)
    StorageService get(@PathParam("storageAccountName") String storageAccountName);
 
    /**
     * The Get Storage Keys operation returns the primary and secondary access keys for the specified storage account.
+    * https://msdn.microsoft.com/en-us/library/mt163589.aspx
+    * POST
     */
    @Named("GetStorageAccountKeys")
-   @GET
-   @Path("/{storageAccountName}/keys")
-   @XMLResponseParser(StorageServiceKeysHandler.class)
+   @POST
+   @Path("/resourcegroups/{resourceGroup}/providers/Microsoft.Storage/storageAccounts/{storageAccountName}/listKeys")
    @Fallback(NullOnNotFoundOr404.class)
    StorageServiceKeys getKeys(@PathParam("storageAccountName") String storageAccountName);
 
+   /**
+    * https://msdn.microsoft.com/en-us/library/mt163567.aspx
+    * POST
+    */
    @Named("RegenerateStorageAccountKeys")
    @POST
-   @Path("/{storageAccountName}/keys")
-   @QueryParams(keys = "action", values = "regenerate")
-   @ResponseParser(ParseRequestIdHeader.class)
-   String regenerateKeys(
-           @PathParam("storageAccountName") String storageAccountName,
-           @BinderParam(StorageServiceKeyTypeToXML.class) KeyType keyType);
+   @Payload("%7B\"keyName\":\"{keyName}\"%7D")
+   @Path("/resourcegroups/{resourceGroup}/providers/Microsoft.Storage/storageAccounts/{storageAccount}/regenerateKey")
+   StorageServiceKeys regenerateKeys(@PathParam("storageAccount") String storageAccount,
+                                     @PayloadParam("keyName") String keyName);
 
    /**
     * The Update Storage Account asynchronous operation updates the label, the description, and enables or disables the
-    * geo-replication status for the specified storage account.
+    * geo-replication status for the specified storage account. https://msdn.microsoft.com/en-us/library/mt163639.aspx
+    * PATCH
     */
    @Named("UpdateStorageAccount")
-   @PUT
-   @Path("/{storageAccountName}")
-   @ResponseParser(ParseRequestIdHeader.class)
-   String update(
+   @PATCH
+   @Payload("%7B\"tags\":{tags},\"properties\":{properties}%7D")
+   @MapBinder(BindToJsonPayload.class)
+   @Path("/resourcegroups/{resourceGroup}/providers/Microsoft.Storage/storageAccounts/{storageAccountName}")
+   StorageServiceUpdateParams update(
            @PathParam("storageAccountName") String storageAccountName,
-           @BinderParam(UpdateStorageServiceParamsToXML.class) UpdateStorageServiceParams storageServiceParams);
+           @PayloadParam("properties") StorageServiceUpdateParams.StorageServiceUpdateProperties properties,
+           @PayloadParam("tags") Map<String, String> tags);
 
+   /**
+    * https://msdn.microsoft.com/en-us/library/mt163652.aspx
+    * DELETE
+    */
    @Named("DeleteStorageAccount")
    @DELETE
-   @Path("/{serviceName}")
-   @ResponseParser(ParseRequestIdHeader.class)
-   String delete(@PathParam("serviceName") String serviceName);
+   @Path("/resourcegroups/{resourceGroup}/providers/Microsoft.Storage/storageAccounts/{storageAccountName}")
+   void delete(@PathParam("storageAccountName") String storageAccountName);
 
 }

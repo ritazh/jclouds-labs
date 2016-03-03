@@ -23,7 +23,6 @@ import java.util.List;
 import com.google.auto.value.AutoValue;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Optional;
 
 import org.jclouds.javax.annotation.Nullable;
 import org.jclouds.json.SerializedNames;

@@ -14,32 +14,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jclouds.azurecomputearm.domain;
+package org.jclouds.azurecomputearm.features;
 
-import com.google.auto.value.AutoValue;
-import org.jclouds.json.SerializedNames;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
 
-import java.net.URL;
+import org.jclouds.azurecomputearm.domain.RoleSize;
+import org.jclouds.azurecomputearm.domain.Subscription;
+import org.jclouds.azurecomputearm.internal.AbstractAzureComputeApiLiveTest;
+import org.testng.annotations.Test;
 
-@AutoValue
-public abstract class StorageServiceKeys {
+@Test(groups = "live", testName = "SubscriptionApiLiveTest")
+public class SubscriptionApiLiveTest extends AbstractAzureComputeApiLiveTest {
+
+   @Test
+   public void testList() {
+      for (Subscription subscription : api().listSubscriptions()) {
+          assertTrue(!subscription.getSubscriptionId().isEmpty());
+      }
+      assertTrue(!api().listSubscriptions().isEmpty());
+   }
 
 
-   StorageServiceKeys() {
-   } // For AutoValue only!
-
-   /**
-    * The primary access key for the storage account.
-    */
-   public abstract String key1();
-
-   /**
-    * The secondary access key for the storage account.
-    */
-   public abstract String key2();
-
-   @SerializedNames({"key1", "key2"})
-   public static StorageServiceKeys create(final String key1, final String key2) {
-      return new AutoValue_StorageServiceKeys(key1, key2);
+   private SubscriptionApi api() {
+      return api.getSubscriptionApi();
    }
 }
