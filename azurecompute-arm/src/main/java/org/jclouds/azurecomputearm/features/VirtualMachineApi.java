@@ -17,13 +17,7 @@
 package org.jclouds.azurecomputearm.features;
 
 import javax.inject.Named;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
 import org.jclouds.Fallbacks;
@@ -75,7 +69,7 @@ public interface VirtualMachineApi {
    @Path("/virtualMachines/{vmname}")
    @QueryParams(keys = "validating", values = "false")
    @Fallback(Fallbacks.EmptyListOnNotFoundOr404.class)
-   VirtualMachine create(@PathParam("vmname") String vmname,@PayloadParam("id") String id,
+   VirtualMachine create(@PathParam("vmname") String vmname, @PayloadParam("id") String id,
                          @PayloadParam("name") String name,
                          @PayloadParam("location") String location,
                          @PayloadParam("properties") VirtualMachineProperties properties);
@@ -90,101 +84,40 @@ public interface VirtualMachineApi {
    @Fallback(Fallbacks.EmptyListOnNotFoundOr404.class)
    List<VirtualMachine> list();
 
-   @Named("RestartRole")
+   /**
+    * The Delete Virtual Machine operation
+    */
+   @Named("DeleteVirtualMachine")
+   @DELETE
+   @Path("/virtualMachines/{name}")
+   @Fallback(Fallbacks.EmptyListOnNotFoundOr404.class)
+   void delete(@PathParam("name") String name);
+
+   /**
+    * The Restart Virtual Machine operation
+    */
+   @Named("RestartVirtualMachine")
    @POST
-   // Warning : the url in the documentation is WRONG ! @see
-   // http://social.msdn.microsoft.com/Forums/pl-PL/WAVirtualMachinesforWindows/thread/\
-   // 7ba2367b-e450-49e0-89e4-46c240e9d213
-   @Path("/roleinstances/{name}/Operations")
-   @Produces(MediaType.APPLICATION_XML)
-   @ResponseParser(ParseRequestIdHeader.class)
-   @Payload(value = "<RestartRoleOperation xmlns=\"http://schemas.microsoft.com/windowsazure\">"
-           + "<OperationType>RestartRoleOperation</OperationType></RestartRoleOperation>")
-   String restart(@PathParam("name") String name);
+   @Path("/virtualMachines/{name}/restart")
+   @Fallback(Fallbacks.EmptyListOnNotFoundOr404.class)
+   void restart(@PathParam("name") String name);
 
    /**
-    * http://msdn.microsoft.com/en-us/library/jj157201
+    * The start Virtual Machine operation
     */
-   @Named("CaptureRole")
+   @Named("StartVirtualMachine")
    @POST
-   @Path("/roleinstances/{name}/Operations")
-   @Produces(MediaType.APPLICATION_XML)
-   @ResponseParser(ParseRequestIdHeader.class)
-   @Payload(value = "<CaptureRoleOperation xmlns=\"http://schemas.microsoft.com/windowsazure\">"
-           + "<OperationType>CaptureRoleOperation</OperationType>"
-           + "<PostCaptureAction>Delete</PostCaptureAction>"
-           + "<TargetImageLabel>{imageLabel}</TargetImageLabel>"
-           + "<TargetImageName>{imageName}</TargetImageName></CaptureRoleOperation>")
-   String capture(@PathParam("name") String name, @PayloadParam("imageName") String imageName,
-           @PayloadParam("imageLabel") String imageLabel);
+   @Path("/virtualMachines/{name}/start")
+   @Fallback(Fallbacks.EmptyListOnNotFoundOr404.class)
+   void start(@PathParam("name") String name);
 
    /**
-    * http://msdn.microsoft.com/en-us/library/jj157195
+    * The stop Virtual Machine operation
     */
-   @Named("ShutdownRole")
+   @Named("StopVirtualMachine")
    @POST
-   @Path("/roleinstances/{name}/Operations")
-   @Produces(MediaType.APPLICATION_XML)
-   @ResponseParser(ParseRequestIdHeader.class)
-   @Payload(value = "<ShutdownRoleOperation xmlns=\"http://schemas.microsoft.com/windowsazure\">"
-           + "<OperationType>ShutdownRoleOperation</OperationType>" +
-           "<PostShutdownAction>{postShutdownAction}</PostShutdownAction></ShutdownRoleOperation>")
-   String shutdown(@PathParam("name") String name, @PayloadParam("postShutdownAction") String postShutdownAction);
+   @Path("/virtualMachines/{name}/powerOff")
+   @Fallback(Fallbacks.EmptyListOnNotFoundOr404.class)
+   void stop(@PathParam("name") String name);
 
-   /**
-    * http://msdn.microsoft.com/en-us/library/jj157195
-    */
-   @Named("ShutdownRole")
-   @POST
-   @Path("/roleinstances/{name}/Operations")
-   @Produces(MediaType.APPLICATION_XML)
-   @ResponseParser(ParseRequestIdHeader.class)
-   @Payload(value = "<ShutdownRoleOperation xmlns=\"http://schemas.microsoft.com/windowsazure\">"
-           + "<OperationType>ShutdownRoleOperation</OperationType></ShutdownRoleOperation>")
-   String shutdown(@PathParam("name") String name);
-
-   /**
-    * http://msdn.microsoft.com/en-us/library/jj157189
-    */
-   @Named("StartRole")
-   @POST
-   @Path("/roleinstances/{name}/Operations")
-   @Produces(MediaType.APPLICATION_XML)
-   @ResponseParser(ParseRequestIdHeader.class)
-   @Payload(value = "<StartRoleOperation xmlns=\"http://schemas.microsoft.com/windowsazure\">"
-           + "<OperationType>StartRoleOperation</OperationType></StartRoleOperation>")
-   String start(@PathParam("name") String name);
-
-   /**
-    * https://msdn.microsoft.com/en-us/library/azure/jj157193.aspx
-    */
-   @Named("GetRole")
-   @GET
-   @Path("/roles/{roleName}")
-   @Produces(MediaType.APPLICATION_XML)
-   @XMLResponseParser(RoleHandler.class)
-   @Fallback(NullOnNotFoundOr404.class)
-   Role getRole(@PathParam("roleName") String roleName);
-
-   /**
-    * https://msdn.microsoft.com/library/azure/jj157187.aspx
-    */
-   @Named("UpdateRole")
-   @PUT
-   @Path("/roles/{roleName}")
-   @Produces(MediaType.APPLICATION_XML)
-   @ResponseParser(ParseRequestIdHeader.class)
-   String updateRole(@PathParam("roleName") String roleName, @BinderParam(RoleToXML.class) Role role);
-
-   /**
-    * The Capture VM Image operation creates a copy of the operating system virtual hard disk (VHD) and all of the data
-    * VHDs that are associated with the Virtual Machine, saves the VHD copies in the same storage location as the original
-    * VHDs, and registers the copies as a VM Image in the image repository that is associated with the specified subscription.
-    */
-   @Named("CaptureVMImage")
-   @POST
-   @Produces(MediaType.APPLICATION_XML)
-   @Path("/roleinstances/{name}/Operations")
-   @ResponseParser(ParseRequestIdHeader.class) String capture(@PathParam("name") String name,
-         @BinderParam(CaptureVMImageParamsToXML.class) CaptureVMImageParams params);
 }

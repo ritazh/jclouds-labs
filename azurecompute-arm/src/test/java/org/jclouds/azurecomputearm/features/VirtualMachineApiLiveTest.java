@@ -43,20 +43,6 @@ public class VirtualMachineApiLiveTest extends AbstractAzureComputeApiLiveTest {
    }
 
    @Test
-   public void testGet() {
-      VirtualMachine vm = api().get("jannenwinkkari");
-      assertTrue(!vm.name().isEmpty());
-   }
-
-   @Test
-   public void testList() {
-      List<VirtualMachine> list = api().list();
-      for (VirtualMachine machine : list) {
-         assertTrue(!machine.name().isEmpty());
-      }
-   }
-
-   @Test
    public void testCreate() {
       StorageAccountApi storageApi = api.getStorageAccountApi(getSubscriptionId(), getResourceGroup());
       final CreateStorageServiceParams params = CreateStorageServiceParams.builder().
@@ -88,7 +74,7 @@ public class VirtualMachineApiLiveTest extends AbstractAzureComputeApiLiveTest {
       String status = "Creating";
       while (status.equals("Creating")){
          try {
-            Thread.sleep(60*1000);
+            Thread.sleep(120*1000);
          } catch (InterruptedException e) {
             e.printStackTrace();
          }
@@ -100,12 +86,34 @@ public class VirtualMachineApiLiveTest extends AbstractAzureComputeApiLiveTest {
       assertTrue(!status.equals("Failed"));
    }
 
+   @Test(dependsOnMethods = "testCreate")
+   public void testGet() {
+      VirtualMachine vm = api().get(getName());
+      assertTrue(!vm.name().isEmpty());
+   }
+
+   @Test(dependsOnMethods = "testGet")
+   public void testList() {
+      List<VirtualMachine> list = api().list();
+      for (VirtualMachine machine : list) {
+         assertTrue(!machine.name().isEmpty());
+      }
+   }
+
+   @Test(dependsOnMethods = "testList")
+   public void testDelete() {
+      api().delete(getName());
+      StorageAccountApi storageApi = api.getStorageAccountApi(getSubscriptionId(), getResourceGroup());
+      storageApi.delete(getName() + "storage");
+
+   }
+
    private VirtualMachineApi api() {
       return api.getVirtualMachineApi(getSubscriptionId(),getResourceGroup());
    }
 
 
-   // TODO: remove later. This is stubbing the fact that we dont have os disk creation or many other things yet
+   // TODO: remove later. Write your network interface name to be used here. You must do it in Azure Portal for now.
    private String getNetworkInterface() {
       return "janneinterface";
    }
@@ -139,8 +147,7 @@ public class VirtualMachineApiLiveTest extends AbstractAzureComputeApiLiveTest {
       VirtualMachineProperties.NetworkProfile networkProfile =
               VirtualMachineProperties.NetworkProfile.create(networkInterfaces);
       VirtualMachineProperties.DiagnosticsProfile.BootDiagnostics bootDiagnostics =
-              VirtualMachineProperties.DiagnosticsProfile.BootDiagnostics.create(true,
-                      "https://" + getResourceGroup() + "2760.blob.core.windows.net/");
+              VirtualMachineProperties.DiagnosticsProfile.BootDiagnostics.create(true, blob);
       VirtualMachineProperties.DiagnosticsProfile diagnosticsProfile =
               VirtualMachineProperties.DiagnosticsProfile.create(bootDiagnostics);
       VirtualMachineProperties properties = VirtualMachineProperties.create(null,
