@@ -168,11 +168,6 @@ public class VirtualMachineApiLiveTest extends BaseAzureComputeApiLiveTest {
    }
 
 
-   // TODO: remove later. Write your network interface name to be used here. You must do it in Azure Portal for now.
-   private String getNetworkInterface() {
-      return "janneinterface";
-   }
-
    private VirtualMachineProperties getProperties(String blob, String nic) {
       VirtualMachineProperties.HardwareProfile hwProf = VirtualMachineProperties.HardwareProfile.create("Standard_D1");
       VirtualMachineProperties.ImageReference imgRef = VirtualMachineProperties.ImageReference.create(
