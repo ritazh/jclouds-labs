@@ -21,25 +21,9 @@ import java.io.Closeable;
 import javax.ws.rs.PathParam;
 
 import org.jclouds.azurecomputearm.domain.AffinityGroup;
-import org.jclouds.azurecomputearm.features.ResourceGroupApi;
+import org.jclouds.azurecomputearm.domain.Availability;
+import org.jclouds.azurecomputearm.features.*;
 
-import org.jclouds.azurecomputearm.features.AffinityGroupApi;
-
-import org.jclouds.azurecomputearm.features.CloudServiceApi;
-import org.jclouds.azurecomputearm.features.DeploymentApi;
-import org.jclouds.azurecomputearm.features.DiskApi;
-import org.jclouds.azurecomputearm.features.LocationApi;
-import org.jclouds.azurecomputearm.features.NetworkSecurityGroupApi;
-import org.jclouds.azurecomputearm.features.OSImageApi;
-import org.jclouds.azurecomputearm.features.OperationApi;
-import org.jclouds.azurecomputearm.features.ReservedIPAddressApi;
-import org.jclouds.azurecomputearm.features.ServiceCertificatesApi;
-import org.jclouds.azurecomputearm.features.StorageAccountApi;
-import org.jclouds.azurecomputearm.features.SubscriptionApi;
-import org.jclouds.azurecomputearm.features.TrafficManagerApi;
-import org.jclouds.azurecomputearm.features.VirtualMachineApi;
-import org.jclouds.azurecomputearm.features.VirtualNetworkApi;
-import org.jclouds.azurecomputearm.features.VMImageApi;
 import org.jclouds.rest.annotations.Delegate;
 
 /**
@@ -103,6 +87,15 @@ public interface AzureComputeApi extends Closeable {
     */
    @Delegate
    OSImageApi getOSImageApi();
+
+   /**
+    * The Availability set API includes operations for managing the availability sets in your subscription.
+    *
+    * @see <a href="http://msdn.microsoft.com/en-us/library/jj157175">docs</a>
+    */
+   @Delegate
+   AvailabilitySetApi getAvailabilitySetApi(@PathParam("subscriptionId") String subscriptionId,
+                                            @PathParam("resourceGroup") String resourceGroup);
 
    /**
     * The Service Management API includes operations for Tracking Asynchronous Service Management Requests.

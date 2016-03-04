@@ -1,0 +1,10 @@
+{
+      "id": "/subscriptions/subscriptionid/locations/eastasia",
+      "name": "name",
+      "type": "Microsoft.Compute/availabilitySets",
+      "location": "eastasia",
+      "properties": {
+        "platformUpdateDomainCount": 5,
+        "platformFaultDomainCount": 3
+      }
+    }
