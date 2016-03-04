@@ -19,6 +19,8 @@ package org.jclouds.azurecomputearm;
 import static org.jclouds.reflect.Reflection2.typeToken;
 import java.net.URI;
 import java.util.Properties;
+
+import com.google.auto.service.AutoService;
 import org.jclouds.apis.ApiMetadata;
 import org.jclouds.azurecomputearm.compute.config.AzureComputeServiceContextModule;
 import org.jclouds.azurecomputearm.config.AzureComputeHttpApiModule;
@@ -37,6 +39,7 @@ import com.google.inject.Module;
 /**
  * Implementation of {@link ApiMetadata} for Microsoft Azure Resource Manager REST API
  */
+@AutoService(ApiMetadata.class)
 public class AzureManagementApiMetadata extends BaseHttpApiMetadata<AzureComputeApi> {
 
    @Override

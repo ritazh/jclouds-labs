@@ -25,7 +25,7 @@ import org.testng.annotations.Test;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
-@Test(groups = "unit", testName = "AvailabilitySetApiMockTest")
+@Test(groups = "unit", testName = "AvailabilitySetApiMockTest", singleThreaded = true)
 public class AvailabilitySetAPIMockTest extends BaseAzureComputeApiMockTest {
 
    public void testList() throws Exception {

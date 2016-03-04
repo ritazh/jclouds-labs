@@ -25,7 +25,7 @@ import org.testng.annotations.Test;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
-@Test(groups = "unit", testName = "LocationApiMockTest")
+@Test(groups = "unit", testName = "LocationApiMockTest", singleThreaded = true)
 public class LocationAPIMockTest extends BaseAzureComputeApiMockTest {
 
    public void testList() throws Exception {
@@ -34,7 +34,7 @@ public class LocationAPIMockTest extends BaseAzureComputeApiMockTest {
       assertEquals(locationAPI.list(), ImmutableList.of(
               Location.create("/subscriptions/subscriptionid/locations/eastasia","eastasia","East Asia",114.188,22.267)
       ));
-      assertSent(server, "GET", "/subscriptions/subscriptionid/locations?api-version=2015-06-15");
+      assertSent(server, "GET", "/subscriptions/subscriptionid/locations?api-version=2015-11-01");
    }
 
    public void testEmptyList() throws Exception {
@@ -44,6 +44,6 @@ public class LocationAPIMockTest extends BaseAzureComputeApiMockTest {
 
       assertTrue(locationAPI.list().isEmpty());
 
-      assertSent(server, "GET", "/subscriptions/subscriptionid/locations?api-version=2015-06-15");
+      assertSent(server, "GET", "/subscriptions/subscriptionid/locations?api-version=2015-11-01");
    }
 }

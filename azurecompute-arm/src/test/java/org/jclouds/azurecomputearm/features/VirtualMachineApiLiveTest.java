@@ -158,7 +158,7 @@ public class VirtualMachineApiLiveTest extends BaseAzureComputeApiLiveTest {
    @Test(dependsOnMethods = "testList")
    public void testDelete() {
       api().delete(getName());
-      StorageAccountApi storageApi = api.getStorageAccountApi(getSubscriptionId(), getResourceGroup());
+      //StorageAccountApi storageApi = api.getStorageAccountApi(getSubscriptionId(), getResourceGroup());
       //TODO: delete storage and other resources after VM is destroyed. storageApi.delete(getName() + "storage");
 
    }
@@ -168,46 +168,29 @@ public class VirtualMachineApiLiveTest extends BaseAzureComputeApiLiveTest {
    }
 
 
-   // TODO: remove later. Write your network interface name to be used here. You must do it in Azure Portal for now.
-   private String getNetworkInterface() {
-      return "janneinterface";
-   }
-
    private VirtualMachineProperties getProperties(String blob, String nic) {
-      VirtualMachineProperties.HardwareProfile hwProf = VirtualMachineProperties.HardwareProfile.create("Standard_D1");
-      VirtualMachineProperties.ImageReference imgRef = VirtualMachineProperties.ImageReference.create(
-              "MicrosoftWindowsServerEssentials",
+      HardwareProfile hwProf = HardwareProfile.create("Standard_D1");
+      ImageReference imgRef = ImageReference.create("MicrosoftWindowsServerEssentials",
               "WindowsServerEssentials", "WindowsServerEssentials","latest");
-      VirtualMachineProperties.VHD vhd = VirtualMachineProperties.VHD.create(
-              blob + "vhds/" + getName()+ ".vhd");
-      VirtualMachineProperties.VHD vhd2 = VirtualMachineProperties.VHD.create(
-              blob + "vhds/" + getName()+ "data.vhd");
-      VirtualMachineProperties.DataDisk dataDisk = VirtualMachineProperties.DataDisk.create(getName() + "data","100",0,
-              vhd2,"Empty");
-      VirtualMachineProperties.OSDisk osDisk = VirtualMachineProperties.OSDisk.create(null,getName(),
-              vhd,"ReadWrite","FromImage");
-      VirtualMachineProperties.StorageProfile storageProfile = VirtualMachineProperties.StorageProfile.create(imgRef,
-              osDisk, null);
-      VirtualMachineProperties.OSProfile.WindowsConfiguration windowsConfig =
-              VirtualMachineProperties.OSProfile.WindowsConfiguration.create(false,null,null,true,null);
-      VirtualMachineProperties.OSProfile osProfile = VirtualMachineProperties.OSProfile.create(
-              getName(),"azureuser","RFe3&432dg",null,null,windowsConfig);
-      VirtualMachineProperties.NetworkProfile.NetworkInterfaceId networkInterface =
-              VirtualMachineProperties.NetworkProfile.NetworkInterfaceId.create("/subscriptions/" + getSubscriptionId()+
-                      "/resourceGroups/" + getResourceGroup() + "/providers/Microsoft.Network/networkInterfaces/" +
-                      nic);
-      List<VirtualMachineProperties.NetworkProfile.NetworkInterfaceId> networkInterfaces =
-              new ArrayList<VirtualMachineProperties.NetworkProfile.NetworkInterfaceId>();
+      VHD vhd = VHD.create(blob + "vhds/" + getName()+ ".vhd");
+      VHD vhd2 = VHD.create(blob + "vhds/" + getName()+ "data.vhd");
+      DataDisk dataDisk = DataDisk.create(getName() + "data","100",0, vhd2,"Empty");
+      OSDisk osDisk = OSDisk.create(null,getName(), vhd,"ReadWrite","FromImage");
+      StorageProfile storageProfile = StorageProfile.create(imgRef, osDisk, null);
+      OSProfile.WindowsConfiguration windowsConfig = OSProfile.WindowsConfiguration.create(false,null,null,true,null);
+      OSProfile osProfile = OSProfile.create(getName(),"azureuser","RFe3&432dg",null,null,windowsConfig);
+      NetworkProfile.NetworkInterfaceId networkInterface =
+              NetworkProfile.NetworkInterfaceId.create("/subscriptions/" + getSubscriptionId()+
+                  "/resourceGroups/" + getResourceGroup() + "/providers/Microsoft.Network/networkInterfaces/" + nic);
+      List<NetworkProfile.NetworkInterfaceId> networkInterfaces =
+              new ArrayList<NetworkProfile.NetworkInterfaceId>();
       networkInterfaces.add(networkInterface);
-      VirtualMachineProperties.NetworkProfile networkProfile =
-              VirtualMachineProperties.NetworkProfile.create(networkInterfaces);
-      VirtualMachineProperties.DiagnosticsProfile.BootDiagnostics bootDiagnostics =
-              VirtualMachineProperties.DiagnosticsProfile.BootDiagnostics.create(true, blob);
-      VirtualMachineProperties.DiagnosticsProfile diagnosticsProfile =
-              VirtualMachineProperties.DiagnosticsProfile.create(bootDiagnostics);
+      NetworkProfile networkProfile = NetworkProfile.create(networkInterfaces);
+      DiagnosticsProfile.BootDiagnostics bootDiagnostics =
+              DiagnosticsProfile.BootDiagnostics.create(true, blob);
+      DiagnosticsProfile diagnosticsProfile = DiagnosticsProfile.create(bootDiagnostics);
       VirtualMachineProperties properties = VirtualMachineProperties.create(null,
               null, null, hwProf, storageProfile, osProfile,networkProfile, diagnosticsProfile, "Creating");
-
       return properties;
    }
 }

@@ -26,7 +26,7 @@ import org.jclouds.azurecomputearm.domain.Subscription;
 import org.jclouds.azurecomputearm.internal.BaseAzureComputeApiMockTest;
 import org.testng.annotations.Test;
 
-@Test(groups = "unit", testName = "SubscriptionApiMockTest")
+@Test(groups = "unit", testName = "SubscriptionApiMockTest", singleThreaded = true)
 public class SubscriptionApiMockTest extends BaseAzureComputeApiMockTest {
 
    public void testList() throws Exception {

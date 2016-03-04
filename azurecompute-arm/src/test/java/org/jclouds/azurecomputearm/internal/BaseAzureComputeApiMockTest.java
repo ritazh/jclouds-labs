@@ -70,8 +70,9 @@ public class BaseAzureComputeApiMockTest {
       server = new MockWebServer();
       server.play();
       Properties properties = new Properties();
+      AzureComputeProviderMetadata pm = AzureComputeProviderMetadata.builder().build();
       properties.put(CREDENTIAL_TYPE, BEARER_TOKEN_CREDENTIALS.toString());
-      ApiContext<AzureComputeApi> ctx = ContextBuilder.newBuilder("azurecompute-arm")
+      ApiContext<AzureComputeApi> ctx = ContextBuilder.newBuilder(pm)
               .credentials("", MOCK_BEARER_TOKEN)
               .endpoint(url(""))
               .modules(modules)

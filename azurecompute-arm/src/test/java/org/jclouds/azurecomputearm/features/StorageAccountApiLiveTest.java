@@ -55,7 +55,7 @@ public class StorageAccountApiLiveTest extends BaseAzureComputeApiLiveTest {
 
    @Test()
    public void testIsAvailable() {
-      assertTrue(api().isAvailable(NAME).nameAvailable() == "true");
+      assertTrue(api().isAvailable(NAME).nameAvailable().equals("true"));
    }
 
    @Test(dependsOnMethods = "testIsAvailable")
@@ -108,7 +108,7 @@ public class StorageAccountApiLiveTest extends BaseAzureComputeApiLiveTest {
    @AfterClass(alwaysRun = true)
    public void testDelete() {
       api().delete(NAME);
-      assertFalse(api().isAvailable(NAME).nameAvailable() == "false");
+      assertFalse(api().isAvailable(NAME).nameAvailable().equals("false"));
    }
 
    private StorageAccountApi api() {

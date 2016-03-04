@@ -36,7 +36,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Test(groups = "unit", testName = "StorageAccountApiMockTest")
+@Test(groups = "unit", testName = "StorageAccountApiMockTest", singleThreaded = true)
 public class StorageAccountApiMockTest extends BaseAzureComputeApiMockTest {
 
    private String subsriptionId = "1234";

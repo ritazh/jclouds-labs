@@ -61,7 +61,6 @@ public interface AvailabilitySetApi {
            "\"location\":\"{location}\",\"tags\":%7B%7D,\"properties\":%7B\"platformUpdateDomainCount\": " +
            "{updateDomainCount},\"platformFaultDomainCount\": {faultDomainCount}%7D%7D")
    @Path("/availabilitySets/{availabilitySet}")
-   @MapBinder(BindToJsonPayload.class)
    @Fallback(EmptyListOnNotFoundOr404.class)
    AvailabilitySet create(@PathParam("availabilitySet") String availabilitySet, @PayloadParam("name") String name,
            @PayloadParam("location") String location, @PayloadParam("updateDomainCount") int updateDomainCount,

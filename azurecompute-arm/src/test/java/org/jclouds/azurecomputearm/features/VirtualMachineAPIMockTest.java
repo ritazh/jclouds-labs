@@ -18,9 +18,7 @@ package org.jclouds.azurecomputearm.features;
 
 import com.google.common.collect.ImmutableList;
 import com.squareup.okhttp.mockwebserver.MockResponse;
-import org.jclouds.azurecomputearm.domain.Location;
-import org.jclouds.azurecomputearm.domain.VirtualMachine;
-import org.jclouds.azurecomputearm.domain.VirtualMachineProperties;
+import org.jclouds.azurecomputearm.domain.*;
 import org.jclouds.azurecomputearm.internal.BaseAzureComputeApiMockTest;
 import org.testng.annotations.Test;
 
@@ -31,7 +29,7 @@ import java.util.List;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
-@Test(groups = "unit", testName = "VirtualMachineApiMockTest")
+@Test(groups = "unit", testName = "VirtualMachineApiMockTest", singleThreaded = true)
 public class VirtualMachineAPIMockTest extends BaseAzureComputeApiMockTest {
 
    public void testGet() throws Exception {
@@ -62,37 +60,26 @@ public class VirtualMachineAPIMockTest extends BaseAzureComputeApiMockTest {
    }
 
    private VirtualMachineProperties getProperties() {
-      VirtualMachineProperties.HardwareProfile hwProf = VirtualMachineProperties.HardwareProfile.create("Standard_D1");
-      VirtualMachineProperties.ImageReference imgRef = VirtualMachineProperties.ImageReference.create("publisher",
-              "offer", "sku","ver");
-      VirtualMachineProperties.VHD vhd = VirtualMachineProperties.VHD.create(
-              "https://groupname2760.blob.core.windows.net/vhds/windowsmachine201624102936.vhd");
-      List<VirtualMachineProperties.DataDisk> dataDisks = new ArrayList<VirtualMachineProperties.DataDisk>();
-      VirtualMachineProperties.OSDisk osDisk = VirtualMachineProperties.OSDisk.create("Windows","windowsmachine",
-              vhd,"ReadWrite","FromImage");
-      VirtualMachineProperties.StorageProfile storageProfile = VirtualMachineProperties.StorageProfile.create(imgRef,
-              osDisk, dataDisks);
-      VirtualMachineProperties.OSProfile.WindowsConfiguration windowsConfig =
-              VirtualMachineProperties.OSProfile.WindowsConfiguration.create(false,null,null,true,null);
-      VirtualMachineProperties.OSProfile osProfile = VirtualMachineProperties.OSProfile.create(
-              "windowsmachine","azureuser",null,null,null,windowsConfig);
-      VirtualMachineProperties.NetworkProfile.NetworkInterfaceId networkInterface =
-              VirtualMachineProperties.NetworkProfile.NetworkInterfaceId.create("/subscriptions/626f67f6-8fd0-xxxx-" +
+      HardwareProfile hwProf = HardwareProfile.create("Standard_D1");
+      ImageReference imgRef = ImageReference.create("publisher", "offer", "sku","ver");
+      VHD vhd = VHD.create("https://groupname2760.blob.core.windows.net/vhds/windowsmachine201624102936.vhd");
+      List<DataDisk> dataDisks = new ArrayList<DataDisk>();
+      OSDisk osDisk = OSDisk.create("Windows","windowsmachine", vhd,"ReadWrite","FromImage");
+      StorageProfile storageProfile = StorageProfile.create(imgRef, osDisk, dataDisks);
+      OSProfile.WindowsConfiguration windowsConfig = OSProfile.WindowsConfiguration.create(false,null,null,true,null);
+      OSProfile osProfile = OSProfile.create("windowsmachine","azureuser",null,null,null,windowsConfig);
+      NetworkProfile.NetworkInterfaceId networkInterface =
+              NetworkProfile.NetworkInterfaceId.create("/subscriptions/626f67f6-8fd0-xxxx-" +
                       "yyyy-e3ce95f7dfec/resourceGroups/groupname/providers/Microsoft.Network/networkInterfaces/" +
                       "windowsmachine167");
-      List<VirtualMachineProperties.NetworkProfile.NetworkInterfaceId> networkInterfaces =
-              new ArrayList<VirtualMachineProperties.NetworkProfile.NetworkInterfaceId>();
+      List<NetworkProfile.NetworkInterfaceId> networkInterfaces = new ArrayList<NetworkProfile.NetworkInterfaceId>();
       networkInterfaces.add(networkInterface);
-      VirtualMachineProperties.NetworkProfile networkProfile =
-              VirtualMachineProperties.NetworkProfile.create(networkInterfaces);
-      VirtualMachineProperties.DiagnosticsProfile.BootDiagnostics bootDiagnostics =
-              VirtualMachineProperties.DiagnosticsProfile.BootDiagnostics.create(true,
+      NetworkProfile networkProfile = NetworkProfile.create(networkInterfaces);
+      DiagnosticsProfile.BootDiagnostics bootDiagnostics = DiagnosticsProfile.BootDiagnostics.create(true,
                       "https://groupname2760.blob.core.windows.net/");
-      VirtualMachineProperties.DiagnosticsProfile diagnosticsProfile =
-              VirtualMachineProperties.DiagnosticsProfile.create(bootDiagnostics);
+      DiagnosticsProfile diagnosticsProfile = DiagnosticsProfile.create(bootDiagnostics);
       VirtualMachineProperties properties = VirtualMachineProperties.create("27ee085b-d707-xxxx-yyyy-2370e2eb1cc1",
               null, null, hwProf, storageProfile, osProfile,networkProfile, diagnosticsProfile, "Creating");
-
       return properties;
    }
 

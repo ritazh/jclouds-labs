@@ -70,8 +70,7 @@ public class AvailabilitySetAPILiveTest extends AbstractAzureComputeApiLiveTest 
 
    @Test
    public void testCreate() {
-      AvailabilitySet availabilitySet = api().create(getName(),getName(),
-              LOCATION, COUNT, COUNT);
+      AvailabilitySet availabilitySet = api().create(getName(),getName(),LOCATION, COUNT, COUNT);
       assertTrue(!availabilitySet.id().isEmpty());
       Assert.assertEquals(LOCATION, availabilitySet.location());
       Assert.assertEquals(getName(), availabilitySet.name());

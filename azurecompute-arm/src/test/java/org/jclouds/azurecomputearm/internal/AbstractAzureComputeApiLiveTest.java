@@ -28,8 +28,10 @@ import java.util.Random;
 
 import org.jclouds.apis.BaseApiLiveTest;
 import org.jclouds.azurecomputearm.AzureComputeApi;
+import org.jclouds.azurecomputearm.AzureComputeProviderMetadata;
 import org.jclouds.azurecomputearm.util.ConflictManagementPredicate;
 import org.jclouds.compute.config.ComputeServiceProperties;
+import org.jclouds.providers.ProviderMetadata;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 
@@ -66,6 +68,12 @@ public abstract class AbstractAzureComputeApiLiveTest extends BaseApiLiveTest<Az
    public void setup() {
       super.setup();
       operationSucceeded = new ConflictManagementPredicate(api, 600, 5, 5, SECONDS);
+   }
+
+   @Override
+   protected ProviderMetadata createProviderMetadata() {
+      AzureComputeProviderMetadata pm = AzureComputeProviderMetadata.builder().build();
+      return pm;
    }
 
    protected String getSubscriptionId() {

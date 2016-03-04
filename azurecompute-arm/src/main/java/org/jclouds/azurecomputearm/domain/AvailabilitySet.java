@@ -43,13 +43,11 @@ public abstract class AvailabilitySet {
         /**
          * A platform Update Domain Count
          */
-        @Nullable
         public abstract int platformUpdateDomainCount();
 
         /**
          * A platform Fault Domain Count
          */
-        @Nullable
         public abstract int platformFaultDomainCount();
 
         /**
