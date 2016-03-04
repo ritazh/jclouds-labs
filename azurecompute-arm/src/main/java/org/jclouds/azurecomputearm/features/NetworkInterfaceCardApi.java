@@ -16,12 +16,11 @@
  */
 package org.jclouds.azurecomputearm.features;
 
-import org.jclouds.Fallbacks.VoidOnNotFoundOr404;
 import org.jclouds.Fallbacks.EmptyListOnNotFoundOr404;
 import org.jclouds.Fallbacks.NullOnNotFoundOr404;
-
+import org.jclouds.Fallbacks.VoidOnNotFoundOr404;
+import org.jclouds.azurecomputearm.domain.NetworkInterfaceCard;
 import org.jclouds.azurecomputearm.domain.VirtualNetwork;
-
 import org.jclouds.azurecomputearm.oauth.v2.filters.OAuthFilter;
 import org.jclouds.rest.annotations.*;
 import org.jclouds.rest.binders.BindToJsonPayload;
@@ -36,34 +35,35 @@ import java.util.List;
 @Headers(keys = "x-ms-version", values = "{jclouds.api-version}")
 @RequestFilters(OAuthFilter.class)
 @Consumes(MediaType.APPLICATION_JSON)
-public interface VirtualNetworkApi {
 
-   @Named("virtualnetwork:list")
-   @Path("virtualNetworks")
+public interface NetworkInterfaceCardApi {
+
+   @Named("networkinterfacecard:list")
+   @Path("networkInterfaces")
    @SelectJson("value")
    @GET
    @Fallback(EmptyListOnNotFoundOr404.class)
-   List<VirtualNetwork> listVirtualNetworks();
+   List<NetworkInterfaceCard> listNetworkInterfaceCards();
 
-   @Named("virtualnetwork:create_or_update")
-   @Path("virtualNetworks/{virtualnetworkname}")
+   @Named("networkinterfacecard:create_or_update")
+   @Path("networkInterfaces/{networkinterfacecardname}")
    @MapBinder(BindToJsonPayload.class)
    @PUT
    @Fallback(NullOnNotFoundOr404.class)
-   VirtualNetwork createOrUpdateVirtualNetwork(@PathParam("virtualnetworkname") String virtualnetworkname,
-                                               //VirtualNetworkOptions virtualNetworkOptions);
-                                               @PayloadParam("location") String location,
-                                               @PayloadParam("properties")VirtualNetwork.VirtualNetworkProperties properties);
+   NetworkInterfaceCard createOrUpdateNetworkInterfaceCard(@PathParam("networkinterfacecardname") String networkinterfacecardname,
+                                                           @PayloadParam("location") String location,
+                                                           @PayloadParam("properties") NetworkInterfaceCard.NetworkInterfaceCardProperties properties);
 
-   @Named("virtualnetwork:get")
-   @Path("virtualNetworks/{virtualnetworkname}")
+
+   @Named("networkinterfacecard:get")
+   @Path("networkInterfaces/{networkinterfacecardname}")
    @GET
    @Fallback(NullOnNotFoundOr404.class)
-   VirtualNetwork getVirtualNetwork(@PathParam("virtualnetworkname") String virtualnetworkname);
+   NetworkInterfaceCard getNetworkInterfaceCard(@PathParam("networkinterfacecardname") String networkinterfacecardname);
 
-   @Named("virtualnetwork:delete")
-   @Path("virtualNetworks/{virtualnetworkname}")
+   @Named("networkinterfacecard:delete")
+   @Path("networkInterfaces/{networkinterfacecardname}")
    @DELETE
    @Fallback(VoidOnNotFoundOr404.class)
-   void deleteVirtualNetwork(@PathParam("virtualnetworkname") String virtualnetworkname);
+   void deleteNetworkInterfaceCard(@PathParam("networkinterfacecardname") String networkinterfacecardname);
 }

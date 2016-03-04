@@ -16,12 +16,10 @@
  */
 package org.jclouds.azurecomputearm.features;
 
-import org.jclouds.Fallbacks.VoidOnNotFoundOr404;
 import org.jclouds.Fallbacks.EmptyListOnNotFoundOr404;
 import org.jclouds.Fallbacks.NullOnNotFoundOr404;
-
-import org.jclouds.azurecomputearm.domain.VirtualNetwork;
-
+import org.jclouds.Fallbacks.VoidOnNotFoundOr404;
+import org.jclouds.azurecomputearm.domain.Subnet;
 import org.jclouds.azurecomputearm.oauth.v2.filters.OAuthFilter;
 import org.jclouds.rest.annotations.*;
 import org.jclouds.rest.binders.BindToJsonPayload;
@@ -31,39 +29,38 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
 
-@Path("/subscriptions/{subscriptionid}/resourcegroups/{resourcegroup}/providers/Microsoft.Network/")
+@Path("/subscriptions/{subscriptionid}/resourcegroups/{resourcegroup}/providers/Microsoft.Network/virtualNetworks/{virtualnetwork}")
+
 @QueryParams(keys = "api-version", values = "2015-06-15")
 @Headers(keys = "x-ms-version", values = "{jclouds.api-version}")
 @RequestFilters(OAuthFilter.class)
 @Consumes(MediaType.APPLICATION_JSON)
-public interface VirtualNetworkApi {
+public interface SubnetApi {
 
-   @Named("virtualnetwork:list")
-   @Path("virtualNetworks")
+   @Named("subnet:list")
+   @Path("subnets")
    @SelectJson("value")
    @GET
    @Fallback(EmptyListOnNotFoundOr404.class)
-   List<VirtualNetwork> listVirtualNetworks();
+   List<Subnet> listSubnets();
 
-   @Named("virtualnetwork:create_or_update")
-   @Path("virtualNetworks/{virtualnetworkname}")
+   @Named("subnet:create_or_update")
+   @Path("subnets/{subnetname}")
    @MapBinder(BindToJsonPayload.class)
    @PUT
    @Fallback(NullOnNotFoundOr404.class)
-   VirtualNetwork createOrUpdateVirtualNetwork(@PathParam("virtualnetworkname") String virtualnetworkname,
-                                               //VirtualNetworkOptions virtualNetworkOptions);
-                                               @PayloadParam("location") String location,
-                                               @PayloadParam("properties")VirtualNetwork.VirtualNetworkProperties properties);
+   Subnet createOrUpdateSubnet(@PathParam("subnetname") String subnetName,
+                               @PayloadParam("properties") Subnet.SubnetProperties properties);
 
-   @Named("virtualnetwork:get")
-   @Path("virtualNetworks/{virtualnetworkname}")
+   @Named("subnet:get")
+   @Path("subnets/{subnetname}")
    @GET
    @Fallback(NullOnNotFoundOr404.class)
-   VirtualNetwork getVirtualNetwork(@PathParam("virtualnetworkname") String virtualnetworkname);
+   Subnet getSubnet(@PathParam("subnetname") String subnetname);
 
-   @Named("virtualnetwork:delete")
-   @Path("virtualNetworks/{virtualnetworkname}")
+   @Named("subnet:delete")
+   @Path("subnets/{subnetname}")
    @DELETE
    @Fallback(VoidOnNotFoundOr404.class)
-   void deleteVirtualNetwork(@PathParam("virtualnetworkname") String virtualnetworkname);
+   void deleteSubnet(@PathParam("subnetname") String subnetname);
 }

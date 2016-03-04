@@ -39,6 +39,8 @@ import org.jclouds.azurecomputearm.features.SubscriptionApi;
 import org.jclouds.azurecomputearm.features.TrafficManagerApi;
 import org.jclouds.azurecomputearm.features.VirtualMachineApi;
 import org.jclouds.azurecomputearm.features.VirtualNetworkApi;
+import org.jclouds.azurecomputearm.features.SubnetApi;
+import org.jclouds.azurecomputearm.features.NetworkInterfaceCardApi;
 import org.jclouds.azurecomputearm.features.VMImageApi;
 import org.jclouds.rest.annotations.Delegate;
 
@@ -128,13 +130,33 @@ public interface AzureComputeApi extends Closeable {
    @Delegate
    SubscriptionApi getSubscriptionApi();
 
+/**
+    * The Service Management API includes operations for managing the NICs in your subscription.
+    *
+    * @see <a href="http://msdn.microsoft.com/en-us/library/jj157182.aspx">docs</a>
+    */
+   @Delegate
+   NetworkInterfaceCardApi getNetworkInterfaceCardApi(@PathParam("subscriptionid") String subscriptionid,
+                                          @PathParam("resourcegroup") String resourcegroup);
+
    /**
     * The Service Management API includes operations for managing the virtual networks in your subscription.
     *
     * @see <a href="http://msdn.microsoft.com/en-us/library/jj157182.aspx">docs</a>
     */
    @Delegate
-   VirtualNetworkApi getVirtualNetworkApi();
+   VirtualNetworkApi getVirtualNetworkApi(@PathParam("subscriptionid") String subscriptionid,
+                                                  @PathParam("resourcegroup") String resourcegroup);
+
+   /**
+    * The Service Management API includes operations for managing the subnets in your virtual network.
+    *
+    * @see <a href="http://msdn.microsoft.com/en-us/library/jj157182.aspx">docs</a>
+    */
+   @Delegate
+   SubnetApi getSubnetApi(@PathParam("subscriptionid") String subscriptionid,
+                          @PathParam("resourcegroup") String resourcegroup,
+                          @PathParam("virtualnetwork") String virtualnetwork);
 
    /**
     * The Service Management API includes operations for managing the storage accounts in your subscription.

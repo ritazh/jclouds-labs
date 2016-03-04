@@ -19,27 +19,22 @@ package org.jclouds.azurecomputearm.internal;
 import static com.google.common.collect.Iterables.find;
 import static com.google.common.collect.Iterables.tryFind;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.Properties;
 
+import com.google.common.base.Strings;
 import org.jclouds.azurecomputearm.AzureTestUtils;
 import org.jclouds.azurecomputearm.AzureTestUtils.SameVirtualNetworkSiteNamePredicate;
-import org.jclouds.azurecomputearm.domain.CloudService;
-import org.jclouds.azurecomputearm.domain.CreateStorageServiceParams;
-import org.jclouds.azurecomputearm.domain.Deployment;
-import org.jclouds.azurecomputearm.domain.DeploymentParams;
-import org.jclouds.azurecomputearm.domain.NetworkConfiguration;
-import org.jclouds.azurecomputearm.domain.NetworkConfiguration.AddressSpace;
-import org.jclouds.azurecomputearm.domain.NetworkConfiguration.Subnet;
-import org.jclouds.azurecomputearm.domain.NetworkConfiguration.VirtualNetworkConfiguration;
-import org.jclouds.azurecomputearm.domain.NetworkConfiguration.VirtualNetworkSite;
-import org.jclouds.azurecomputearm.domain.StorageService;
+import org.jclouds.azurecomputearm.domain.*;
+import org.jclouds.azurecomputearm.features.NetworkInterfaceCardApi;
+import org.jclouds.azurecomputearm.features.SubnetApi;
+import org.jclouds.azurecomputearm.features.VirtualNetworkApi;
 import org.jclouds.azurecomputearm.util.ConflictManagementPredicate;
+import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.jclouds.azurecomputearm.internal.AzureLiveTestUtils;
@@ -50,22 +45,26 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class BaseAzureComputeApiLiveTest extends AbstractAzureComputeApiLiveTest {
 
-   public static final String DEFAULT_ADDRESS_SPACE = "10.0.0.0/20";
+   public static final String DEFAULT_ADDRESS_SPACE = "10.2.0.0/20";
 
-   public static final String DEFAULT_SUBNET_ADDRESS_SPACE = "10.0.0.0/23";
+   public static final String DEFAULT_SUBNET_ADDRESS_SPACE = "10.2.0.0/24";
+
+   public static final String DEFAULT_VIRTUALNETWORK_ADDRESS_PREFIX = "10.2.0.0/16";
 
    public static final String VIRTUAL_NETWORK_NAME = "jclouds-virtual-network-live-test";
 
-   public static final String DEFAULT_SUBNET_NAME = "jclouds-1";
+   public static final String DEFAULT_SUBNET_NAME = "jcloudslivetestsubnet";
 
-   public static final String LOCATION = "West Europe";
+   public static final String NETWORKINTERFACECARD_NAME = "jcloudsNic";
+
+   public static final String LOCATION = "northeurope";
 
    public static final String IMAGE_NAME
            = "b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-14_04_1-LTS-amd64-server-20150123-en-us-30GB";
 
    protected StorageService storageService;
 
-   protected VirtualNetworkSite virtualNetworkSite;
+   //protected VirtualNetworkSite virtualNetworkSite;
 
    private String storageServiceName = null;
 
@@ -77,13 +76,30 @@ public class BaseAzureComputeApiLiveTest extends AbstractAzureComputeApiLiveTest
       return storageServiceName;
    }
 
+
+   protected String getSubscriptionId() {
+      String subscriptionId = null;
+      if(System.getProperties().containsKey("test.azurecompute-arm.subscriptionid"))
+         subscriptionId = System.getProperty("test.azurecompute-arm.subscriptionid");
+      Assert.assertNotNull(subscriptionId);
+      return subscriptionId;
+   }
+
+   protected String getResourceGroup() {
+      String resourceGroup = null;
+      if(System.getProperties().containsKey("test.azurecompute-arm.resourcegroup"))
+         resourceGroup = System.getProperty("test.azurecompute-arm.resourcegroup");
+      Assert.assertNotNull(resourceGroup);
+      return resourceGroup;
+   }
+
    @BeforeClass
    @Override
    public void setup() {
       super.setup();
 
       operationSucceeded = new ConflictManagementPredicate(api, 600, 5, 5, SECONDS);
-
+  /*
       final CreateStorageServiceParams params = CreateStorageServiceParams.builder().
               serviceName(getStorageServiceName()).
               label(getStorageServiceName()).
@@ -91,20 +107,21 @@ public class BaseAzureComputeApiLiveTest extends AbstractAzureComputeApiLiveTest
               accountType(StorageService.AccountType.Standard_LRS).
               build();
       storageService = getOrCreateStorageService(getStorageServiceName(), params);
+  */
    }
 
    @AfterClass(alwaysRun = true)
    @Override
    protected void tearDown() {
       super.tearDown();
-
+/*
       assertTrue(new ConflictManagementPredicate(api) {
          @Override
          protected String operation() {
             return api.getStorageAccountApi().delete(getStorageServiceName());
          }
       }.apply(getStorageServiceName()));
-
+*/
 
 
    }
@@ -159,48 +176,73 @@ public class BaseAzureComputeApiLiveTest extends AbstractAzureComputeApiLiveTest
       return ss;
    }
 
-   protected VirtualNetworkSite getOrCreateVirtualNetworkSite(final String virtualNetworkSiteName, String location) {
-      final List<VirtualNetworkSite> current = AzureTestUtils.getVirtualNetworkSite(api);
+   protected VirtualNetwork getOrCreateVirtualNetwork(final String virtualNetworkName, String location) {
 
-      final Optional<VirtualNetworkSite> optionalVirtualNetworkSite = tryFind(
-              current,
-              new SameVirtualNetworkSiteNamePredicate(virtualNetworkSiteName));
+      VirtualNetworkApi vnApi = api.getVirtualNetworkApi(getSubscriptionId(), getResourceGroup());
+      VirtualNetwork vn = vnApi.getVirtualNetwork(virtualNetworkName);
 
-      if (optionalVirtualNetworkSite.isPresent()) {
-         return optionalVirtualNetworkSite.get();
+      if (vn != null) {
+         return vn;
       }
 
-      current.add(VirtualNetworkSite.create(UUID.randomUUID().toString(),
-              virtualNetworkSiteName,
-              location,
-              AddressSpace.create(DEFAULT_ADDRESS_SPACE),
-              ImmutableList.of(Subnet.create(DEFAULT_SUBNET_NAME, DEFAULT_SUBNET_ADDRESS_SPACE, null))));
+      final VirtualNetwork.VirtualNetworkProperties virtualNetworkProperties =
+              VirtualNetwork.VirtualNetworkProperties.builder()
+                      .addressSpace(
+                              VirtualNetwork.AddressSpace.builder()
+                                 .addressPrefixes(Arrays.asList(DEFAULT_VIRTUALNETWORK_ADDRESS_PREFIX)).build()
+                      ).build();
 
-      final NetworkConfiguration networkConfiguration
-              = NetworkConfiguration.create(VirtualNetworkConfiguration.create(null, current));
+      vn = vnApi.createOrUpdateVirtualNetwork(VIRTUAL_NETWORK_NAME, LOCATION, virtualNetworkProperties);
+      return vn;
+   }
 
-      VirtualNetworkSite vns;
-      try {
-         vns = find(
-                 api.getVirtualNetworkApi().getNetworkConfiguration().virtualNetworkConfiguration().
-                 virtualNetworkSites(),
-                 new SameVirtualNetworkSiteNamePredicate(virtualNetworkSiteName));
-      } catch (Exception e) {
-         assertTrue(new ConflictManagementPredicate(api) {
+   protected Subnet getOrCreateSubnet(final String subnetName, final String virtualNetworkName){
 
-            @Override
-            protected String operation() {
-               return api.getVirtualNetworkApi().set(networkConfiguration);
-            }
-         }.apply(virtualNetworkSiteName));
+      SubnetApi subnetApi = api.getSubnetApi(getSubscriptionId(), getResourceGroup(), virtualNetworkName);
+      Subnet subnet = subnetApi.getSubnet(subnetName);
 
-         vns = find(
-                 api.getVirtualNetworkApi().getNetworkConfiguration().virtualNetworkConfiguration().
-                 virtualNetworkSites(),
-                 new SameVirtualNetworkSiteNamePredicate(virtualNetworkSiteName));
-
-         Logger.getAnonymousLogger().log(Level.INFO, "created virtualNetworkSite: {0}", vns);
+      if(subnet != null){
+         return subnet;
       }
-      return vns;
+
+      Subnet.SubnetProperties properties = Subnet.SubnetProperties.builder().addressPrefix(DEFAULT_SUBNET_ADDRESS_SPACE).build();
+      subnet = subnetApi.createOrUpdateSubnet(subnetName, properties);
+
+      return subnet;
+   }
+
+   protected NetworkInterfaceCard getOrCreateNetworkInterfaceCard(final String networkInterfaceCardName){
+
+      NetworkInterfaceCardApi nicApi = api.getNetworkInterfaceCardApi(getSubscriptionId(),getResourceGroup());
+      NetworkInterfaceCard nic = nicApi.getNetworkInterfaceCard(networkInterfaceCardName);
+
+      if(nic != null){
+         return nic;
+      }
+
+      VirtualNetwork vn = getOrCreateVirtualNetwork(VIRTUAL_NETWORK_NAME, LOCATION);
+
+      Subnet subnet = getOrCreateSubnet(DEFAULT_SUBNET_NAME, VIRTUAL_NETWORK_NAME);
+
+       //Create properties object
+      final NetworkInterfaceCard.NetworkInterfaceCardProperties networkInterfaceCardProperties =
+              NetworkInterfaceCard.NetworkInterfaceCardProperties.builder()
+                      .ipConfigurations(
+                              Arrays.asList(
+                                   IpConfiguration.builder()
+                                           .name("myipconfig")
+                                           .properties(
+                                                   IpConfiguration.IpConfigurationProperties.builder()
+                                                           .subnet(Subnet.builder().id(subnet.id()).build())
+                                                           .privateIPAllocationMethod("Dynamic")
+                                                           .build()
+                                           )
+                                           .build()
+                              )
+                      )
+                      .build();
+
+      nic = nicApi.createOrUpdateNetworkInterfaceCard(NETWORKINTERFACECARD_NAME, LOCATION, networkInterfaceCardProperties);
+      return  nic;
    }
 }
