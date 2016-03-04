@@ -33,6 +33,7 @@ import org.jclouds.concurrent.config.ExecutorServiceModule;
 import org.jclouds.azurecomputearm.AzureComputeApi;
 import org.jclouds.azurecomputearm.AzureComputeProviderMetadata;
 import org.jclouds.json.Json;
+import org.jclouds.logging.slf4j.config.SLF4JLoggingModule;
 import org.jclouds.rest.ApiContext;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -51,9 +52,11 @@ import com.squareup.okhttp.mockwebserver.RecordedRequest;
 public class BaseAzureComputeApiMockTest {
 
    private static final String MOCK_BEARER_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6Ik1uQ19WWmNBVGZNNXBPWWlKSE1iYTlnb0VLWSIsImtpZCI6Ik1uQ19WWmNBVGZNNXBPWWlKSE1iYTlnb0VLWSJ9";
+
    private static final String DEFAULT_ENDPOINT = new AzureComputeProviderMetadata().getEndpoint();
 
-   private final Set<Module> modules = ImmutableSet.<Module> of(new ExecutorServiceModule(sameThreadExecutor()));
+   private final Set<Module> modules = ImmutableSet.<Module> of(new ExecutorServiceModule(sameThreadExecutor()),
+           new SLF4JLoggingModule());
 
    protected MockWebServer server;
    protected AzureComputeApi api;
@@ -103,6 +106,10 @@ public class BaseAzureComputeApiMockTest {
 
    protected MockResponse response204() {
       return new MockResponse().setStatus("HTTP/1.1 204 No Content");
+   }
+
+   protected MockResponse response202() {
+      return new MockResponse().setStatus("HTTP/1.1 204 Accepted");
    }
 
    protected String stringFromResource(String resourceName) {

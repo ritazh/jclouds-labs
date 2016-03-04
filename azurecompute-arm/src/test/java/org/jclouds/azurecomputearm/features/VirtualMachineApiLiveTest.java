@@ -19,18 +19,39 @@ package org.jclouds.azurecomputearm.features;
 import com.google.common.collect.ImmutableMap;
 import org.jclouds.azurecomputearm.domain.*;
 import org.jclouds.azurecomputearm.internal.AbstractAzureComputeApiLiveTest;
+import org.jclouds.azurecomputearm.internal.BaseAzureComputeApiLiveTest;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
 @Test(groups = "live", testName = "VirtualMachineApiLiveTest")
-public class VirtualMachineApiLiveTest extends AbstractAzureComputeApiLiveTest {
+public class VirtualMachineApiLiveTest extends BaseAzureComputeApiLiveTest {
 
    private String vmName = null;
    private static String LOCATION = "westus";
+   final String subscriptionid =  getSubscriptionId();
+   final String resourcegroup =  getResourceGroup();
+   String subnetID ="";
+
+   @BeforeClass
+   public  void Setup(){
+      //Subnets belong to a virtual network so that needs to be created first
+      VirtualNetwork vn = getOrCreateVirtualNetwork(VIRTUAL_NETWORK_NAME, LOCATION);
+      assertNotNull(vn);
+
+      //Subnet needs to be up&running before NIC can be created
+      Subnet subnet = getOrCreateSubnet(DEFAULT_SUBNET_NAME, VIRTUAL_NETWORK_NAME);
+      assertNotNull(subnet);
+      assertNotNull(subnet.id());
+      subnetID = subnet.id();
+   }
 
    private String getName() {
 
@@ -42,8 +63,42 @@ public class VirtualMachineApiLiveTest extends AbstractAzureComputeApiLiveTest {
       return vmName;
    }
 
+   private NetworkInterfaceCard createNetworkInterfaceCard() {
+
+      final NetworkInterfaceCardApi nicApi = api.getNetworkInterfaceCardApi(subscriptionid, resourcegroup);
+
+
+      //Create properties object
+      final NetworkInterfaceCard.NetworkInterfaceCardProperties networkInterfaceCardProperties =
+              NetworkInterfaceCard.NetworkInterfaceCardProperties.builder()
+                      .ipConfigurations(
+                              Arrays.asList(
+                                      IpConfiguration.builder()
+                                              .name("myipconfig")
+                                              .properties(
+                                                      IpConfiguration.IpConfigurationProperties.builder()
+                                                              .subnet(Subnet.builder().id(subnetID).build())
+                                                              .privateIPAllocationMethod("Dynamic")
+                                                              .build()
+                                              )
+                                              .build()
+                              ))
+                      .build();
+
+      NetworkInterfaceCard nic = nicApi.createOrUpdateNetworkInterfaceCard(NETWORKINTERFACECARD_NAME, LOCATION,  networkInterfaceCardProperties);
+
+      assertEquals(nic.name(), NETWORKINTERFACECARD_NAME);
+      assertEquals(nic.location(), LOCATION);
+      assertTrue(nic.properties().ipConfigurations().size() > 0 );
+      assertEquals(nic.properties().ipConfigurations().get(0).name(), "myipconfig");
+      assertEquals(nic.properties().ipConfigurations().get(0).properties().privateIPAllocationMethod(), "Dynamic");
+      assertEquals(nic.properties().ipConfigurations().get(0).properties().subnet().id(), subnetID);
+      return nic;
+   }
+
    @Test
    public void testCreate() {
+      NetworkInterfaceCard nic = createNetworkInterfaceCard();
       StorageAccountApi storageApi = api.getStorageAccountApi(getSubscriptionId(), getResourceGroup());
       final CreateStorageServiceParams params = CreateStorageServiceParams.builder().
               location(LOCATION).
@@ -69,7 +124,7 @@ public class VirtualMachineApiLiveTest extends AbstractAzureComputeApiLiveTest {
       String blob = storageAccount.storageServiceProperties().primaryEndpoints().get("blob");
       String id = "/subscriptions/{subscription-id}/resourceGroups/myresourcegroup1/providers/" +
               "Microsoft.Compute/virtualMachines/" + getName();
-      VirtualMachine vm = api().create(getName(),id, getName(), LOCATION, getProperties(blob));
+      VirtualMachine vm = api().create(getName(),id, getName(), LOCATION, getProperties(blob,nic.name()));
       assertTrue(!vm.name().isEmpty());
       String status = "Creating";
       while (status.equals("Creating")){
@@ -104,7 +159,7 @@ public class VirtualMachineApiLiveTest extends AbstractAzureComputeApiLiveTest {
    public void testDelete() {
       api().delete(getName());
       StorageAccountApi storageApi = api.getStorageAccountApi(getSubscriptionId(), getResourceGroup());
-      storageApi.delete(getName() + "storage");
+      //TODO: delete storage and other resources after VM is destroyed. storageApi.delete(getName() + "storage");
 
    }
 
@@ -118,7 +173,7 @@ public class VirtualMachineApiLiveTest extends AbstractAzureComputeApiLiveTest {
       return "janneinterface";
    }
 
-   private VirtualMachineProperties getProperties(String blob) {
+   private VirtualMachineProperties getProperties(String blob, String nic) {
       VirtualMachineProperties.HardwareProfile hwProf = VirtualMachineProperties.HardwareProfile.create("Standard_D1");
       VirtualMachineProperties.ImageReference imgRef = VirtualMachineProperties.ImageReference.create(
               "MicrosoftWindowsServerEssentials",
@@ -140,7 +195,7 @@ public class VirtualMachineApiLiveTest extends AbstractAzureComputeApiLiveTest {
       VirtualMachineProperties.NetworkProfile.NetworkInterfaceId networkInterface =
               VirtualMachineProperties.NetworkProfile.NetworkInterfaceId.create("/subscriptions/" + getSubscriptionId()+
                       "/resourceGroups/" + getResourceGroup() + "/providers/Microsoft.Network/networkInterfaces/" +
-                      getNetworkInterface());
+                      nic);
       List<VirtualMachineProperties.NetworkProfile.NetworkInterfaceId> networkInterfaces =
               new ArrayList<VirtualMachineProperties.NetworkProfile.NetworkInterfaceId>();
       networkInterfaces.add(networkInterface);
