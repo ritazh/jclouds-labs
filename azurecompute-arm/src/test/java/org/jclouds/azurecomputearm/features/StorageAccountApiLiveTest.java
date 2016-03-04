@@ -60,6 +60,7 @@ public class StorageAccountApiLiveTest extends BaseAzureComputeApiLiveTest {
 
    @Test(dependsOnMethods = "testIsAvailable")
    public void testCreate() {
+
       CreateStorageServiceParams storage = api().create(NAME,LOCATION, ImmutableMap.of("property_name",
               "property_value"), ImmutableMap.of("accountType", StorageService.AccountType.Standard_ZRS.toString()));
       while (storage == null) {

@@ -80,16 +80,19 @@ public abstract class AvailabilitySet {
     /**
      * The name of the availability set.
      */
+    @Nullable
     public abstract String name();
 
     /**
      * The name of the availability set.
      */
+    @Nullable
     public abstract String type();
 
     /**
      * The location of the availability set
      */
+    @Nullable
     public abstract String location();
 
     /**
@@ -101,6 +104,7 @@ public abstract class AvailabilitySet {
     /**
      * Specifies the properties of the availability set
      */
+    @Nullable
     public abstract AvailabilitySetProperties properties();
 
 

@@ -20,6 +20,7 @@ import org.jclouds.Fallbacks.EmptyListOnNotFoundOr404;
 import org.jclouds.azurecomputearm.domain.AvailabilitySet;
 import org.jclouds.azurecomputearm.oauth.v2.filters.OAuthFilter;
 import org.jclouds.rest.annotations.*;
+import org.jclouds.rest.binders.BindToJsonPayload;
 
 import javax.inject.Named;
 import javax.ws.rs.*;
@@ -60,6 +61,7 @@ public interface AvailabilitySetApi {
            "\"location\":\"{location}\",\"tags\":%7B%7D,\"properties\":%7B\"platformUpdateDomainCount\": " +
            "{updateDomainCount},\"platformFaultDomainCount\": {faultDomainCount}%7D%7D")
    @Path("/availabilitySets/{availabilitySet}")
+   @MapBinder(BindToJsonPayload.class)
    @Fallback(EmptyListOnNotFoundOr404.class)
    AvailabilitySet create(@PathParam("availabilitySet") String availabilitySet, @PayloadParam("name") String name,
            @PayloadParam("location") String location, @PayloadParam("updateDomainCount") int updateDomainCount,

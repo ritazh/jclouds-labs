@@ -26,31 +26,69 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import org.jclouds.Fallbacks;
 import org.jclouds.Fallbacks.NullOnNotFoundOr404;
 import org.jclouds.azurecomputearm.binders.CaptureVMImageParamsToXML;
 import org.jclouds.azurecomputearm.binders.RoleToXML;
+import org.jclouds.azurecomputearm.domain.VirtualMachine;
 import org.jclouds.azurecomputearm.domain.CaptureVMImageParams;
 import org.jclouds.azurecomputearm.domain.Role;
+import org.jclouds.azurecomputearm.domain.VirtualMachineProperties;
 import org.jclouds.azurecomputearm.functions.ParseRequestIdHeader;
+import org.jclouds.azurecomputearm.oauth.v2.filters.OAuthFilter;
 import org.jclouds.azurecomputearm.xml.RoleHandler;
-import org.jclouds.rest.annotations.BinderParam;
-import org.jclouds.rest.annotations.Fallback;
-import org.jclouds.rest.annotations.Headers;
-import org.jclouds.rest.annotations.Payload;
-import org.jclouds.rest.annotations.PayloadParam;
-import org.jclouds.rest.annotations.ResponseParser;
-import org.jclouds.rest.annotations.XMLResponseParser;
+import org.jclouds.rest.annotations.*;
+import org.jclouds.rest.binders.BindToJsonPayload;
+
+import java.util.List;
 
 /**
- * The Service Management API includes operations for managing the virtual machines in your subscription.
+ * The Virtual Machine API includes operations for managing the virtual machines in your subscription.
  *
- * @see <a href="http://msdn.microsoft.com/en-us/library/jj157206">docs</a>
+ * @see <a href="https://msdn.microsoft.com/en-us/library/azure/mt163630.aspx">docs</a>
  */
-@Path("/services/hostedservices/{serviceName}/deployments/{deploymentName}")
+@Path("/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.Compute")
 @Headers(keys = "x-ms-version", values = "{jclouds.api-version}")
-@Consumes(MediaType.APPLICATION_XML)
-// NOTE: MS Docs refer to the commands as Role, but in the description, it is always Virtual Machine.
+@RequestFilters(OAuthFilter.class)
+@QueryParams(keys = "api-version", values = "2015-06-15")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
 public interface VirtualMachineApi {
+
+   /**
+    * The Get Virtual Machine operation
+    */
+   @Named("GetVirtualMachine")
+   @GET
+   @Path("/virtualMachines/{name}")
+   @Fallback(Fallbacks.EmptyListOnNotFoundOr404.class)
+   VirtualMachine get(@PathParam("name") String name);
+
+   /**
+    * The Create Virtual Machine operation
+    */
+   @Named("CreateVirtualMachine")
+   @PUT
+   @Payload("%7B\"id\":\"{id}\",\"name\":\"{name}\",\"type\":\"Microsoft.Compute/virtualMachines\"," +
+           "\"location\":\"{location}\",\"tags\":%7B%7D,\"properties\":{properties}%7D")
+   @MapBinder(BindToJsonPayload.class)
+   @Path("/virtualMachines/{vmname}")
+   @QueryParams(keys = "validating", values = "false")
+   @Fallback(Fallbacks.EmptyListOnNotFoundOr404.class)
+   VirtualMachine create(@PathParam("vmname") String vmname,@PayloadParam("id") String id,
+                         @PayloadParam("name") String name,
+                         @PayloadParam("location") String location,
+                         @PayloadParam("properties") VirtualMachineProperties properties);
+
+   /**
+    * The List Virtual Machines operation
+    */
+   @Named("ListVirtualMachines")
+   @GET
+   @Path("/virtualMachines")
+   @SelectJson("value")
+   @Fallback(Fallbacks.EmptyListOnNotFoundOr404.class)
+   List<VirtualMachine> list();
 
    @Named("RestartRole")
    @POST
