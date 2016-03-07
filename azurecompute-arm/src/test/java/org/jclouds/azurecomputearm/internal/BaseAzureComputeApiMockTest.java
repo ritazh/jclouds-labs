@@ -16,22 +16,33 @@
  */
 package org.jclouds.azurecomputearm.internal;
 
-import static com.google.common.base.Charsets.UTF_8;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.common.util.concurrent.MoreExecutors.sameThreadExecutor;
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.testng.Assert.assertEquals;
+import static org.jclouds.azurecomputearm.oauth.v2.config.CredentialType.BEARER_TOKEN_CREDENTIALS;
+import static org.jclouds.azurecomputearm.oauth.v2.config.OAuthProperties.CREDENTIAL_TYPE;
 
 import java.io.IOException;
-import java.net.URL;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
 import org.jclouds.ContextBuilder;
-import org.jclouds.azurecomputearm.AzureComputeApi;
 import org.jclouds.concurrent.config.ExecutorServiceModule;
-import org.jclouds.util.Strings2;
+import org.jclouds.azurecomputearm.AzureComputeApi;
+import org.jclouds.azurecomputearm.AzureComputeProviderMetadata;
+import org.jclouds.json.Json;
+import org.jclouds.rest.ApiContext;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.io.Resources;
+import com.google.common.reflect.TypeToken;
+import com.google.gson.JsonParser;
 import com.google.inject.Module;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.MockWebServer;
@@ -39,64 +50,98 @@ import com.squareup.okhttp.mockwebserver.RecordedRequest;
 
 public class BaseAzureComputeApiMockTest {
 
-   private final Set<Module> modules = ImmutableSet.<Module>of(new ExecutorServiceModule(sameThreadExecutor()));
+   private static final String MOCK_BEARER_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6Ik1uQ19WWmNBVGZNNXBPWWlKSE1iYTlnb0VLWSIsImtpZCI6Ik1uQ19WWmNBVGZNNXBPWWlKSE1iYTlnb0VLWSJ9";
+   private static final String DEFAULT_ENDPOINT = new AzureComputeProviderMetadata().getEndpoint();
 
-   protected String provider;
+   private final Set<Module> modules = ImmutableSet.<Module> of(new ExecutorServiceModule(sameThreadExecutor()));
 
-   private final String identity;
+   protected MockWebServer server;
+   protected AzureComputeApi api;
+   private Json json;
 
-   private final String credential;
+   // So that we can ignore formatting.
+   private final JsonParser parser = new JsonParser();
 
-   public BaseAzureComputeApiMockTest() {
-      provider = "azurecompute-arm";
-      // self-signed dummy cert:
-      // keytool -genkey -alias test -keyalg RSA -keysize 1024 -validity 5475 -dname "CN=localhost" -keystore azure-test.p12 -storepass azurepass -storetype pkcs12
-      identity = this.getClass().getResource("/azure-test.p12").getFile();
-      credential = "azurepass";
-   }
-
-   public AzureComputeApi api(URL url) {
-      Properties properties = new Properties();
-      //properties.setProperty(SUBSCRIPTION_ID, "1234-1234-1234");
-      return ContextBuilder.newBuilder(provider).credentials(identity, credential).endpoint(url.toString())
-              .modules(modules).overrides(properties).buildApi(AzureComputeApi.class);
-   }
-
-   protected static MockWebServer mockAzureManagementServer() throws IOException {
-      MockWebServer server = new MockWebServer();
+   @BeforeMethod
+   public void start() throws IOException {
+      server = new MockWebServer();
       server.play();
-      return server;
+      Properties properties = new Properties();
+      properties.put(CREDENTIAL_TYPE, BEARER_TOKEN_CREDENTIALS.toString());
+      ApiContext<AzureComputeApi> ctx = ContextBuilder.newBuilder("azurecompute-arm")
+              .credentials("", MOCK_BEARER_TOKEN)
+              .endpoint(url(""))
+              .modules(modules)
+              .overrides(properties)
+              .build();
+      json = ctx.utils().injector().getInstance(Json.class);
+      api = ctx.getApi();
+
    }
 
-   protected MockResponse xmlResponse(String resource) {
-      return new MockResponse().addHeader("Content-Type", "application/xml").setBody(stringFromResource(resource));
+   @AfterMethod(alwaysRun = true)
+   public void stop() throws IOException {
+      server.shutdown();
+      api.close();
    }
 
-   protected MockResponse requestIdResponse(String requestId) {
-      return new MockResponse().addHeader("x-ms-request-id", requestId);
+   protected Properties overrides() {
+      return new Properties();
+   }
+
+   protected String url(String path) {
+      return server.getUrl(path).toString();
+   }
+
+   protected MockResponse jsonResponse(String resource) {
+      return new MockResponse().addHeader("Content-Type", "application/json").setBody(stringFromResource(resource));
+   }
+
+   protected MockResponse response404() {
+      return new MockResponse().setStatus("HTTP/1.1 404 Not Found");
+   }
+
+   protected MockResponse response204() {
+      return new MockResponse().setStatus("HTTP/1.1 204 No Content");
    }
 
    protected String stringFromResource(String resourceName) {
       try {
-         return Strings2.toStringAndClose(getClass().getResourceAsStream(resourceName));
+         return Resources.toString(getClass().getResource(resourceName), Charsets.UTF_8)
+                 .replace(DEFAULT_ENDPOINT, url(""));
       } catch (IOException e) {
          throw Throwables.propagate(e);
       }
    }
 
+   protected <T> T onlyObjectFromResource(String resourceName, TypeToken<Map<String, T>> type) {
+      // Assume JSON objects passed here will be in the form: { "entity": { ... } }
+      String text = stringFromResource(resourceName);
+      Map<String, T> object = json.fromJson(text, type.getType());
+      checkArgument(!object.isEmpty(), "The given json does not contain any object: %s", text);
+      checkArgument(object.keySet().size() == 1, "The given json does not contain more than one object: %s", text);
+      return object.get(getOnlyElement(object.keySet()));
+   }
+
+   protected <T> T objectFromResource(String resourceName, Class<T> type) {
+      String text = stringFromResource(resourceName);
+      return json.fromJson(text, type);
+   }
+
    protected RecordedRequest assertSent(MockWebServer server, String method, String path) throws InterruptedException {
       RecordedRequest request = server.takeRequest();
-      assertThat(request.getMethod()).isEqualTo(method);
-      assertThat(request.getPath()).isEqualTo(path);
-      assertThat(request.getHeader("x-ms-version")).isEqualTo("2014-10-01");
-      assertThat(request.getHeader("Accept")).isEqualTo("application/xml");
+      assertEquals(request.getMethod(), method);
+      assertEquals(request.getPath(), path);
+      assertEquals(request.getHeader("Accept"), "application/json");
+      assertEquals(request.getHeader("Authorization"), "Bearer " + MOCK_BEARER_TOKEN);
       return request;
    }
 
-   protected RecordedRequest assertSent(MockWebServer server, String method, String path, String resource)
+   protected RecordedRequest assertSent(MockWebServer server, String method, String path, String json)
            throws InterruptedException {
       RecordedRequest request = assertSent(server, method, path);
-      assertThat(new String(request.getBody(), UTF_8)).isEqualTo(stringFromResource(resource).trim());
+      assertEquals(request.getHeader("Content-Type"), "application/json");
+      assertEquals(parser.parse(new String(request.getBody(), Charsets.UTF_8)), parser.parse(json));
       return request;
    }
 }
