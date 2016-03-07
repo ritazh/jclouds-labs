@@ -17,8 +17,10 @@
 package org.jclouds.azurecomputearm.features;
 
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
 
 import org.jclouds.azurecomputearm.domain.RoleSize;
+import org.jclouds.azurecomputearm.domain.Subscription;
 import org.jclouds.azurecomputearm.internal.AbstractAzureComputeApiLiveTest;
 import org.testng.annotations.Test;
 
@@ -27,16 +29,12 @@ public class SubscriptionApiLiveTest extends AbstractAzureComputeApiLiveTest {
 
    @Test
    public void testList() {
-      for (RoleSize roleSize : api().listRoleSizes()) {
-         checkLocation(roleSize);
+      for (Subscription subscription : api().listSubscriptions()) {
+          assertTrue(!subscription.getSubscriptionId().isEmpty());
       }
+      assertTrue(!api().listSubscriptions().isEmpty());
    }
 
-   private void checkLocation(final RoleSize roleSize) {
-      assertNotNull(roleSize.name(), "Name cannot be null for a Location.");
-      assertNotNull(roleSize.label(), "Label cannot be null for: " + roleSize);
-      assertNotNull(roleSize.cores(), "Cores cannot be null for: " + roleSize.name());
-   }
 
    private SubscriptionApi api() {
       return api.getSubscriptionApi();

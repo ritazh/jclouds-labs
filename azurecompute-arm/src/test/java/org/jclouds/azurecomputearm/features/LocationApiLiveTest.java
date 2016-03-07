@@ -16,39 +16,25 @@
  */
 package org.jclouds.azurecomputearm.features;
 
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
-
-import java.util.Arrays;
-import java.util.List;
-
 import org.jclouds.azurecomputearm.domain.Location;
 import org.jclouds.azurecomputearm.internal.AbstractAzureComputeApiLiveTest;
-
 import org.testng.annotations.Test;
+
+import static org.testng.Assert.assertTrue;
 
 @Test(groups = "live", testName = "LocationApiLiveTest")
 public class LocationApiLiveTest extends AbstractAzureComputeApiLiveTest {
 
-   private static final List<String> KNOWN_SERVICES = Arrays
-           .asList("Compute", "Storage", "PersistentVMRole", "HighMemory");
-
    @Test
    public void testList() {
       for (Location location : api().list()) {
-         checkLocation(location);
+          assertTrue(!location.id().isEmpty());
       }
+      assertTrue(!api().list().isEmpty());
    }
 
-   private void checkLocation(final Location location) {
-      assertNotNull(location.name(), "Name cannot be null for a Location.");
-      assertNotNull(location.displayName(), "DisplayName cannot be null for: " + location);
-      assertNotNull(location.availableServices(), "AvailableServices cannot be null for: " + location.name());
-      assertTrue(KNOWN_SERVICES.containsAll(location.availableServices()),
-              "AvailableServices in " + location + " didn't match: " + KNOWN_SERVICES);
-   }
 
    private LocationApi api() {
-      return api.getLocationApi();
+      return api.getLocationApi(getSubscriptionId());
    }
 }

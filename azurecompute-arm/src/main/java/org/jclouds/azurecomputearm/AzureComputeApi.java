@@ -20,6 +20,10 @@ import java.io.Closeable;
 
 import javax.ws.rs.PathParam;
 
+import org.jclouds.azurecomputearm.domain.AffinityGroup;
+import org.jclouds.azurecomputearm.domain.Availability;
+import org.jclouds.azurecomputearm.features.*;
+import org.jclouds.azurecomputearm.features.ResourceGroupApi;
 import org.jclouds.azurecomputearm.features.AffinityGroupApi;
 import org.jclouds.azurecomputearm.features.CloudServiceApi;
 import org.jclouds.azurecomputearm.features.DeploymentApi;
@@ -35,22 +39,27 @@ import org.jclouds.azurecomputearm.features.SubscriptionApi;
 import org.jclouds.azurecomputearm.features.TrafficManagerApi;
 import org.jclouds.azurecomputearm.features.VirtualMachineApi;
 import org.jclouds.azurecomputearm.features.VirtualNetworkApi;
+import org.jclouds.azurecomputearm.features.SubnetApi;
+import org.jclouds.azurecomputearm.features.NetworkInterfaceCardApi;
 import org.jclouds.azurecomputearm.features.VMImageApi;
 import org.jclouds.rest.annotations.Delegate;
 
 /**
- * The Windows Azure Service Management API is a REST API for managing your services and deployments.
+ * The Azure Resource Manager API is a REST API for managing your services and deployments.
  * <p/>
  *
- * @see <a href="http://msdn.microsoft.com/en-us/library/ee460799" >doc</a>
+ * @see <a href="https://msdn.microsoft.com/en-us/library/azure/dn790568.aspx" >doc</a>
  */
 public interface AzureComputeApi extends Closeable {
 
    /**
-    * The Service Management API includes operations for managing affinity groups in your subscription.
+    * The Azure Resource Manager API includes operations for managing resource groups in your subscription.
     *
-    * @see <a href="http://msdn.microsoft.com/en-us/library/azure/ee460798">docs</a>
+    * @see <a href="https://msdn.microsoft.com/en-us/library/azure/dn790546.aspx">docs</a>
     */
+   @Delegate
+   ResourceGroupApi getResourceGroupApi();
+
    @Delegate
    AffinityGroupApi getAffinityGroupApi();
 
@@ -61,7 +70,7 @@ public interface AzureComputeApi extends Closeable {
     * @see <a href="http://msdn.microsoft.com/en-us/library/gg441299">docs</a>
     */
    @Delegate
-   LocationApi getLocationApi();
+   LocationApi getLocationApi(@PathParam("subscriptionId") String subscriptionId);
 
    /**
     * The Service Management API includes operations for managing the cloud services beneath your subscription.
@@ -80,6 +89,15 @@ public interface AzureComputeApi extends Closeable {
    DeploymentApi getDeploymentApiForService(@PathParam("serviceName") String serviceName);
 
    /**
+    * The Virtual Machine API includes operations for managing the virtual machines in your subscription.
+    *
+    * @see <a href="https://msdn.microsoft.com/en-us/library/azure/mt163630.aspx">docs</a>
+    */
+   @Delegate
+   VirtualMachineApi getVirtualMachineApi(@PathParam("subscriptionId") String subscriptionId,
+                                          @PathParam("resourceGroup") String resourceGroup);
+
+   /**
     * The Service Management API includes operations for managing the virtual machines in your subscription.
     *
     * @see <a href="http://msdn.microsoft.com/en-us/library/jj157206">docs</a>
@@ -96,6 +114,15 @@ public interface AzureComputeApi extends Closeable {
     */
    @Delegate
    OSImageApi getOSImageApi();
+
+   /**
+    * The Availability set API includes operations for managing the availability sets in your subscription.
+    *
+    * @see <a href="http://msdn.microsoft.com/en-us/library/jj157175">docs</a>
+    */
+   @Delegate
+   AvailabilitySetApi getAvailabilitySetApi(@PathParam("subscriptionId") String subscriptionId,
+                                            @PathParam("resourceGroup") String resourceGroup);
 
    /**
     * The Service Management API includes operations for Tracking Asynchronous Service Management Requests.
@@ -121,21 +148,42 @@ public interface AzureComputeApi extends Closeable {
    @Delegate
    SubscriptionApi getSubscriptionApi();
 
+/**
+    * The Service Management API includes operations for managing the NICs in your subscription.
+    *
+    * @see <a href="http://msdn.microsoft.com/en-us/library/jj157182.aspx">docs</a>
+    */
+   @Delegate
+   NetworkInterfaceCardApi getNetworkInterfaceCardApi(@PathParam("subscriptionid") String subscriptionid,
+                                          @PathParam("resourcegroup") String resourcegroup);
+
    /**
     * The Service Management API includes operations for managing the virtual networks in your subscription.
     *
     * @see <a href="http://msdn.microsoft.com/en-us/library/jj157182.aspx">docs</a>
     */
    @Delegate
-   VirtualNetworkApi getVirtualNetworkApi();
+   VirtualNetworkApi getVirtualNetworkApi(@PathParam("subscriptionid") String subscriptionid,
+                                                  @PathParam("resourcegroup") String resourcegroup);
+
+   /**
+    * The Service Management API includes operations for managing the subnets in your virtual network.
+    *
+    * @see <a href="http://msdn.microsoft.com/en-us/library/jj157182.aspx">docs</a>
+    */
+   @Delegate
+   SubnetApi getSubnetApi(@PathParam("subscriptionid") String subscriptionid,
+                          @PathParam("resourcegroup") String resourcegroup,
+                          @PathParam("virtualnetwork") String virtualnetwork);
 
    /**
     * The Service Management API includes operations for managing the storage accounts in your subscription.
     *
-    * @see <a href="http://msdn.microsoft.com/en-us/library/ee460790.aspx">docs</a>
+    * @see <a href="https://msdn.microsoft.com/en-us/library/mt163683.aspx">docs</a>
     */
    @Delegate
-   StorageAccountApi getStorageAccountApi();
+   StorageAccountApi getStorageAccountApi(@PathParam("subscriptionId") String subscriptionId,
+                                          @PathParam("resourceGroup") String resourceGroup);
 
    /**
     * The Service Management API includes operations for managing the Network Security Groups in your subscription.

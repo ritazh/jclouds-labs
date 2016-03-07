@@ -16,20 +16,17 @@
  */
 package org.jclouds.azurecomputearm.features;
 
-import java.util.List;
-
 import javax.inject.Named;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.MediaType;
 
+import com.google.common.collect.FluentIterable;
 import org.jclouds.Fallbacks.EmptyListOnNotFoundOr404;
-import org.jclouds.azurecomputearm.domain.RoleSize;
-import org.jclouds.azurecomputearm.xml.ListRoleSizesHandler;
-import org.jclouds.rest.annotations.Fallback;
-import org.jclouds.rest.annotations.Headers;
-import org.jclouds.rest.annotations.XMLResponseParser;
+import org.jclouds.azurecomputearm.domain.Subscription;
+import org.jclouds.rest.annotations.*;
+import org.jclouds.azurecomputearm.oauth.v2.filters.OAuthFilter;
 
 /**
  * The Service Management API includes operations for retrieving information about a subscription.
@@ -37,17 +34,20 @@ import org.jclouds.rest.annotations.XMLResponseParser;
  * @see <a href="http://msdn.microsoft.com/en-us/library/gg715315">docs</a>
  */
 @Headers(keys = "x-ms-version", values = "{jclouds.api-version}")
-@Consumes(MediaType.APPLICATION_XML)
+@RequestFilters(OAuthFilter.class)
+@QueryParams(keys = "api-version", values = "2015-06-15")
+@Consumes(MediaType.APPLICATION_JSON)
 public interface SubscriptionApi {
 
    /**
-    * The List Role Sizes operation lists the role sizes that are available under the specified subscription.
+    * The List Subscriptions operation lists the subscriptions that are available with token.
+    //   @ResponseParser(SubscriptionParser.class)
     */
-   @Named("ListRoleSizes")
+   @Named("ListSubscriptions")
    @GET
-   @Path("/rolesizes")
-   @XMLResponseParser(ListRoleSizesHandler.class)
+   @Path("/subscriptions")
+   @SelectJson("value")
    @Fallback(EmptyListOnNotFoundOr404.class)
-   List<RoleSize> listRoleSizes();
+   com.google.common.collect.ImmutableList<Subscription> listSubscriptions();
 
 }

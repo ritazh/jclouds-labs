@@ -19,42 +19,33 @@ package org.jclouds.azurecomputearm.features;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
+import com.google.common.collect.ImmutableList;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.MockWebServer;
+import org.jclouds.azurecomputearm.domain.Subscription;
 import org.jclouds.azurecomputearm.internal.BaseAzureComputeApiMockTest;
-import org.jclouds.azurecomputearm.xml.ListRoleSizesHandlerTest;
 import org.testng.annotations.Test;
 
 @Test(groups = "unit", testName = "SubscriptionApiMockTest")
 public class SubscriptionApiMockTest extends BaseAzureComputeApiMockTest {
 
    public void testList() throws Exception {
-      final MockWebServer server = mockAzureManagementServer();
-      server.enqueue(xmlResponse("/rolesizes.xml"));
-
-      try {
-         final SubscriptionApi api = api(server.getUrl("/")).getSubscriptionApi();
-
-         assertEquals(api.listRoleSizes(), ListRoleSizesHandlerTest.expected());
-
-         assertSent(server, "GET", "/rolesizes");
-      } finally {
-         server.shutdown();
-      }
+      server.enqueue(jsonResponse("/subscriptions.json"));
+      final SubscriptionApi subscriptionAPI = api.getSubscriptionApi();
+      assertEquals(subscriptionAPI.listSubscriptions(), ImmutableList.of(
+              Subscription.create("/subscriptions/626f67f6-8fd0-4cc3-bc02-e3ce95f7dfec",
+                      "626f67f6-8fd0-4cc3-bc02-e3ce95f7dfec","Free Trial","Enabled")
+      ));
+      assertSent(server, "GET", "/subscriptions?api-version=2015-06-15");
    }
 
    public void testEmptyList() throws Exception {
-      final MockWebServer server = mockAzureManagementServer();
       server.enqueue(new MockResponse().setResponseCode(404));
 
-      try {
-         final SubscriptionApi api = api(server.getUrl("/")).getSubscriptionApi();
+      final SubscriptionApi subscriptionAPI = api.getSubscriptionApi();
 
-         assertTrue(api.listRoleSizes().isEmpty());
+      assertTrue(subscriptionAPI.listSubscriptions().isEmpty());
 
-         assertSent(server, "GET", "/rolesizes");
-      } finally {
-         server.shutdown();
-      }
+      assertSent(server, "GET", "/subscriptions?api-version=2015-06-15");
    }
 }

@@ -19,6 +19,7 @@ package org.jclouds.azurecomputearm.domain;
 import org.jclouds.javax.annotation.Nullable;
 
 import com.google.auto.value.AutoValue;
+import org.jclouds.json.SerializedNames;
 
 @AutoValue
 public abstract class Availability {
@@ -26,13 +27,11 @@ public abstract class Availability {
    Availability() {
    } // For AutoValue only!
 
-   public abstract Boolean result();
+   public abstract String nameAvailable();
 
-   @Nullable
-   public abstract String reason();
-
-   public static Availability create(final Boolean result, final String reason) {
-      return new AutoValue_Availability(result, reason);
+   @SerializedNames({"nameAvailable"})
+   public static Availability create(final String nameAvailable) {
+      return new AutoValue_Availability(nameAvailable);
    }
 
 }
