@@ -20,7 +20,10 @@ import java.io.Closeable;
 
 import javax.ws.rs.PathParam;
 
+import org.jclouds.azurecomputearm.features.ResourceGroupApi;
+
 import org.jclouds.azurecomputearm.features.AffinityGroupApi;
+
 import org.jclouds.azurecomputearm.features.CloudServiceApi;
 import org.jclouds.azurecomputearm.features.DeploymentApi;
 import org.jclouds.azurecomputearm.features.DiskApi;
@@ -39,18 +42,21 @@ import org.jclouds.azurecomputearm.features.VMImageApi;
 import org.jclouds.rest.annotations.Delegate;
 
 /**
- * The Windows Azure Service Management API is a REST API for managing your services and deployments.
+ * The Azure Resource Manager API is a REST API for managing your services and deployments.
  * <p/>
  *
- * @see <a href="http://msdn.microsoft.com/en-us/library/ee460799" >doc</a>
+ * @see <a href="https://msdn.microsoft.com/en-us/library/azure/dn790568.aspx" >doc</a>
  */
 public interface AzureComputeApi extends Closeable {
 
    /**
-    * The Service Management API includes operations for managing affinity groups in your subscription.
+    * The Azure Resource Manager API includes operations for managing resource groups in your subscription.
     *
-    * @see <a href="http://msdn.microsoft.com/en-us/library/azure/ee460798">docs</a>
+    * @see <a href="https://msdn.microsoft.com/en-us/library/azure/dn790546.aspx">docs</a>
     */
+   @Delegate
+   ResourceGroupApi getResourceGroupApi();
+
    @Delegate
    AffinityGroupApi getAffinityGroupApi();
 
