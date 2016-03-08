@@ -18,63 +18,64 @@ package org.jclouds.azurecomputearm.features;
 
 import static com.google.common.collect.Iterables.isEmpty;
 import static com.google.common.collect.Iterables.size;
-import static org.jclouds.azurecomputearm.domain.options.ListOptions.Builder.top;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 import org.jclouds.azurecomputearm.domain.ResourceGroup;
 import org.jclouds.azurecomputearm.internal.BaseAzureComputeApiMockTest;
 import org.testng.annotations.Test;
 
-import com.google.common.reflect.TypeToken;
-
 @Test(groups = "unit", testName = "ResourceGroupApiMockTest", singleThreaded = true)
 public class ResourceGroupApiMockTest extends BaseAzureComputeApiMockTest {
+
+   final String subscriptionid = "12345678-1234-1234-1234-123456789012";
+   final String requestUrl = "/subscriptions/" + subscriptionid + "/resourcegroups";
+   final String version = "?api-version=2015-01-01";
 
    public void testListResourceGroups() throws InterruptedException {
       server.enqueue(jsonResponse("/resourcegroups.json"));
 
-      Iterable<ResourceGroup> resourceGroups = api.getResourceGroupApi().list().concat();
+      List<ResourceGroup> resourceGroups = api.getResourceGroupApi(subscriptionid).list();
 
       assertEquals(size(resourceGroups), 2);
 
-      assertSent(server, "GET", "/resourcegroups");
+      assertSent(server, "GET", requestUrl + version);
    }
 
    public void testListResourceGroupsReturns404() throws InterruptedException {
       server.enqueue(response404());
 
-      Iterable<ResourceGroup> resourceGroups = api.getResourceGroupApi().list().concat();
+      List<ResourceGroup> resourceGroups = api.getResourceGroupApi(subscriptionid).list();
 
       assertTrue(isEmpty(resourceGroups));
 
       assertEquals(server.getRequestCount(), 1);
-      assertSent(server, "GET", "/resourcegroups");
+      assertSent(server, "GET", requestUrl + version);
    }
 
    public void testListResourceGroupsWithOptions() throws InterruptedException {
       server.enqueue(jsonResponse("/resourcegroups.json"));
 
-      Iterable<ResourceGroup> resourceGroups = api.getResourceGroupApi().list(top(2));
+      List<ResourceGroup> resourceGroups = api.getResourceGroupApi(subscriptionid).list();
 
       assertEquals(size(resourceGroups), 2);
       assertEquals(server.getRequestCount(), 1);
 
-      assertSent(server, "GET", "/resourcegroups?%24top=2");
+      assertSent(server, "GET", requestUrl + version);
    }
 
    public void testListResourceGroupsWithOptionsReturns404() throws InterruptedException {
       server.enqueue(response404());
 
-      Iterable<ResourceGroup> resourceGroups = api.getResourceGroupApi().list(top(1));
+      List<ResourceGroup> resourceGroups = api.getResourceGroupApi(subscriptionid).list();
 
       assertTrue(isEmpty(resourceGroups));
 
       assertEquals(server.getRequestCount(), 1);
-      assertSent(server, "GET", "/resourcegroups?%24top=1");
+      assertSent(server, "GET", requestUrl + version);
    }
 
    public void testCreateResourceGroup() throws InterruptedException {
@@ -83,7 +84,7 @@ public class ResourceGroupApiMockTest extends BaseAzureComputeApiMockTest {
       HashMap<String, String> tags = new HashMap<String, String>();
       tags.put("tagname1", "tagvalue1");
 
-      ResourceGroup resourceGroup = api.getResourceGroupApi().create("jcloudstest", "West US", tags);
+      ResourceGroup resourceGroup = api.getResourceGroupApi(subscriptionid).create("jcloudstest", "West US", tags);
 
       assertEquals(resourceGroup.name(), "jcloudstest");
       assertEquals(resourceGroup.location(), "westus");
@@ -91,29 +92,29 @@ public class ResourceGroupApiMockTest extends BaseAzureComputeApiMockTest {
       assertTrue(resourceGroup.id().contains("jcloudstest"));
 
       assertEquals(server.getRequestCount(), 1);
-      assertSent(server, "PUT", "/resourcegroups/jcloudstest", String.format("{\"location\":\"%s\", \"tags\":{\"tagname1\":\"tagvalue1\"}}", "West US"));
+      assertSent(server, "PUT", requestUrl + "/jcloudstest" + version, String.format("{\"location\":\"%s\", \"tags\":{\"tagname1\":\"tagvalue1\"}}", "West US"));
    }
 
    public void testGetResourceGroup() throws InterruptedException {
       server.enqueue(jsonResponse("/resourcegroup.json"));
 
-      ResourceGroup resourceGroup = api.getResourceGroupApi().get("jcloudstest");
+      ResourceGroup resourceGroup = api.getResourceGroupApi(subscriptionid).get("jcloudstest");
 
       assertEquals(resourceGroup.name(), "jcloudstest");
 
       assertEquals(server.getRequestCount(), 1);
-      assertSent(server, "GET", "/resourcegroups/jcloudstest");
+      assertSent(server, "GET", requestUrl + "/jcloudstest" + version);
    }
 
    public void testGetResourceGroupReturns404() throws InterruptedException {
       server.enqueue(response404());
 
-      ResourceGroup resourceGroup = api.getResourceGroupApi().get("jcloudstest");
+      ResourceGroup resourceGroup = api.getResourceGroupApi(subscriptionid).get("jcloudstest");
 
       assertNull(resourceGroup);
 
       assertEquals(server.getRequestCount(), 1);
-      assertSent(server, "GET", "/resourcegroups/jcloudstest");
+      assertSent(server, "GET", requestUrl + "/jcloudstest" + version);
    }
 
    public void testUpdateResourceGroupTags() throws InterruptedException {
@@ -121,36 +122,31 @@ public class ResourceGroupApiMockTest extends BaseAzureComputeApiMockTest {
 
       HashMap<String, String> tags = new HashMap<String, String>();
 
-      ResourceGroup resourceGroup = api.getResourceGroupApi().update("jcloudstest", tags);
+      ResourceGroup resourceGroup = api.getResourceGroupApi(subscriptionid).update("jcloudstest", tags);
 
 
       assertEquals(resourceGroup.tags().size(), 0);
 
       assertEquals(server.getRequestCount(), 1);
-      assertSent(server, "PATCH", "/resourcegroups/jcloudstest", "{\"tags\":{}}");
+      assertSent(server, "PATCH", requestUrl + "/jcloudstest" + version, "{\"tags\":{}}");
    }
 
    public void testDeleteResourceGroup() throws InterruptedException {
       server.enqueue(response204());
 
-      api.getResourceGroupApi().delete("jcloudstest");
+      api.getResourceGroupApi(subscriptionid).delete("jcloudstest");
 
       assertEquals(server.getRequestCount(), 1);
-      assertSent(server, "DELETE", "/resourcegroups/jcloudstest");
+      assertSent(server, "DELETE", requestUrl + "/jcloudstest" + version);
    }
 
    public void testDeleteResourceGroupReturns404() throws InterruptedException {
       server.enqueue(response404());
 
-      api.getResourceGroupApi().delete("jcloudstest");
+      api.getResourceGroupApi(subscriptionid).delete("jcloudstest");
 
       assertEquals(server.getRequestCount(), 1);
-      assertSent(server, "DELETE", "/resourcegroups/jcloudstest");
+      assertSent(server, "DELETE", requestUrl + "/jcloudstest" + version);
    }
 
-   private ResourceGroup ResourceGroupFromResource(String resource) {
-      return onlyObjectFromResource(resource, new TypeToken<Map<String, ResourceGroup>>() {
-         private static final long serialVersionUID = 1L;
-      });
-   }
 }
