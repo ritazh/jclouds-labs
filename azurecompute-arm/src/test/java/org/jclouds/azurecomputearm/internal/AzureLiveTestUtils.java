@@ -1,5 +1,3 @@
-package org.jclouds.azurecomputearm.internal;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -16,20 +14,13 @@ package org.jclouds.azurecomputearm.internal;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
-
-import java.io.File;
-import java.io.IOException;
+package org.jclouds.azurecomputearm.internal;
 import java.util.Properties;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Throwables.propagate;
 import static org.jclouds.azurecomputearm.oauth.v2.config.OAuthProperties.AUDIENCE;
 import static org.jclouds.azurecomputearm.oauth.v2.config.OAuthProperties.CREDENTIAL_TYPE;
 import static org.jclouds.azurecomputearm.oauth.v2.config.CredentialType.CLIENT_CREDENTIALS_SECRET;
-import static org.jclouds.util.Strings2.toStringAndClose;
 
 public class AzureLiveTestUtils {
 

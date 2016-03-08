@@ -18,15 +18,12 @@ package org.jclouds.azurecomputearm.domain;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.net.URI;
+
 import java.util.Iterator;
 import java.util.List;
 
 import org.jclouds.collect.IterableWithMarker;
-import org.jclouds.javax.annotation.Nullable;
-import org.jclouds.json.SerializedNames;
 
-import com.google.auto.value.AutoValue;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 

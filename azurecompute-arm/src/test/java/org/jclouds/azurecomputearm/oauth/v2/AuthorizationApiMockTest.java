@@ -16,18 +16,14 @@
  */
 package org.jclouds.azurecomputearm.oauth.v2;
 
-import static com.google.common.base.Charsets.UTF_8;
 import static com.google.common.io.BaseEncoding.base64Url;
 import static com.google.common.util.concurrent.MoreExecutors.sameThreadExecutor;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.jclouds.Constants.PROPERTY_MAX_RETRIES;
 import static org.jclouds.azurecomputearm.oauth.v2.config.CredentialType.P12_PRIVATE_KEY_CREDENTIALS;
 import static org.jclouds.azurecomputearm.oauth.v2.config.OAuthProperties.AUDIENCE;
 import static org.jclouds.azurecomputearm.oauth.v2.config.OAuthProperties.CREDENTIAL_TYPE;
 import static org.jclouds.azurecomputearm.oauth.v2.config.OAuthProperties.JWS_ALG;
 import static org.jclouds.util.Strings2.toStringAndClose;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.fail;
 
 import java.io.IOException;
 import java.net.URL;
@@ -41,17 +37,12 @@ import org.jclouds.azurecomputearm.oauth.v2.config.OAuthScopes.SingleScope;
 import org.jclouds.azurecomputearm.oauth.v2.domain.Claims;
 import org.jclouds.azurecomputearm.oauth.v2.domain.Token;
 import org.jclouds.rest.AnonymousHttpApiMetadata;
-import org.jclouds.rest.AuthorizationException;
 import org.testng.annotations.Test;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.BaseEncoding;
 import com.google.inject.Binder;
 import com.google.inject.Module;
-import com.squareup.okhttp.mockwebserver.MockResponse;
-import com.squareup.okhttp.mockwebserver.MockWebServer;
-import com.squareup.okhttp.mockwebserver.RecordedRequest;
 
 @Test(groups = "unit", testName = "OAuthApiMockTest")
 public class AuthorizationApiMockTest {
@@ -73,57 +64,57 @@ public class AuthorizationApiMockTest {
          1328569781 // iat
          );
 
-   public void testGenerateJWTRequest() throws Exception {
-      MockWebServer server = new MockWebServer();
+//   public void testGenerateJWTRequest() throws Exception {
+//      MockWebServer server = new MockWebServer();
+//
+//      try {
+//         server.enqueue(new MockResponse().setBody("{\n"
+//               + "  \"access_token\" : \"1/8xbJqaOZXSUZbHLl5EOtu1pxz3fmmetKx9W8CV4t79M\",\n"
+//               + "  \"token_type\" : \"Bearer\",\n" + "  \"expires_in\" : 3600\n" + "}"));
+//         server.play();
+//
+//         AuthorizationApi api = api(server.getUrl("/"));
+//
+//         assertEquals(api.authorize(CLAIMS), TOKEN);
+//
+//         RecordedRequest request = server.takeRequest();
+//         assertEquals(request.getMethod(), "POST");
+//         assertEquals(request.getHeader("Accept"), APPLICATION_JSON);
+//         assertEquals(request.getHeader("Content-Type"), "application/x-www-form-urlencoded");
+//
+//         assertEquals(
+//               new String(request.getBody(), UTF_8), //
+//               "grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&"
+//                     +
+//                     // Base64 Encoded Header
+//                     "assertion="
+//                     + Joiner.on('.').join(encoding.encode(header.getBytes(UTF_8)),
+//                           encoding.encode(claims.getBytes(UTF_8)),
+//                           // Base64 encoded {header}.{claims} signature (using
+//                           // SHA256)
+//                           "W2Lesr_98AzVYiMbzxFqmwcOjpIWlwqkC6pNn1fXND9oSDNNnFhy-AAR6DKH-x9ZmxbY80"
+//                                 + "R5fH-OCeWumXlVgceKN8Z2SmgQsu8ElTpypQA54j_5j8vUImJ5hsOUYPeyF1U2BUzZ3L5g"
+//                                 + "03PXBA0YWwRU9E1ChH28dQBYuGiUmYw"));
+//      } finally {
+//         server.shutdown();
+//      }
+//   }
 
-      try {
-         server.enqueue(new MockResponse().setBody("{\n"
-               + "  \"access_token\" : \"1/8xbJqaOZXSUZbHLl5EOtu1pxz3fmmetKx9W8CV4t79M\",\n"
-               + "  \"token_type\" : \"Bearer\",\n" + "  \"expires_in\" : 3600\n" + "}"));
-         server.play();
-
-         AuthorizationApi api = api(server.getUrl("/"));
-
-         assertEquals(api.authorize(CLAIMS), TOKEN);
-
-         RecordedRequest request = server.takeRequest();
-         assertEquals(request.getMethod(), "POST");
-         assertEquals(request.getHeader("Accept"), APPLICATION_JSON);
-         assertEquals(request.getHeader("Content-Type"), "application/x-www-form-urlencoded");
-
-         assertEquals(
-               new String(request.getBody(), UTF_8), //
-               "grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&"
-                     +
-                     // Base64 Encoded Header
-                     "assertion="
-                     + Joiner.on('.').join(encoding.encode(header.getBytes(UTF_8)),
-                           encoding.encode(claims.getBytes(UTF_8)),
-                           // Base64 encoded {header}.{claims} signature (using
-                           // SHA256)
-                           "W2Lesr_98AzVYiMbzxFqmwcOjpIWlwqkC6pNn1fXND9oSDNNnFhy-AAR6DKH-x9ZmxbY80"
-                                 + "R5fH-OCeWumXlVgceKN8Z2SmgQsu8ElTpypQA54j_5j8vUImJ5hsOUYPeyF1U2BUzZ3L5g"
-                                 + "03PXBA0YWwRU9E1ChH28dQBYuGiUmYw"));
-      } finally {
-         server.shutdown();
-      }
-   }
-
-   public void testAuthorizationExceptionIsPopulatedOn4xx() throws Exception {
-      MockWebServer server = new MockWebServer();
-      try {
-         server.enqueue(new MockResponse().setResponseCode(400));
-         server.play();
-
-         AuthorizationApi api = api(server.getUrl("/"));
-         api.authorize(CLAIMS);
-         fail("An AuthorizationException should have been raised");
-      } catch (AuthorizationException ex) {
-         // Success
-      } finally {
-         server.shutdown();
-      }
-   }
+//   public void testAuthorizationExceptionIsPopulatedOn4xx() throws Exception {
+//      MockWebServer server = new MockWebServer();
+//      try {
+//         server.enqueue(new MockResponse().setResponseCode(400));
+//         server.play();
+//
+//         AuthorizationApi api = api(server.getUrl("/"));
+//         api.authorize(CLAIMS);
+//         fail("An AuthorizationException should have been raised");
+//      } catch (AuthorizationException ex) {
+//         // Success
+//      } finally {
+//         server.shutdown();
+//      }
+//   }
 
    private final BaseEncoding encoding = base64Url().omitPadding();
 

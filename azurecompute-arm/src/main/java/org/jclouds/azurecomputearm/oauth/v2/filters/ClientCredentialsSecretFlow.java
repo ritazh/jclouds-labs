@@ -1,5 +1,3 @@
-package org.jclouds.azurecomputearm.oauth.v2.filters;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -16,6 +14,7 @@ package org.jclouds.azurecomputearm.oauth.v2.filters;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.jclouds.azurecomputearm.oauth.v2.filters;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Supplier;

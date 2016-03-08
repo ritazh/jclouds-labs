@@ -18,13 +18,11 @@ package org.jclouds.azurecomputearm.features;
 
 import static com.google.common.collect.Iterables.isEmpty;
 import static com.google.common.collect.Iterables.size;
-import static org.jclouds.azurecomputearm.domain.options.ListOptions.Builder.page;
 import static org.jclouds.azurecomputearm.domain.options.ListOptions.Builder.top;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
-import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 import org.jclouds.azurecomputearm.domain.ResourceGroup;
@@ -83,7 +81,7 @@ public class ResourceGroupApiMockTest extends BaseAzureComputeApiMockTest {
       server.enqueue(jsonResponse("/resourcegroup.json").setStatus("HTTP/1.1 201 Created"));
 
       HashMap<String, String> tags = new HashMap<String, String>();
-      tags.put("tagname1","tagvalue1");
+      tags.put("tagname1", "tagvalue1");
 
       ResourceGroup resourceGroup = api.getResourceGroupApi().create("jcloudstest", "West US", tags);
 

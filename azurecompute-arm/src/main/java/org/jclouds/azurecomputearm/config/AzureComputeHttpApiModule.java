@@ -16,14 +16,13 @@
  */
 package org.jclouds.azurecomputearm.config;
 
-import javax.net.ssl.SSLContext;
+
 import java.net.URI;
 
 import org.jclouds.azurecomputearm.AzureComputeApi;
 import org.jclouds.azurecomputearm.domain.options.ListOptions;
 import org.jclouds.azurecomputearm.functions.LinkToListOptions;
 import org.jclouds.azurecomputearm.handlers.AzureComputeErrorHandler;
-import org.jclouds.azurecomputearm.suppliers.DelegatingSSLContextSupplier;
 import org.jclouds.http.HttpErrorHandler;
 import org.jclouds.http.annotation.ClientError;
 import org.jclouds.http.annotation.Redirection;
@@ -36,7 +35,7 @@ import org.jclouds.rest.ConfiguresHttpApi;
 import org.jclouds.rest.config.HttpApiModule;
 import org.jclouds.azurecomputearm.oauth.v2.config.OAuthScopes;
 
-import com.google.common.base.Supplier;
+
 import com.google.common.base.Function;
 import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;

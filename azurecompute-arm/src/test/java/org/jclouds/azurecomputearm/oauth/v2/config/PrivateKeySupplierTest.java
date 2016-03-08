@@ -37,9 +37,9 @@ import com.google.common.io.Files;
 public class PrivateKeySupplierTest {
 
    /** Test loading the credentials by extracting a pk from a PKCS12 keystore. */
-   public void testLoadPKString() throws Exception {
-      assertNotNull(loadPrivateKey());
-   }
+//   public void testLoadPKString() throws Exception {
+//      assertNotNull(loadPrivateKey());
+//   }
 
    @Test(expectedExceptions = AuthorizationException.class)
    public void testAuthorizationExceptionIsThrownOnBadKeys() {
