@@ -24,3 +24,6 @@ mvn -Plive -Dtest.azurecomputearm.endpoint=https://management.core.windows.net/1
 -Dtest.azurecomputearm.credential=P12_EXPORT_PASSWORD \
 -Dtest.azurecomputearm.identity=$HOME/.jclouds/azure.p12
 ```
+
+## Updating
+This work will add Azure Resource Manager support.
