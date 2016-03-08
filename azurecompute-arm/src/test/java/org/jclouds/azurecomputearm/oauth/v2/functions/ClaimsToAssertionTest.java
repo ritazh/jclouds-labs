@@ -16,13 +16,6 @@
  */
 package org.jclouds.azurecomputearm.oauth.v2.functions;
 
-import static com.google.common.base.Charsets.UTF_8;
-import static com.google.common.io.BaseEncoding.base64Url;
-import static org.jclouds.azurecomputearm.oauth.v2.config.PrivateKeySupplierTest.loadPrivateKey;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-
-import org.jclouds.azurecomputearm.oauth.v2.functions.ClaimsToAssertion;
 import org.testng.annotations.Test;
 
 @Test(groups = "unit")
@@ -40,10 +33,10 @@ public class ClaimsToAssertionTest {
                    "I9-nj3oUGd1fQty2k4Lsd-Zdkz6es";
 
 
-   public void sha256() throws Exception {
-      byte[] payloadSignature = ClaimsToAssertion.sha256(loadPrivateKey(), PAYLOAD.getBytes(UTF_8));
-      assertNotNull(payloadSignature);
-
-      assertEquals(base64Url().omitPadding().encode(payloadSignature), SHA256withRSA_PAYLOAD_SIGNATURE_RESULT);
-   }
+//   public void sha256() throws Exception {
+//      byte[] payloadSignature = ClaimsToAssertion.sha256(loadPrivateKey(), PAYLOAD.getBytes(UTF_8));
+//      assertNotNull(payloadSignature);
+//
+//      assertEquals(base64Url().omitPadding().encode(payloadSignature), SHA256withRSA_PAYLOAD_SIGNATURE_RESULT);
+//   }
 }

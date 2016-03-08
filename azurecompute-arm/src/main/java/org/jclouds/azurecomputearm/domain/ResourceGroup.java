@@ -16,19 +16,10 @@
  */
 package org.jclouds.azurecomputearm.domain;
 
-import static com.google.common.collect.ImmutableList.copyOf;
-
-import java.util.List;
-
 import com.google.auto.value.AutoValue;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.Optional;
-
 import org.jclouds.javax.annotation.Nullable;
 import org.jclouds.json.SerializedNames;
-
-import com.google.auto.value.AutoValue;
 
 @AutoValue
 public abstract class ResourceGroup {

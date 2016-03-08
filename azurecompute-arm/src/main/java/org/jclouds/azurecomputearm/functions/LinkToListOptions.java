@@ -20,7 +20,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Strings.emptyToNull;
 import static com.google.common.collect.Iterables.getFirst;
 import static org.jclouds.azurecomputearm.domain.options.ListOptions.TOP_PARAM;
-import static org.jclouds.azurecomputearm.domain.options.ListOptions.PER_PAGE_PARAM;
 import static org.jclouds.http.utils.Queries.queryParser;
 
 import java.net.URI;

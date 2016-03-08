@@ -20,7 +20,6 @@ import java.io.Closeable;
 
 import javax.ws.rs.PathParam;
 
-import org.jclouds.azurecomputearm.domain.AffinityGroup;
 import org.jclouds.azurecomputearm.features.ResourceGroupApi;
 
 import org.jclouds.azurecomputearm.features.AffinityGroupApi;
