@@ -28,16 +28,7 @@ public class StorageServiceKeyTypeToXML implements Binder {
    @Override
    @SuppressWarnings("unchecked")
    public <R extends HttpRequest> R bindToRequest(final R request, final Object input) {
-      final StorageServiceKeys.KeyType params = StorageServiceKeys.KeyType.class.cast(input);
-
-      try {
-         final XMLBuilder builder = XMLBuilder.create(
-                 "RegenerateKeys", "http://schemas.microsoft.com/windowsazure").
-                 e("KeyType").t(params.name()).up();
-         return (R) request.toBuilder().payload(builder.asString()).build();
-      } catch (Exception e) {
-         throw propagate(e);
-      }
+      return null;
    }
 
 }

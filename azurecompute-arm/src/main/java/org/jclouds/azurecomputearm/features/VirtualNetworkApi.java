@@ -16,60 +16,54 @@
  */
 package org.jclouds.azurecomputearm.features;
 
-import java.util.List;
-
-import javax.inject.Named;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
-
+import org.jclouds.Fallbacks.VoidOnNotFoundOr404;
 import org.jclouds.Fallbacks.EmptyListOnNotFoundOr404;
 import org.jclouds.Fallbacks.NullOnNotFoundOr404;
-import org.jclouds.azurecomputearm.binders.NetworkConfigurationToXML;
-import org.jclouds.azurecomputearm.domain.NetworkConfiguration;
-import org.jclouds.azurecomputearm.domain.NetworkConfiguration.VirtualNetworkSite;
-import org.jclouds.azurecomputearm.functions.ParseRequestIdHeader;
-import org.jclouds.azurecomputearm.xml.ListVirtualNetworkSitesHandler;
-import org.jclouds.azurecomputearm.xml.NetworkConfigurationHandler;
-import org.jclouds.rest.annotations.BinderParam;
-import org.jclouds.rest.annotations.Fallback;
-import org.jclouds.rest.annotations.Headers;
-import org.jclouds.rest.annotations.ResponseParser;
-import org.jclouds.rest.annotations.XMLResponseParser;
 
-@Path("/services/networking")
+import org.jclouds.azurecomputearm.domain.VirtualNetwork;
+
+import org.jclouds.azurecomputearm.oauth.v2.filters.OAuthFilter;
+import org.jclouds.rest.annotations.*;
+import org.jclouds.rest.binders.BindToJsonPayload;
+
+import javax.inject.Named;
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+import java.util.List;
+
+@Path("/subscriptions/{subscriptionid}/resourcegroups/{resourcegroup}/providers/Microsoft.Network/")
+@QueryParams(keys = "api-version", values = "2015-06-15")
 @Headers(keys = "x-ms-version", values = "{jclouds.api-version}")
-@Consumes(MediaType.APPLICATION_XML)
+@RequestFilters(OAuthFilter.class)
+@Consumes(MediaType.APPLICATION_JSON)
 public interface VirtualNetworkApi {
 
-   /**
-    * The Get Network Configuration operation retrieves the network configuration file.
-    *
-    * @return The response body is a netcfg.cfg file.
-    *
-    */
-   @Named("GetVirtualNetworkConfiguration")
-   @Path("/media")
+   @Named("virtualnetwork:list")
+   @Path("virtualNetworks")
+   @SelectJson("value")
    @GET
-   @XMLResponseParser(NetworkConfigurationHandler.class)
-   @Fallback(NullOnNotFoundOr404.class)
-   NetworkConfiguration getNetworkConfiguration();
-
-   @Named("ListVirtualNetworkSites")
-   @Path("/virtualnetwork")
-   @GET
-   @XMLResponseParser(ListVirtualNetworkSitesHandler.class)
    @Fallback(EmptyListOnNotFoundOr404.class)
-   List<VirtualNetworkSite> list();
+   List<VirtualNetwork> listVirtualNetworks();
 
-   @Named("SetVirtualNetworkConfiguration")
-   @Path("/media")
+   @Named("virtualnetwork:create_or_update")
+   @Path("virtualNetworks/{virtualnetworkname}")
+   @MapBinder(BindToJsonPayload.class)
    @PUT
-   @Produces(MediaType.TEXT_PLAIN)
-   @ResponseParser(ParseRequestIdHeader.class)
-   String set(@BinderParam(NetworkConfigurationToXML.class) NetworkConfiguration networkConfiguration);
+   @Fallback(NullOnNotFoundOr404.class)
+   VirtualNetwork createOrUpdateVirtualNetwork(@PathParam("virtualnetworkname") String virtualnetworkname,
+                                               //VirtualNetworkOptions virtualNetworkOptions);
+                                               @PayloadParam("location") String location,
+                                               @PayloadParam("properties")VirtualNetwork.VirtualNetworkProperties properties);
 
+   @Named("virtualnetwork:get")
+   @Path("virtualNetworks/{virtualnetworkname}")
+   @GET
+   @Fallback(NullOnNotFoundOr404.class)
+   VirtualNetwork getVirtualNetwork(@PathParam("virtualnetworkname") String virtualnetworkname);
+
+   @Named("virtualnetwork:delete")
+   @Path("virtualNetworks/{virtualnetworkname}")
+   @DELETE
+   @Fallback(VoidOnNotFoundOr404.class)
+   void deleteVirtualNetwork(@PathParam("virtualnetworkname") String virtualnetworkname);
 }

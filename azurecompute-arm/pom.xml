@@ -34,9 +34,10 @@
 
   <properties>
     <test.jclouds.azurecomputearm.subscription-id>FIXME_subscription-id</test.jclouds.azurecomputearm.subscription-id>
+    <test.jclouds.azurecomputearm.tenant-id>FIXME_tenant-id</test.jclouds.azurecomputearm.tenant-id>
     <!-- note that there's no prefix of "test." in the url.  This is to ensure that jclouds inteprets the value, as opposed to maven -->
-    <test.azurecomputearm.endpoint>https://management.core.windows.net/${test.jclouds.azurecomputearm.subscription-id}</test.azurecomputearm.endpoint>
-    <test.azurecomputearm.api-version>2014-10-01</test.azurecomputearm.api-version>
+    <test.azurecomputearm.endpoint>https://management.azure.com/subscriptions/${test.jclouds.azurecomputearm.subscription-id}</test.azurecomputearm.endpoint>
+    <test.azurecomputearm.api-version>2014-04-01</test.azurecomputearm.api-version>
     <test.azurecomputearm.build-version />
     <test.azurecomputearm.identity>/path/to/cert.p12</test.azurecomputearm.identity>
     <test.azurecomputearm.credential>password to cert</test.azurecomputearm.credential>
@@ -68,22 +69,46 @@
     <dependency>
       <groupId>org.apache.jclouds</groupId>
       <artifactId>jclouds-core</artifactId>
-      <version>${project.parent.version}</version>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.jclouds</groupId>
+      <artifactId>jclouds-core</artifactId>
+      <version>${project.version}</version>
       <type>test-jar</type>
       <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.jclouds.api</groupId>
+      <artifactId>oauth</artifactId>
+      <version>${project.version}</version>
+      <type>jar</type>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.jclouds.api</groupId>
+      <artifactId>oauth</artifactId>
+      <version>${project.version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.jclouds</groupId>
+      <artifactId>jclouds-compute</artifactId>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.jclouds</groupId>
       <artifactId>jclouds-compute</artifactId>
-      <version>${project.parent.version}</version>
+      <version>${project.version}</version>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.jclouds.driver</groupId>
       <artifactId>jclouds-slf4j</artifactId>
-      <version>${project.parent.version}</version>
-      <type>test-jar</type>
+      <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -93,10 +118,10 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-    <groupId>ch.qos.logback</groupId>
-    <artifactId>logback-classic</artifactId>
-    <scope>test</scope>
-  </dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>org.apache.jclouds.driver</groupId>
       <artifactId>jclouds-sshj</artifactId>
@@ -143,6 +168,7 @@
                     <test.azurecomputearm.identity>${test.azurecomputearm.identity}</test.azurecomputearm.identity>
                     <test.azurecomputearm.credential>${test.azurecomputearm.credential}</test.azurecomputearm.credential>
                     <test.jclouds.azurecomputearm.subscription-id>${test.jclouds.azurecomputearm.subscription-id}</test.jclouds.azurecomputearm.subscription-id>
+                    <test.jclouds.azurecomputearm.tenant-id>${test.jclouds.azurecomputearm.tenant-id}</test.jclouds.azurecomputearm.tenant-id>
                   </systemPropertyVariables>
                 </configuration>
               </execution>

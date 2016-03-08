@@ -22,13 +22,12 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableMap;
-import org.jclouds.azurecomputearm.domain.CreateStorageServiceParams;
-import org.jclouds.azurecomputearm.domain.StorageService;
-import org.jclouds.azurecomputearm.domain.StorageServiceKeys;
-import org.jclouds.azurecomputearm.domain.UpdateStorageServiceParams;
+import org.jclouds.azurecomputearm.domain.*;
 import org.jclouds.azurecomputearm.internal.BaseAzureComputeApiLiveTest;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
+
+import java.util.List;
 
 @Test(groups = "live", testName = "StorageAccountApiLiveTest")
 public class StorageAccountApiLiveTest extends BaseAzureComputeApiLiveTest {
@@ -37,82 +36,82 @@ public class StorageAccountApiLiveTest extends BaseAzureComputeApiLiveTest {
            RAND + StorageAccountApiLiveTest.class.getSimpleName().toLowerCase());
 
    private void check(final StorageService storage) {
-      assertNotNull(storage.url());
-      assertNotNull(storage.serviceName());
+      assertNotNull(storage.id());
+      assertNotNull(storage.name());
       assertNotNull(storage.storageServiceProperties());
       assertNotNull(storage.storageServiceProperties().accountType());
-      assertFalse(storage.storageServiceProperties().endpoints().isEmpty());
+      assertFalse(storage.storageServiceProperties().primaryEndpoints().isEmpty());
       assertNotNull(storage.storageServiceProperties().creationTime());
    }
 
+   @Test()
    public void testList() {
-      for (StorageService storage : api().list()) {
+      List<StorageService> storages = api().list();
+      assertTrue(storages.size() > 0);
+      for (StorageService storage : storages) {
          check(storage);
       }
    }
 
+   @Test()
    public void testIsAvailable() {
-      assertTrue(api().isAvailable(NAME).result());
+      assertTrue(api().isAvailable(NAME).nameAvailable().equals("true"));
    }
 
    @Test(dependsOnMethods = "testIsAvailable")
    public void testCreate() {
-      final CreateStorageServiceParams params = CreateStorageServiceParams.builder().
-              serviceName(NAME).
-              description("description").
-              label("label").
-              location(LOCATION).
-              extendedProperties(ImmutableMap.of("property_name", "property_value")).
-              accountType(StorageService.AccountType.Standard_ZRS).
-              build();
-      final String requestId = api().create(params);
-      assertTrue(operationSucceeded.apply(requestId), requestId);
+
+      CreateStorageServiceParams storage = api().create(NAME,LOCATION, ImmutableMap.of("property_name",
+              "property_value"), ImmutableMap.of("accountType", StorageService.AccountType.Standard_ZRS.toString()));
+      while (storage == null) {
+         storage = api().create(NAME,LOCATION, ImmutableMap.of("property_name", "property_value"),
+                 ImmutableMap.of("accountType", StorageService.AccountType.Standard_ZRS.toString()));
+      }
+      assertEquals(storage.location(), LOCATION);
+      assertTrue(!storage.properties().isEmpty());
    }
 
    @Test(dependsOnMethods = "testCreate")
    public void testGet() {
       final StorageService service = api().get(NAME);
       assertNotNull(service);
-      assertEquals(service.serviceName(), NAME);
-      assertEquals(service.storageServiceProperties().description(), "description");
-      assertEquals(service.storageServiceProperties().location(), LOCATION);
-      assertEquals(service.storageServiceProperties().label(), "label");
+      assertEquals(service.name(), NAME);
+      assertEquals(service.storageServiceProperties().primaryLocation(), LOCATION);
       assertEquals(service.storageServiceProperties().accountType(), StorageService.AccountType.Standard_ZRS);
-      assertTrue(service.extendedProperties().containsKey("property_name"));
-      assertEquals(service.extendedProperties().get("property_name"), "property_value");
    }
 
    @Test(dependsOnMethods = "testCreate")
    public void testGetKeys() {
       final StorageServiceKeys keys = api().getKeys(NAME);
       assertNotNull(keys);
-      assertNotNull(keys.url());
-      assertNotNull(keys.primary());
-      assertNotNull(keys.secondary());
+      assertNotNull(keys.key1());
+      assertNotNull(keys.key2());
    }
 
    @Test(dependsOnMethods = "testCreate")
    public void testRegenerateKeys() {
-      final String requestId = api().regenerateKeys(NAME, StorageServiceKeys.KeyType.Primary);
-      assertTrue(operationSucceeded.apply(requestId), requestId);
+      StorageServiceKeys keys = api().regenerateKeys(NAME, "key1");
+      assertFalse(keys.key1().isEmpty());
+      assertFalse(keys.key2().isEmpty());
    }
 
    @Test(dependsOnMethods = "testCreate")
    public void testUpdate() {
-      final UpdateStorageServiceParams params = UpdateStorageServiceParams.builder().
-              extendedProperties(ImmutableMap.of("another_property_name", "another_property_value")).
-              build();
-      final String requestId = api().update(NAME, params);
-      assertTrue(operationSucceeded.apply(requestId), requestId);
+      StorageServiceUpdateParams.StorageServiceUpdateProperties props =
+              StorageServiceUpdateParams.StorageServiceUpdateProperties.create(null,null,null,null,
+                      null,null,null,null,null);
+      final StorageServiceUpdateParams params = api().update(NAME, props,
+              ImmutableMap.of("another_property_name", "another_property_value"));
+      assertTrue(params.tags().containsKey("another_property_name"));
    }
 
    @AfterClass(alwaysRun = true)
    public void testDelete() {
-      final String requestId = api().delete(NAME);
-      assertTrue(operationSucceeded.apply(requestId), requestId);
+      api().delete(NAME);
+      assertFalse(api().isAvailable(NAME).nameAvailable().equals("false"));
    }
 
    private StorageAccountApi api() {
-      return api.getStorageAccountApi();
+      return api.getStorageAccountApi(getSubscriptionId(), getResourceGroup());
    }
 }

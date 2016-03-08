@@ -16,6 +16,7 @@
  */
 package org.jclouds.azurecomputearm.internal;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.jclouds.azurecomputearm.config.AzureComputeProperties.OPERATION_POLL_INITIAL_PERIOD;
 import static org.jclouds.azurecomputearm.config.AzureComputeProperties.OPERATION_POLL_MAX_PERIOD;
@@ -27,8 +28,11 @@ import java.util.Random;
 
 import org.jclouds.apis.BaseApiLiveTest;
 import org.jclouds.azurecomputearm.AzureComputeApi;
+import org.jclouds.azurecomputearm.AzureComputeProviderMetadata;
 import org.jclouds.azurecomputearm.util.ConflictManagementPredicate;
 import org.jclouds.compute.config.ComputeServiceProperties;
+import org.jclouds.providers.ProviderMetadata;
+import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 
 import com.google.common.base.Predicate;
@@ -52,6 +56,10 @@ public abstract class AbstractAzureComputeApiLiveTest extends BaseApiLiveTest<Az
       properties.setProperty(OPERATION_POLL_MAX_PERIOD, "15");
       properties.setProperty(TCP_RULE_FORMAT, "tcp_%s-%s");
       properties.setProperty(TCP_RULE_REGEXP, "tcp_\\d{1,5}-\\d{1,5}");
+      // for oauth
+      AzureLiveTestUtils.defaultProperties(properties);
+      checkNotNull(setIfTestSystemPropertyPresent(properties, "jclouds.oauth.resource"), "test.jclouds.oauth.resource");
+      checkNotNull(setIfTestSystemPropertyPresent(properties, "oauth.endpoint"), "test.oauth.endpoint");
       return properties;
    }
 
@@ -61,4 +69,28 @@ public abstract class AbstractAzureComputeApiLiveTest extends BaseApiLiveTest<Az
       super.setup();
       operationSucceeded = new ConflictManagementPredicate(api, 600, 5, 5, SECONDS);
    }
+
+   @Override
+   protected ProviderMetadata createProviderMetadata() {
+      AzureComputeProviderMetadata pm = AzureComputeProviderMetadata.builder().build();
+      return pm;
+   }
+
+   protected String getSubscriptionId() {
+      String subscriptionId = null;
+      if(System.getProperties().containsKey("test.azurecompute-arm.subscriptionid"))
+         subscriptionId = System.getProperty("test.azurecompute-arm.subscriptionid");
+      Assert.assertNotNull(subscriptionId);
+      return subscriptionId;
+   }
+
+   protected String getResourceGroup() {
+      String resourceGroup = null;
+      if(System.getProperties().containsKey("test.azurecompute-arm.resourcegroup"))
+         resourceGroup = System.getProperty("test.azurecompute-arm.resourcegroup");
+      Assert.assertNotNull(resourceGroup);
+      return resourceGroup;
+   }
+
+
 }

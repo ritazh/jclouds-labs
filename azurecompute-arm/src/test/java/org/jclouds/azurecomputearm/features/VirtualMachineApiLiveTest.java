@@ -16,207 +16,181 @@
  */
 package org.jclouds.azurecomputearm.features;
 
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.jclouds.azurecomputearm.domain.Deployment.InstanceStatus.READY_ROLE;
-import static org.jclouds.util.Predicates2.retry;
-import static org.testng.Assert.assertTrue;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import org.jclouds.azurecomputearm.compute.AzureComputeServiceAdapter;
-import org.jclouds.azurecomputearm.domain.CloudService;
-import org.jclouds.azurecomputearm.domain.Deployment;
-import org.jclouds.azurecomputearm.domain.Deployment.RoleInstance;
-import org.jclouds.azurecomputearm.domain.DeploymentParams;
-import org.jclouds.azurecomputearm.domain.OSImage;
-import org.jclouds.azurecomputearm.domain.Role;
-import org.jclouds.azurecomputearm.domain.RoleSize;
+import com.google.common.collect.ImmutableMap;
+import org.jclouds.azurecomputearm.domain.*;
+import org.jclouds.azurecomputearm.internal.AbstractAzureComputeApiLiveTest;
 import org.jclouds.azurecomputearm.internal.BaseAzureComputeApiLiveTest;
-import org.jclouds.azurecomputearm.util.ConflictManagementPredicate;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
-/*
- * Note: Live test for CaptureVMImage method is in VMImageApiLiveTest class
- */
-@Test(groups = "live", testName = "VirtualMachineApiLiveTest", singleThreaded = true)
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
+
+@Test(groups = "live", testName = "VirtualMachineApiLiveTest")
 public class VirtualMachineApiLiveTest extends BaseAzureComputeApiLiveTest {
 
-   private static final String CLOUD_SERVICE = String.format("%s%d-%s",
-           System.getProperty("user.name"), RAND, VirtualMachineApiLiveTest.class.getSimpleName()).toLowerCase();
+   private String vmName = null;
+   private static String LOCATION = "westus";
+   final String subscriptionid =  getSubscriptionId();
+   final String resourcegroup =  getResourceGroup();
+   String subnetID ="";
 
-   private static final String DEPLOYMENT = String.format("%s%d-%s",
-           System.getProperty("user.name"), RAND, VirtualMachineApiLiveTest.class.getSimpleName()).toLowerCase();
+   @BeforeClass
+   public  void Setup(){
+      //Subnets belong to a virtual network so that needs to be created first
+      VirtualNetwork vn = getOrCreateVirtualNetwork(VIRTUAL_NETWORK_NAME, LOCATION);
+      assertNotNull(vn);
 
-   private String roleName;
-
-   private Predicate<String> roleInstanceReady;
-
-   private Predicate<String> roleInstanceStopped;
-
-   private CloudService cloudService;
-
-   @BeforeClass(groups = {"integration", "live"})
-   @Override
-   public void setup() {
-      super.setup();
-      cloudService = getOrCreateCloudService(CLOUD_SERVICE, LOCATION);
-
-      roleInstanceReady = retry(new Predicate<String>() {
-
-         @Override
-         public boolean apply(String input) {
-            RoleInstance roleInstance = getFirstRoleInstanceInDeployment(input);
-            return roleInstance != null && roleInstance.instanceStatus() == READY_ROLE;
-         }
-      }, 600, 5, 15, SECONDS);
-
-      roleInstanceStopped = retry(new Predicate<String>() {
-
-         @Override
-         public boolean apply(String input) {
-            RoleInstance roleInstance = getFirstRoleInstanceInDeployment(input);
-            return roleInstance != null && roleInstance.instanceStatus() == Deployment.InstanceStatus.STOPPED_VM;
-         }
-      }, 600, 5, 15, SECONDS);
-
-      final DeploymentParams params = DeploymentParams.builder()
-              .name(DEPLOYMENT)
-              .os(OSImage.Type.LINUX)
-              .sourceImageName(BaseAzureComputeApiLiveTest.IMAGE_NAME)
-              .mediaLink(AzureComputeServiceAdapter.createMediaLink(storageService.serviceName(), DEPLOYMENT))
-              .username("test")
-              .password("supersecurePassword1!")
-              .size(RoleSize.Type.BASIC_A0)
-              .externalEndpoints(ImmutableSet.of(DeploymentParams.ExternalEndpoint.inboundTcpToLocalPort(22, 22)))
-              .build();
-      getOrCreateDeployment(cloudService.name(), params);
-      RoleInstance roleInstance = getFirstRoleInstanceInDeployment(DEPLOYMENT);
-      assertTrue(roleInstanceReady.apply(DEPLOYMENT), roleInstance.toString());
-      roleName = roleInstance.roleName();
+      //Subnet needs to be up&running before NIC can be created
+      Subnet subnet = getOrCreateSubnet(DEFAULT_SUBNET_NAME, VIRTUAL_NETWORK_NAME);
+      assertNotNull(subnet);
+      assertNotNull(subnet.id());
+      subnetID = subnet.id();
    }
 
-   public void testUpdate() {
-      final Role role = api().getRole(roleName);
-      assertTrue(new ConflictManagementPredicate(api) {
+   private String getName() {
 
-         @Override
-         protected String operation() {
-            return api().updateRole(roleName,
-                    Role.create(
-                            role.roleName(),
-                            role.roleType(),
-                            role.vmImage(),
-                            role.mediaLocation(),
-                            role.configurationSets(),
-                            role.resourceExtensionReferences(),
-                            role.availabilitySetName(),
-                            role.dataVirtualHardDisks(),
-                            role.osVirtualHardDisk(),
-                            role.roleSize(),
-                            role.provisionGuestAgent(),
-                            role.defaultWinRmCertificateThumbprint()));
-         }
-      }.apply(role.roleName()));
+      if (vmName == null) {
+         vmName = String.format("%3.24s",
+           System.getProperty("user.name") + RAND + this.getClass().getSimpleName()).toLowerCase().substring(0,15);
+      }
+
+      return vmName;
    }
 
-   @Test(dependsOnMethods = "testUpdate")
-   public void testShutdown() {
-      assertTrue(new ConflictManagementPredicate(api) {
+   private NetworkInterfaceCard createNetworkInterfaceCard() {
 
-         @Override
-         protected String operation() {
-            return api().shutdown(roleName);
-         }
-      }.apply(roleName));
+      final NetworkInterfaceCardApi nicApi = api.getNetworkInterfaceCardApi(subscriptionid, resourcegroup);
 
-      RoleInstance roleInstance = getFirstRoleInstanceInDeployment(DEPLOYMENT);
-      assertTrue(roleInstanceStopped.apply(DEPLOYMENT), roleInstance.toString());
-      Logger.getAnonymousLogger().log(Level.INFO, "roleInstance stopped: {0}", roleInstance);
+
+      //Create properties object
+      final NetworkInterfaceCard.NetworkInterfaceCardProperties networkInterfaceCardProperties =
+              NetworkInterfaceCard.NetworkInterfaceCardProperties.builder()
+                      .ipConfigurations(
+                              Arrays.asList(
+                                      IpConfiguration.builder()
+                                              .name("myipconfig")
+                                              .properties(
+                                                      IpConfiguration.IpConfigurationProperties.builder()
+                                                              .subnet(Subnet.builder().id(subnetID).build())
+                                                              .privateIPAllocationMethod("Dynamic")
+                                                              .build()
+                                              )
+                                              .build()
+                              ))
+                      .build();
+
+      NetworkInterfaceCard nic = nicApi.createOrUpdateNetworkInterfaceCard(NETWORKINTERFACECARD_NAME, LOCATION,  networkInterfaceCardProperties);
+
+      assertEquals(nic.name(), NETWORKINTERFACECARD_NAME);
+      assertEquals(nic.location(), LOCATION);
+      assertTrue(nic.properties().ipConfigurations().size() > 0 );
+      assertEquals(nic.properties().ipConfigurations().get(0).name(), "myipconfig");
+      assertEquals(nic.properties().ipConfigurations().get(0).properties().privateIPAllocationMethod(), "Dynamic");
+      assertEquals(nic.properties().ipConfigurations().get(0).properties().subnet().id(), subnetID);
+      return nic;
    }
 
-   @Test(dependsOnMethods = "testShutdown")
-   public void testStart() {
-      assertTrue(new ConflictManagementPredicate(api) {
+   @Test
+   public void testCreate() {
+      NetworkInterfaceCard nic = createNetworkInterfaceCard();
+      StorageAccountApi storageApi = api.getStorageAccountApi(getSubscriptionId(), getResourceGroup());
+      final CreateStorageServiceParams params = CreateStorageServiceParams.builder().
+              location(LOCATION).
+              tags(ImmutableMap.of("property_name", "property_value")).
+              properties(ImmutableMap.of("accountType", StorageService.AccountType.Standard_LRS.toString())).
+              build();
 
-         @Override
-         protected String operation() {
-            return api().start(roleName);
+      CreateStorageServiceParams storage = storageApi.create(getName() + "storage",LOCATION,
+              ImmutableMap.of("property_name", "property_value"),
+              params.properties());
+
+      while (storage == null) {
+         try {
+            Thread.sleep(25*1000);
+         } catch (InterruptedException e) {
+            e.printStackTrace();
          }
-      }.apply(roleName));
-
-      RoleInstance roleInstance = getFirstRoleInstanceInDeployment(DEPLOYMENT);
-      assertTrue(roleInstanceReady.apply(DEPLOYMENT), roleInstance.toString());
-      Logger.getAnonymousLogger().log(Level.INFO, "roleInstance started: {0}", roleInstance);
+         storage = storageApi.create(getName() + "storage",LOCATION,
+                 ImmutableMap.of("property_name", "property_value"),
+                 params.properties());
+      }
+      StorageService storageAccount = storageApi.get(getName() + "storage");
+      String blob = storageAccount.storageServiceProperties().primaryEndpoints().get("blob");
+      String id = "/subscriptions/{subscription-id}/resourceGroups/myresourcegroup1/providers/" +
+              "Microsoft.Compute/virtualMachines/" + getName();
+      VirtualMachine vm = api().create(getName(),id, getName(), LOCATION, getProperties(blob,nic.name()));
+      assertTrue(!vm.name().isEmpty());
+      String status = "Creating";
+      while (status.equals("Creating")){
+         try {
+            Thread.sleep(120*1000);
+         } catch (InterruptedException e) {
+            e.printStackTrace();
+         }
+         vm = api().get(getName());
+         status = vm.properties().provisioningState();
+      }
+      status = vm.properties().provisioningState();
+      assertTrue(!status.equals("Creating"));
+      assertTrue(!status.equals("Failed"));
    }
 
-   @Test(dependsOnMethods = "testStart")
-   public void testRestart() {
-      assertTrue(new ConflictManagementPredicate(api) {
-
-         @Override
-         protected String operation() {
-            return api().restart(roleName);
-         }
-      }.apply(roleName));
-
-      final RoleInstance roleInstance = getFirstRoleInstanceInDeployment(DEPLOYMENT);
-      assertTrue(roleInstanceReady.apply(DEPLOYMENT), roleInstance.toString());
-      Logger.getAnonymousLogger().log(Level.INFO, "roleInstance restarted: {0}", roleInstance);
+   @Test(dependsOnMethods = "testCreate")
+   public void testGet() {
+      VirtualMachine vm = api().get(getName());
+      assertTrue(!vm.name().isEmpty());
    }
 
-   @AfterClass
-   @Override
-   protected void tearDown() {
-      if (cloudService != null && api.getDeploymentApiForService(cloudService.name()).get(DEPLOYMENT) != null) {
-         final List<Role> roles = api.getDeploymentApiForService(cloudService.name()).get(DEPLOYMENT).roleList();
-
-         assertTrue(new ConflictManagementPredicate(api) {
-
-            @Override
-            protected String operation() {
-               return api.getDeploymentApiForService(cloudService.name()).delete(DEPLOYMENT);
-            }
-         }.apply(DEPLOYMENT));
-
-         for (Role r : roles) {
-            final Role.OSVirtualHardDisk disk = r.osVirtualHardDisk();
-            if (disk != null) {
-               assertTrue(new ConflictManagementPredicate(api) {
-
-                  @Override
-                  protected String operation() {
-                     return api.getDiskApi().delete(disk.diskName());
-                  }
-               }.apply(disk.diskName()));
-            }
-         }
-
-         assertTrue(new ConflictManagementPredicate(api) {
-
-            @Override
-            protected String operation() {
-               return api.getCloudServiceApi().delete(cloudService.name());
-            }
-         }.apply(cloudService.name()));
-
-         super.tearDown();
+   @Test(dependsOnMethods = "testGet")
+   public void testList() {
+      List<VirtualMachine> list = api().list();
+      for (VirtualMachine machine : list) {
+         assertTrue(!machine.name().isEmpty());
       }
    }
 
+   @Test(dependsOnMethods = "testList")
+   public void testDelete() {
+      api().delete(getName());
+      //StorageAccountApi storageApi = api.getStorageAccountApi(getSubscriptionId(), getResourceGroup());
+      //TODO: delete storage and other resources after VM is destroyed. storageApi.delete(getName() + "storage");
+
+   }
+
    private VirtualMachineApi api() {
-      return api.getVirtualMachineApiForDeploymentInService(DEPLOYMENT, cloudService.name());
+      return api.getVirtualMachineApi(getSubscriptionId(),getResourceGroup());
    }
 
-   private RoleInstance getFirstRoleInstanceInDeployment(String deployment) {
-      return Iterables.getOnlyElement(api.getDeploymentApiForService(cloudService.name()).get(deployment).
-              roleInstanceList());
-   }
 
+   private VirtualMachineProperties getProperties(String blob, String nic) {
+      HardwareProfile hwProf = HardwareProfile.create("Standard_D1");
+      ImageReference imgRef = ImageReference.create("MicrosoftWindowsServerEssentials",
+              "WindowsServerEssentials", "WindowsServerEssentials","latest");
+      VHD vhd = VHD.create(blob + "vhds/" + getName()+ ".vhd");
+      VHD vhd2 = VHD.create(blob + "vhds/" + getName()+ "data.vhd");
+      DataDisk dataDisk = DataDisk.create(getName() + "data","100",0, vhd2,"Empty");
+      OSDisk osDisk = OSDisk.create(null,getName(), vhd,"ReadWrite","FromImage");
+      StorageProfile storageProfile = StorageProfile.create(imgRef, osDisk, null);
+      OSProfile.WindowsConfiguration windowsConfig = OSProfile.WindowsConfiguration.create(false,null,null,true,null);
+      OSProfile osProfile = OSProfile.create(getName(),"azureuser","RFe3&432dg",null,null,windowsConfig);
+      NetworkProfile.NetworkInterfaceId networkInterface =
+              NetworkProfile.NetworkInterfaceId.create("/subscriptions/" + getSubscriptionId()+
+                  "/resourceGroups/" + getResourceGroup() + "/providers/Microsoft.Network/networkInterfaces/" + nic);
+      List<NetworkProfile.NetworkInterfaceId> networkInterfaces =
+              new ArrayList<NetworkProfile.NetworkInterfaceId>();
+      networkInterfaces.add(networkInterface);
+      NetworkProfile networkProfile = NetworkProfile.create(networkInterfaces);
+      DiagnosticsProfile.BootDiagnostics bootDiagnostics =
+              DiagnosticsProfile.BootDiagnostics.create(true, blob);
+      DiagnosticsProfile diagnosticsProfile = DiagnosticsProfile.create(bootDiagnostics);
+      VirtualMachineProperties properties = VirtualMachineProperties.create(null,
+              null, null, hwProf, storageProfile, osProfile,networkProfile, diagnosticsProfile, "Creating");
+      return properties;
+   }
 }

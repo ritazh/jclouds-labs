@@ -16,99 +16,94 @@
  */
 package org.jclouds.azurecomputearm.features;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
-import java.util.List;
-
-import org.jclouds.azurecomputearm.AzureTestUtils;
-import org.jclouds.azurecomputearm.domain.NetworkConfiguration;
-import org.jclouds.azurecomputearm.domain.NetworkConfiguration.VirtualNetworkSite;
+import org.jclouds.azurecomputearm.domain.VirtualNetwork;
+import org.jclouds.azurecomputearm.internal.AbstractAzureComputeApiLiveTest;
 import org.jclouds.azurecomputearm.internal.BaseAzureComputeApiLiveTest;
-import org.jclouds.azurecomputearm.util.ConflictManagementPredicate;
-import org.testng.annotations.AfterSuite;
-import org.testng.annotations.BeforeSuite;
+import org.jclouds.azurecomputearm.internal.BaseAzureComputeApiMockTest;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
+import java.util.Arrays;
+import java.util.List;
 
-@Test(groups = "live", testName = "VirtualNetworkApiLiveTest", singleThreaded = true)
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
+
+
+//mvn -Dtest=VirtualNetworkApiLiveTest -Dtest.azurecompute-arm.identity="f....a" -Dtest.azurecompute-arm.subscriptionid="626f67f6-8fd0-xxxx-yyyy-e3ce95f7dfec" -Dtest.azurecompute-arm.resourcegroup="hardcodedgroup" -Dtest.azurecompute-arm.credential="yorupass" -Dtest.azurecompute-arm.endpoint="https://management.azure.com/" -Dtest.jclouds.oauth.resource="https://management.azure.com/" -Dtest.oauth.endpoint="https://login.microsoftonline.com/youraccount.onmicrosoft.com/oauth2/token" test
+
+@Test(groups = "live", singleThreaded = true)
 public class VirtualNetworkApiLiveTest extends BaseAzureComputeApiLiveTest {
 
-   private static final String DEFAULT_ADDRESS_SPACE = "10.0.0.0/20";
-   private static final String DEFAULT_SUBNET_ADDRESS_SPACE = "10.0.0.0/23";
-   private List<VirtualNetworkSite> initialVirtualNetworkSite;
+    final String subscriptionid =  getSubscriptionId();
+    final String resourcegroup =  getResourceGroup();
 
-   @BeforeSuite
-   @Override
-   public void setup() {
-      super.setup();
+    @Test(groups = "live")
+    public void deleteVirtualNetworkResourceDoesNotExist() {
 
-      initialVirtualNetworkSite = AzureTestUtils.getVirtualNetworkSite(api);
+        final VirtualNetworkApi vnApi = api.getVirtualNetworkApi(subscriptionid, resourcegroup);
 
-      virtualNetworkSite = getOrCreateVirtualNetworkSite(VIRTUAL_NETWORK_NAME, LOCATION);
+        vnApi.deleteVirtualNetwork(VIRTUAL_NETWORK_NAME);
 
-      final List<VirtualNetworkSite> virtualNetworkSites = Lists.newArrayList(Iterables.filter(
-              AzureTestUtils.getVirtualNetworkSite(api),
-              new AzureTestUtils.SameVirtualNetworkSiteNamePredicate(VIRTUAL_NETWORK_NAME)));
+        //TODO: need to check that we get "no content" back
 
-      final NetworkConfiguration.AddressSpace addressSpace = NetworkConfiguration.AddressSpace.create(
-              DEFAULT_ADDRESS_SPACE);
+    }
 
-      final ImmutableList<NetworkConfiguration.Subnet> subnets = ImmutableList.of(NetworkConfiguration.Subnet.create(
-              DEFAULT_SUBNET_NAME, DEFAULT_SUBNET_ADDRESS_SPACE, null));
+    //mvn -Dtest=VirtualNetworkApiLiveTest#createVirtualNetwork test
+    @Test(groups = "live", dependsOnMethods = "deleteVirtualNetworkResourceDoesNotExist")
+    public void createVirtualNetwork() {
 
-      final NetworkConfiguration networkConfiguration = api().getNetworkConfiguration();
-      assertThat(networkConfiguration.virtualNetworkConfiguration().dns()).isEqualTo(
-              networkConfiguration.virtualNetworkConfiguration().dns());
+        final VirtualNetworkApi vnApi = api.getVirtualNetworkApi(subscriptionid, resourcegroup);
 
-      assertThat(virtualNetworkSites.size()).isEqualTo(1);
-      assertThat(virtualNetworkSites.get(0).name()).isEqualTo(VIRTUAL_NETWORK_NAME);
-      assertThat(virtualNetworkSites.get(0).location()).isEqualTo(LOCATION);
-      assertThat(virtualNetworkSites.get(0).addressSpace()).isEqualTo(addressSpace);
-      assertThat(virtualNetworkSites.get(0).subnets()).isEqualTo(subnets);
-   }
+        //Create properties object
+        //Create properties object
+        final VirtualNetwork.VirtualNetworkProperties virtualNetworkProperties = VirtualNetwork.VirtualNetworkProperties.builder()
+                .addressSpace(VirtualNetwork.AddressSpace.builder()
+                        .addressPrefixes(Arrays.asList(DEFAULT_VIRTUALNETWORK_ADDRESS_PREFIX))
+                        .build()
+                )
+                .build();
 
-   @AfterSuite
-   @Override
-   protected void tearDown() {
-      super.tearDown();
+        VirtualNetwork vn = vnApi.createOrUpdateVirtualNetwork(VIRTUAL_NETWORK_NAME, LOCATION, virtualNetworkProperties);
 
-      final NetworkConfiguration networkConfiguration = NetworkConfiguration.create(NetworkConfiguration.VirtualNetworkConfiguration.create(null, initialVirtualNetworkSite));
-      assertTrue(new ConflictManagementPredicate(api) {
-         @Override
-         protected String operation() {
-            return api.getVirtualNetworkApi().set(networkConfiguration);
-         }
-      }.apply("Revert VirtualNetworkConfiguration"));
-   }
+        assertEquals(VIRTUAL_NETWORK_NAME, vn.name());
+        assertEquals(LOCATION, vn.location());
+    }
 
-   @Test
-   public void testList() {
-      for (VirtualNetworkSite vns : api().list()) {
-         checkVirtualNetworkSite(vns);
-      }
-   }
+    //mvn -Dtest=VirtualNetworkApiLiveTest#getVirtualNetwork test
+    @Test(groups = "live", dependsOnMethods = "createVirtualNetwork")
+    public void getVirtualNetwork() {
 
-   private void checkVirtualNetworkSite(VirtualNetworkSite virtualNetworkSite) {
-      assertNotNull(virtualNetworkSite.name(), "Name cannot be null for a VirtualNetworkSite.");
-      assertNotNull(virtualNetworkSite.addressSpace(), "AddressSpace cannot be null for: " + virtualNetworkSite);
-      assertNotNull(virtualNetworkSite.subnets(), "Subnets cannot be null for: " + virtualNetworkSite);
-   }
+        final VirtualNetworkApi vnApi = api.getVirtualNetworkApi(subscriptionid, resourcegroup);
+        VirtualNetwork vn = vnApi.getVirtualNetwork(VIRTUAL_NETWORK_NAME);
 
-   @Test
-   public void testGetNetworkConfiguration() {
-      final NetworkConfiguration networkConfiguration = api().getNetworkConfiguration();
-      assertThat(networkConfiguration).isNotNull();
-      for (VirtualNetworkSite vns : networkConfiguration.virtualNetworkConfiguration().virtualNetworkSites()) {
-         assertThat(vns.name()).isNotEqualTo("not-existing");
-      }
-   }
+        assertNotNull(vn.name());
+        assertNotNull(vn.location());
+        assertNotNull(vn.properties().addressSpace().addressPrefixes());
+    }
 
-   private VirtualNetworkApi api() {
-      return api.getVirtualNetworkApi();
-   }
+    //mvn -Dtest=VirtualNetworkApiLiveTest#listVirtualNetworks test
+    @Test(groups = "live", dependsOnMethods = "getVirtualNetwork")
+    public void listVirtualNetworks() {
+
+        final VirtualNetworkApi vnApi = api.getVirtualNetworkApi(subscriptionid, resourcegroup);
+        List<VirtualNetwork> vnList = vnApi.listVirtualNetworks();
+
+        assertTrue(vnList.size()>0);
+    }
+
+
+
+    //mvn -Dtest=VirtualNetworkApiLiveTest#deleteVirtualNetwork test
+    @Test(groups = "live", dependsOnMethods = "listVirtualNetworks", alwaysRun = true)
+    public void deleteVirtualNetwork() {
+
+        final VirtualNetworkApi vnApi = api.getVirtualNetworkApi(subscriptionid, resourcegroup);
+
+        vnApi.deleteVirtualNetwork(VIRTUAL_NETWORK_NAME);
+
+    }
 
 }

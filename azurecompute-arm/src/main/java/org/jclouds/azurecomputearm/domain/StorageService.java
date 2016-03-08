@@ -24,6 +24,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import org.jclouds.javax.annotation.Nullable;
+import org.jclouds.json.SerializedNames;
 
 @AutoValue
 public abstract class StorageService {
@@ -51,9 +52,11 @@ public abstract class StorageService {
 
    public enum RegionStatus {
 
-      Available,
-      Unavailable,
-      UNRECOGNIZED;
+       Available,
+       Unavailable,
+       available,
+       unavailable,
+       UNRECOGNIZED;
 
       public static RegionStatus fromString(final String text) {
          if (text != null) {
@@ -70,13 +73,14 @@ public abstract class StorageService {
 
    public enum Status {
 
-      Creating,
-      Created,
-      Deleting,
-      Deleted,
-      Changing,
-      ResolvingDns,
-      UNRECOGNIZED;
+       Creating,
+       Created,
+       Deleting,
+       Deleted,
+       Changing,
+       ResolvingDns,
+       Succeeded,
+       UNRECOGNIZED;
 
       public static Status fromString(final String text) {
          if (text != null) {
@@ -96,108 +100,72 @@ public abstract class StorageService {
       StorageServiceProperties() {
       } // For AutoValue only!
 
-      /**
-       * A description for the storage account. The description can be up to 1024 characters in length.
+       /**
+        * Specifies whether the account supports locally-redundant storage, geo-redundant storage, zone-redundant
+        * storage, or read access geo-redundant storage.
+        */
+       public abstract AccountType accountType();
+
+       /**
+        * Specifies the time that the storage account was created.
+        */
+       public abstract Date creationTime();
+
+       /**
+        * Specifies the endpoints of the storage account.
+        */
+       @Nullable
+       public abstract Map<String, String> primaryEndpoints();
+
+       /**
+       * A primaryLocation for the storage account.
        */
       @Nullable
-      public abstract String description();
+      public abstract String primaryLocation();
 
       /**
-       * Required if Location is not specified. The name of an existing affinity group associated with this
-       * subscription.
+       * provisioningState for the storage group
        */
       @Nullable
-      public abstract String affinityGroup();
+      public abstract Status provisioningState();
+
+       /**
+        * Specifies the secondary endpoints of the storage account.
+        */
+       @Nullable
+       public abstract Map<String, String> secondaryEndpoints();
 
       /**
-       * Required if AffinityGroup is not specified. The location where the storage account will be created.
+       * Secondary location for the storage group
        */
       @Nullable
-      public abstract String location();
+      public abstract String secondaryLocation();
 
       /**
-       * A name for the hosted service that is base-64 encoded. The name can be up to 100 characters in length. The name
-       * can be used identify the storage account for your tracking purposes
-       */
-      public abstract String label();
-
-      /**
-       * The status of the storage account.
-       */
-      public abstract Status status();
-
-      /**
-       * Specifies the endpoints of the storage account.
-       */
-      @Nullable
-      public abstract List<URL> endpoints();
-
-      /**
-       * Indicates the primary geographical region in which the storage account exists at this time.
-       */
-      @Nullable
-      public abstract String geoPrimaryRegion();
-
-      /**
-       * Indicates whether the primary storage region is available.
+       * The status of primary endpoints
        */
       @Nullable
       public abstract RegionStatus statusOfPrimary();
 
       /**
-       * A timestamp that indicates the most recent instance of a failover to the secondary region. In case of multiple
-       * failovers only the latest failover date and time maintained
-       */
-      @Nullable
-      public abstract Date lastGeoFailoverTime();
-
-      /**
-       * Indicates the geographical region in which the storage account is being replicated.
-       */
-      @Nullable
-      public abstract String geoSecondaryRegion();
-
-      /**
-       * Indicates whether the secondary storage region is available.
+       * The secondary status of the storage account.
        */
       @Nullable
       public abstract RegionStatus statusOfSecondary();
 
-      /**
-       * Specifies the time that the storage account was created.
-       */
-      public abstract Date creationTime();
 
-      /**
-       * Specifies the custom domains that are associated with the storage account.
-       */
-      @Nullable
-      public abstract List<String> customDomains();
+      @SerializedNames({"accountType","creationTime","primaryEndpoints", "primaryLocation",
+              "provisioningState","secondaryEndpoints","secondaryLocation","statusOfPrimary","statusOfSecondary"})
+      public static StorageServiceProperties create(final AccountType accountType, final Date creationTime,
+              final Map<String, String> primaryEndpoints, final String primaryLocation, final Status provisioningState,
+              final Map<String, String> secondaryEndpoints, final String secondaryLocation, final RegionStatus statusOfPrimary,
+              final RegionStatus statusOfSecondary) {
 
-      /**
-       * Specifies the secondary endpoints of the storage account.
-       */
-      @Nullable
-      public abstract List<URL> secondaryEndpoints();
-
-      /**
-       * Specifies whether the account supports locally-redundant storage, geo-redundant storage, zone-redundant
-       * storage, or read access geo-redundant storage.
-       */
-      public abstract AccountType accountType();
-
-      public static StorageServiceProperties create(final String description, final String affinityGroup,
-              final String location, final String label, final Status status, final List<URL> endpoints,
-              final String geoPrimaryRegion, final RegionStatus statusOfPrimary,
-              final Date lastGeoFailoverTime, final String geoSecondaryRegion, final RegionStatus statusOfSecondary,
-              final Date creationTime, final List<String> customDomains, final List<URL> secondaryEndpoints,
-              final AccountType accountType) {
-
-         return new AutoValue_StorageService_StorageServiceProperties(description, affinityGroup, location,
-                 label, status, endpoints == null ? null : ImmutableList.copyOf(endpoints),
-                 geoPrimaryRegion, statusOfPrimary, lastGeoFailoverTime, geoSecondaryRegion, statusOfSecondary,
-                 creationTime, customDomains,
-                 secondaryEndpoints == null ? null : ImmutableList.copyOf(secondaryEndpoints), accountType);
+         return new AutoValue_StorageService_StorageServiceProperties(accountType, creationTime,
+                 primaryEndpoints,
+                 primaryLocation, provisioningState,
+                 secondaryEndpoints,
+                 secondaryLocation, statusOfPrimary, statusOfSecondary);
       }
    }
 
@@ -205,39 +173,46 @@ public abstract class StorageService {
    } // For AutoValue only!
 
    /**
-    * Specifies the URI of the storage account.
+    * Specifies the id of the storage account.
     */
-   public abstract URL url();
+   @Nullable
+   public abstract String id();
 
    /**
     * Specifies the name of the storage account. This name is the DNS prefix name and can be used to access blobs,
     * queues, and tables in the storage account.
     */
-   public abstract String serviceName();
+   @Nullable
+   public abstract String name();
+
+   /**
+    * Specifies the location of the storage account.
+    */
+   @Nullable
+   public abstract String location();
+
+   /**
+    * Specifies the tags of the storage account.
+    */
+   @Nullable
+   public abstract Map<String, String> tags();
+
+   /**
+    * Specifies the type of the storage account.
+    */
+   @Nullable
+   public abstract String type();
 
    /**
     * Specifies the properties of the storage account.
     */
    public abstract StorageServiceProperties storageServiceProperties();
 
-   /**
-    * Specifies the name and value of an extended property that was added to the storage account.
-    */
-   @Nullable
-   public abstract Map<String, String> extendedProperties();
 
-   /**
-    * Indicates whether the storage account is able to perform virtual machine related operations. If so, this element
-    * returns a string containing PersistentVMRole. Otherwise, this element will not be present.
-    */
-   @Nullable
-   public abstract String capability();
-
-   public static StorageService create(final URL url, final String serviceName,
-           final StorageServiceProperties storageServiceProperties, final Map<String, String> extendedProperties,
-           final String capability) {
-
-      return new AutoValue_StorageService(url, serviceName, storageServiceProperties,
-              extendedProperties == null ? null : ImmutableMap.copyOf(extendedProperties), capability);
+   @SerializedNames({"id","name","location","tags","type", "properties"})
+   public static StorageService create(final String id, final String name, final String location,
+                                       final Map<String,String> tags, final String type,
+                                       final StorageServiceProperties storageServiceProperties) {
+      return new AutoValue_StorageService(id, name, location, tags, type, storageServiceProperties);
    }
 }

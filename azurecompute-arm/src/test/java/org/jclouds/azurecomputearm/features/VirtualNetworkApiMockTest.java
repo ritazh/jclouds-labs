@@ -15,80 +15,104 @@
  * limitations under the License.
  */
 package org.jclouds.azurecomputearm.features;
+import com.squareup.okhttp.mockwebserver.RecordedRequest;
+import org.jclouds.azurecomputearm.AzureComputeApi;
+import org.jclouds.azurecomputearm.domain.ResourceGroup;
+import org.jclouds.azurecomputearm.domain.Subnet;
+import org.jclouds.azurecomputearm.domain.VirtualNetwork;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.testng.Assert.assertEquals;
-import java.util.UUID;
-
-import org.jclouds.azurecomputearm.domain.NetworkConfiguration;
-import org.jclouds.azurecomputearm.domain.NetworkConfiguration.VirtualNetworkConfiguration;
-import org.jclouds.azurecomputearm.internal.BaseAzureComputeApiMockTest;
-import org.jclouds.azurecomputearm.xml.ListVirtualNetworkSitesHandlerTest;
-import org.jclouds.azurecomputearm.xml.NetworkConfigurationHandlerTest;
 import org.testng.annotations.Test;
+import static com.google.common.collect.Iterables.size;
+import static org.testng.Assert.assertEquals;
+import org.jclouds.azurecomputearm.internal.BaseAzureComputeApiMockTest;
 
-import com.google.common.collect.ImmutableList;
-import com.squareup.okhttp.mockwebserver.MockWebServer;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
-@Test(groups = "unit", testName = "VirtualNetworkApiMockTest")
+//mvn -Dtest=VirtualNetworkApiMockTest test
+@Test(groups = "unit", testName = "VirtualNetworkApiMockTest", singleThreaded = true)
 public class VirtualNetworkApiMockTest extends BaseAzureComputeApiMockTest {
 
-   public void testGetNetworkConfiguration() throws Exception {
-      MockWebServer server = mockAzureManagementServer();
-      server.enqueue(xmlResponse("/networkconfiguration.xml"));
+    final String subscriptionid = "12345678-2749-4e68-9dcf-e21cda85a132";
+    final String resourcegroup = "myresourcegroup";
+    final String virtualNetwork = "mockvirtualnetwork";
+    final String apiVersion ="api-version=2015-06-15";
+    final String location = "northeurope";
 
-      try {
-         VirtualNetworkApi api = virtualNetworkApi(server);
+    //mvn -Dtest=VirtualNetworkApiMockTest#getVirtualNetwork test
+    public void getVirtualNetwork() throws InterruptedException {
+        server.enqueue(jsonResponse("/virtualnetwork.json"));
 
-         assertEquals(api.getNetworkConfiguration(), NetworkConfigurationHandlerTest.expected());
+        final VirtualNetworkApi vnApi = api.getVirtualNetworkApi(subscriptionid, resourcegroup);
+        VirtualNetwork vn = vnApi.getVirtualNetwork(virtualNetwork);
 
-         assertSent(server, "GET", "/services/networking/media");
-      } finally {
-         server.shutdown();
-      }
-   }
+        String path = String.format("/subscriptions/%s/resourcegroups/%s/providers/Microsoft.Network/virtualNetworks/%s?%s", subscriptionid, resourcegroup, virtualNetwork, apiVersion);
+        assertSent(server, "GET", path);
+        assertEquals(vn.name(), "mockvirtualnetwork");
+        assertEquals(vn.properties().resourceGuid(),"1568c76a-73a4-4a60-8dfb-53b823197ccb");
+        assertEquals(vn.properties().addressSpace().addressPrefixes().get(0),"10.2.0.0/16");
+    }
 
-   public void testSet() throws Exception {
-      MockWebServer server = mockAzureManagementServer();
-      server.enqueue(requestIdResponse("request-1"));
+    //mvn -Dtest=VirtualNetworkApiMockTest#listVirtualNetworks test
+    public void listVirtualNetworks() throws InterruptedException {
+        server.enqueue(jsonResponse("/listvirtualnetworks.json"));
 
-      try {
-         VirtualNetworkApi api = virtualNetworkApi(server);
+        final VirtualNetworkApi vnApi = api.getVirtualNetworkApi(subscriptionid, resourcegroup);
+        List<VirtualNetwork> vnList = vnApi.listVirtualNetworks();
+        String path = String.format("/subscriptions/%s/resourcegroups/%s/providers/Microsoft.Network/virtualNetworks?%s", subscriptionid, resourcegroup, apiVersion);
 
-         assertThat(api.set(NetworkConfiguration.create(
-                 VirtualNetworkConfiguration.create(null,
-                         ImmutableList.of(NetworkConfiguration.VirtualNetworkSite.create(
-                                         UUID.randomUUID().toString(),
-                                         "jclouds-virtual-network",
-                                         "West Europe",
-                                         NetworkConfiguration.AddressSpace.create("10.0.0.0/20"),
-                                         ImmutableList.of(NetworkConfiguration.Subnet.create("jclouds-1", "10.0.0.0/23",
-                                                         null)))))))
-         ).isEqualTo("request-1");
+        assertSent(server, "GET", path);
+        assertEquals(vnList.size(),3);
+    }
 
-         assertSent(server, "PUT", "/services/networking/media");
-      } finally {
-         server.shutdown();
-      }
-   }
+    //mvn -Dtest=VirtualNetworkApiMockTest#createVirtualNetwork test
+    public void createVirtualNetwork() throws InterruptedException {
 
-   public void testList() throws Exception {
-      MockWebServer server = mockAzureManagementServer();
-      server.enqueue(xmlResponse("/virtualnetworksites.xml"));
+        server.enqueue(jsonResponse("/createvirtualnetwork.json").setStatus("HTTP/1.1 201 Created"));
 
-      try {
-         VirtualNetworkApi api = virtualNetworkApi(server);
+        final VirtualNetworkApi vnApi = api.getVirtualNetworkApi(subscriptionid, resourcegroup);
 
-         assertThat(api.list()).containsExactlyElementsOf(ListVirtualNetworkSitesHandlerTest.expected());
 
-         assertSent(server, "GET",
-                 "/services/networking/virtualnetwork");
-      } finally {
-         server.shutdown();
-      }
-   }
+        //Create properties object
+        final VirtualNetwork.VirtualNetworkProperties virtualNetworkProperties = VirtualNetwork.VirtualNetworkProperties.builder()
+                .addressSpace(VirtualNetwork.AddressSpace.builder()
+                                .addressPrefixes(Arrays.asList("10.2.0.0/16"))
+                                .build()
+                )
+                .build();
 
-   private VirtualNetworkApi virtualNetworkApi(MockWebServer server) {
-      return api(server.getUrl("/")).getVirtualNetworkApi();
-   }
+        VirtualNetwork vn = vnApi.createOrUpdateVirtualNetwork(virtualNetwork, location,  virtualNetworkProperties);
+
+        String path = String.format("/subscriptions/%s/resourcegroups/%s/providers/Microsoft.Network/virtualNetworks/%s?%s", subscriptionid, resourcegroup, virtualNetwork, apiVersion);
+        String json = String.format("{\"location\":\"%s\",\"properties\":{\"addressSpace\":{\"addressPrefixes\":[\"%s\"]}}}", location, "10.2.0.0/16");
+        assertSent(server, "PUT", path, json);
+    }
+
+    //mvn -Dtest=VirtualNetworkApiMockTest#deleteVirtualNetwork test
+    public void deleteVirtualNetwork() throws InterruptedException {
+
+        server.enqueue(response202());
+
+        final VirtualNetworkApi vnApi = api.getVirtualNetworkApi(subscriptionid, resourcegroup);
+
+        vnApi.deleteVirtualNetwork(virtualNetwork);
+
+        String path = String.format("/subscriptions/%s/resourcegroups/%s/providers/Microsoft.Network/virtualNetworks/%s?%s", subscriptionid, resourcegroup, virtualNetwork, apiVersion);
+        assertSent(server, "DELETE", path);
+
+    }
+
+    //mvn -Dtest=VirtualNetworkApiMockTest#deleteVirtualNetworkResourceDoesNotExist test
+    public void deleteVirtualNetworkResourceDoesNotExist() throws InterruptedException {
+
+       server.enqueue(response204());
+
+        final VirtualNetworkApi vnApi = api.getVirtualNetworkApi(subscriptionid, resourcegroup);
+
+        vnApi.deleteVirtualNetwork(virtualNetwork);
+
+        String path = String.format("/subscriptions/%s/resourcegroups/%s/providers/Microsoft.Network/virtualNetworks/%s?%s", subscriptionid, resourcegroup, virtualNetwork, apiVersion);
+        assertSent(server, "DELETE", path);
+    }
 }

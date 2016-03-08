@@ -166,7 +166,11 @@ public class AzureComputeSecurityGroupExtension implements SecurityGroupExtensio
    }
 
    @Override
+   @Deprecated //IS virtual network api changed
    public boolean removeSecurityGroup(final String id) {
+      return false;
+      //IS: commented out as vn api has changed
+      /*
       final NetworkConfiguration networkConfiguration = api.getVirtualNetworkApi().getNetworkConfiguration();
       if (networkConfiguration != null) {
          for (VirtualNetworkSite virtualNetworkSite
@@ -203,6 +207,7 @@ public class AzureComputeSecurityGroupExtension implements SecurityGroupExtensio
       }
       String deleteRequestId = api.getNetworkSecurityGroupApi().delete(id);
       return operationSucceededPredicate.apply(deleteRequestId);
+      */
    }
 
    @Override

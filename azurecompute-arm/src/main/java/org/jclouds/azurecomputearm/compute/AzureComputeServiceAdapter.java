@@ -187,7 +187,8 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
 
    @Override
    public Iterable<RoleSize> listHardwareProfiles() {
-      return api.getSubscriptionApi().listRoleSizes();
+      // TODO: (jtjk) where to get these?
+      return null; //api.getSubscriptionApi().listRoleSizes();
    }
 
    @Override
@@ -260,9 +261,19 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
                               image.eula());
    }
 
+   // TODO: This should be done some other way....
+   private String getSubscriptionId() {
+      String subscriptionId = null;
+      if(System.getProperties().containsKey("test.azurecompute-arm.subscriptionid"))
+         subscriptionId = System.getProperty("test.azurecompute-arm.subscriptionid");
+      assert(subscriptionId == null);
+      return subscriptionId;
+   }
+
    @Override
    public Iterable<Location> listLocations() {
-      return api.getLocationApi().list();
+      // TODO: (jtjk) Get subscription id properly
+      return api.getLocationApi(getSubscriptionId()).list();
    }
 
    @Override
@@ -310,7 +321,7 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
 
          if (deployment != null) {
             for (Role role : deployment.roleList()) {
-               trackRequest(api.getVirtualMachineApiForDeploymentInService(deploymentName, role.roleName()).shutdown(nodeId, POST_SHUTDOWN_ACTION));
+               /*trackRequest(*/api.getVirtualMachineApiForDeploymentInService(deploymentName, role.roleName()).stop(nodeId); //shutdown(nodeId, POST_SHUTDOWN_ACTION));
             }
 
             deleteDeployment(deploymentName, nodeId);
@@ -370,7 +381,7 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
       final CloudService cloudService = api.getCloudServiceApi().get(id);
       if (cloudService != null) {
          logger.debug("Restarting %s ...", id);
-         trackRequest(api.getVirtualMachineApiForDeploymentInService(id, cloudService.name()).restart(id));
+         /*trackRequest(*/api.getVirtualMachineApiForDeploymentInService(id, cloudService.name()).restart(id)/*)*/;
          logger.debug("Restarted %s", id);
       }
    }
@@ -380,7 +391,7 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
       final CloudService cloudService = api.getCloudServiceApi().get(id);
       if (cloudService != null) {
          logger.debug("Resuming %s ...", id);
-         trackRequest(api.getVirtualMachineApiForDeploymentInService(id, cloudService.name()).start(id));
+         /*trackRequest(*/api.getVirtualMachineApiForDeploymentInService(id, cloudService.name()).start(id)/*)*/;
          logger.debug("Resumed %s", id);
       }
    }
@@ -390,7 +401,7 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
       final CloudService cloudService = api.getCloudServiceApi().get(id);
       if (cloudService != null) {
          logger.debug("Suspending %s ...", id);
-         trackRequest(api.getVirtualMachineApiForDeploymentInService(id, cloudService.name()).shutdown(id, POST_SHUTDOWN_ACTION));
+         /*trackRequest(*/api.getVirtualMachineApiForDeploymentInService(id, cloudService.name()).stop(id); //, POST_SHUTDOWN_ACTION));
          logger.debug("Suspended %s", id);
       }
    }
