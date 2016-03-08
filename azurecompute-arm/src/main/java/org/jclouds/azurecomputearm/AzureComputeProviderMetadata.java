@@ -21,8 +21,6 @@ import static org.jclouds.azurecomputearm.config.AzureComputeProperties.OPERATIO
 import static org.jclouds.azurecomputearm.config.AzureComputeProperties.OPERATION_TIMEOUT;
 import static org.jclouds.azurecomputearm.config.AzureComputeProperties.TCP_RULE_FORMAT;
 import static org.jclouds.azurecomputearm.config.AzureComputeProperties.TCP_RULE_REGEXP;
-
-
 import static org.jclouds.azurecomputearm.oauth.v2.config.CredentialType.CLIENT_CREDENTIALS_SECRET;
 import static org.jclouds.azurecomputearm.oauth.v2.config.OAuthProperties.AUDIENCE;
 import static org.jclouds.azurecomputearm.oauth.v2.config.OAuthProperties.RESOURCE;
@@ -61,13 +59,11 @@ public class AzureComputeProviderMetadata extends BaseProviderMetadata {
       properties.setProperty(OPERATION_POLL_MAX_PERIOD, "15");
       properties.setProperty(TCP_RULE_FORMAT, "tcp_%s-%s");
       properties.setProperty(TCP_RULE_REGEXP, "tcp_\\d{1,5}-\\d{1,5}");
-
       properties.put("oauth.endpoint", "https://login.microsoftonline.com/oauth2/token");
       properties.put(JWS_ALG, "RS256");
       properties.put(AUDIENCE, "https://login.microsoftonline.com/oauth2/token");
       properties.put(RESOURCE, "https://management.azure.com");
       properties.put(CREDENTIAL_TYPE, CLIENT_CREDENTIALS_SECRET.toString());
-
       return properties;
    }
 
@@ -83,7 +79,7 @@ public class AzureComputeProviderMetadata extends BaseProviderMetadata {
          id("azurecompute-arm")
                  .name("Azure Resource Management ")
                  .apiMetadata(new AzureManagementApiMetadata())
-                 .endpoint("https://management.azure.com/subscriptions/04f7ec88-8e28-41ed-8537-5e17766001f5")
+                 .endpoint("https://management.azure.com/subscriptions/SUBSCRIPTION_ID")
                  .homepage(URI.create("https://www.windowsazure.com/"))
                  .console(URI.create("https://windows.azure.com/default.aspx"))
                  .linkedServices("azureblob", "azurequeue", "azuretable")

@@ -17,9 +17,6 @@
 package org.jclouds.azurecomputearm.oauth.v2;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static org.jclouds.azurecomputearm.oauth.v2.OAuthTestUtils.setCredential;
-import static org.jclouds.azurecomputearm.oauth.v2.config.OAuthProperties.AUDIENCE;
-import static org.jclouds.azurecomputearm.oauth.v2.config.OAuthProperties.JWS_ALG;
 import static org.jclouds.providers.AnonymousProviderMetadata.forApiOnEndpoint;
 import static org.testng.Assert.assertNotNull;
 
@@ -29,8 +26,8 @@ import org.jclouds.apis.BaseApiLiveTest;
 import org.jclouds.azurecomputearm.oauth.v2.config.OAuthModule;
 import org.jclouds.azurecomputearm.oauth.v2.config.OAuthScopes;
 import org.jclouds.azurecomputearm.oauth.v2.config.OAuthScopes.SingleScope;
-import org.jclouds.azurecomputearm.oauth.v2.domain.Claims;
 import org.jclouds.azurecomputearm.oauth.v2.domain.Token;
+import org.jclouds.azurecomputearm.oauth.v2.config.OAuthProperties;
 import org.jclouds.providers.ProviderMetadata;
 import org.testng.annotations.Test;
 
@@ -42,27 +39,18 @@ import com.google.inject.name.Names;
 @Test(groups = "live", singleThreaded = true)
 public class AuthorizationApiLiveTest extends BaseApiLiveTest<AuthorizationApi> {
 
-   private final String jwsAlg = "RS256";
    private String scope;
-   private String audience;
+   private String resource;
+   private String audience; // XXX -- to shut up the compilers
 
    public AuthorizationApiLiveTest() {
       provider = "oauth";
    }
 
-   public void authenticateJWTToken() throws Exception {
-      long now = System.currentTimeMillis() / 1000;
-      Claims claims = Claims.create(
-            identity, // iss
-            scope, // scope
-            audience, // aud
-            now + 3600, // exp
-            now // iat
-      );
+   public void authenticateCredentialAndPassword() throws Exception {
+      Token token = api.authorize_client_secret(identity, credential, resource);
 
-      Token token = api.authorize(claims);
-
-      assertNotNull(token, "no token when authorizing " + claims);
+      assertNotNull(token, "no token when authorizing password based credential");
    }
 
    /** OAuth isn't registered as a provider intentionally, so we fake one. */
@@ -72,10 +60,9 @@ public class AuthorizationApiLiveTest extends BaseApiLiveTest<AuthorizationApi> 
 
    @Override protected Properties setupProperties() {
       Properties props = super.setupProperties();
-      props.setProperty(JWS_ALG, jwsAlg);
-      credential = setCredential(props, "oauth.credential");
-      audience = checkNotNull(setIfTestSystemPropertyPresent(props, AUDIENCE), "test.jclouds.oauth.audience");
-      scope = checkNotNull(setIfTestSystemPropertyPresent(props, "jclouds.oauth.scope"), "test.jclouds.oauth.scope");
+      resource = checkNotNull(setIfTestSystemPropertyPresent(props, OAuthProperties.RESOURCE), "test.jclouds.oauth.resource");
+      audience = checkNotNull(setIfTestSystemPropertyPresent(props, OAuthProperties.AUDIENCE), "test.jclouds.oauth.audience");
+      scope = resource;
       return props;
    }
 
@@ -91,4 +78,3 @@ public class AuthorizationApiLiveTest extends BaseApiLiveTest<AuthorizationApi> 
             }).addAll(super.setupModules()).build();
    }
 }
-

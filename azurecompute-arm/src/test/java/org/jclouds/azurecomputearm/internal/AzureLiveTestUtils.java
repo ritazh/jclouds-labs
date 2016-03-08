@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 package org.jclouds.azurecomputearm.internal;
+
 import java.util.Properties;
 
 import static com.google.common.base.Preconditions.checkNotNull;
