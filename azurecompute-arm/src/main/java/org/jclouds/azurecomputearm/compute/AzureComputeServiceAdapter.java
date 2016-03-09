@@ -42,7 +42,6 @@ import org.jclouds.azurecomputearm.domain.DeploymentParams;
 import org.jclouds.azurecomputearm.domain.DeploymentParams.ExternalEndpoint;
 import org.jclouds.azurecomputearm.domain.Location;
 import org.jclouds.azurecomputearm.domain.OSImage;
-import org.jclouds.azurecomputearm.domain.Role;
 import org.jclouds.azurecomputearm.domain.RoleSize;
 import org.jclouds.azurecomputearm.util.ConflictManagementPredicate;
 import org.jclouds.compute.ComputeServiceAdapter;
@@ -302,7 +301,7 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
    }
 
    public Deployment internalDestroyNode(final String nodeId) {
-
+/*
       Deployment deployment = getDeploymentFromNodeId(nodeId);
 
       if (deployment == null) return null;
@@ -340,6 +339,8 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
             }
          }
       return deployment;
+      */
+      return null;
    }
 
    public Deployment getDeploymentFromNodeId(final String nodeId) {
@@ -373,7 +374,7 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
       final CloudService cloudService = api.getCloudServiceApi().get(id);
       if (cloudService != null) {
          logger.debug("Restarting %s ...", id);
-         trackRequest(api.getVirtualMachineApiForDeploymentInService(id, cloudService.name()).restart(id));
+//         trackRequest(api.getVirtualMachineApiForDeploymentInService(id, cloudService.name()).restart(id));
          logger.debug("Restarted %s", id);
       }
    }
@@ -383,7 +384,7 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
       final CloudService cloudService = api.getCloudServiceApi().get(id);
       if (cloudService != null) {
          logger.debug("Resuming %s ...", id);
-         trackRequest(api.getVirtualMachineApiForDeploymentInService(id, cloudService.name()).start(id));
+//         trackRequest(api.getVirtualMachineApiForDeploymentInService(id, cloudService.name()).start(id));
          logger.debug("Resumed %s", id);
       }
    }
@@ -393,7 +394,7 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
       final CloudService cloudService = api.getCloudServiceApi().get(id);
       if (cloudService != null) {
          logger.debug("Suspending %s ...", id);
-         trackRequest(api.getVirtualMachineApiForDeploymentInService(id, cloudService.name()).shutdown(id, POST_SHUTDOWN_ACTION));
+//         trackRequest(api.getVirtualMachineApiForDeploymentInService(id, cloudService.name()).shutdown(id, POST_SHUTDOWN_ACTION));
          logger.debug("Suspended %s", id);
       }
    }
