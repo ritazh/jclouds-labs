@@ -28,12 +28,11 @@ import javax.inject.Named;
 import org.jclouds.azurecomputearm.AzureComputeApi;
 import org.jclouds.azurecomputearm.compute.config.AzureComputeServiceContextModule.AzureComputeConstants;
 import org.jclouds.azurecomputearm.domain.Deployment;
-import org.jclouds.azurecomputearm.domain.NetworkConfiguration;
-import org.jclouds.azurecomputearm.domain.NetworkConfiguration.VirtualNetworkSite;
+
 import org.jclouds.azurecomputearm.domain.NetworkSecurityGroup;
 import org.jclouds.azurecomputearm.domain.Role;
 import org.jclouds.azurecomputearm.domain.Rule;
-import org.jclouds.azurecomputearm.util.ConflictManagementPredicate;
+
 import org.jclouds.azurecomputearm.util.NetworkSecurityGroups;
 import org.jclouds.compute.domain.SecurityGroup;
 import org.jclouds.compute.domain.SecurityGroupBuilder;
@@ -166,7 +165,10 @@ public class AzureComputeSecurityGroupExtension implements SecurityGroupExtensio
    }
 
    @Override
+   @Deprecated //IS API changed code left commented for reference
    public boolean removeSecurityGroup(final String id) {
+      return false;
+      /*
       final NetworkConfiguration networkConfiguration = api.getVirtualNetworkApi().getNetworkConfiguration();
       if (networkConfiguration != null) {
          for (VirtualNetworkSite virtualNetworkSite
@@ -203,6 +205,7 @@ public class AzureComputeSecurityGroupExtension implements SecurityGroupExtensio
       }
       String deleteRequestId = api.getNetworkSecurityGroupApi().delete(id);
       return operationSucceededPredicate.apply(deleteRequestId);
+      */
    }
 
    @Override

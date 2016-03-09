@@ -20,11 +20,14 @@ import com.google.common.base.Predicate;
 import java.util.ArrayList;
 import java.util.List;
 import org.jclouds.azurecomputearm.domain.NetworkConfiguration;
-import org.jclouds.azurecomputearm.features.VirtualNetworkApi;
 
 public class AzureTestUtils {
 
+   @Deprecated //IS virtual network api changed
    public static List<NetworkConfiguration.VirtualNetworkSite> getVirtualNetworkSite(AzureComputeApi api) {
+      return new ArrayList<NetworkConfiguration.VirtualNetworkSite>();
+
+      /*
       final VirtualNetworkApi vnapi = api.getVirtualNetworkApi();
       final NetworkConfiguration netConf = vnapi.getNetworkConfiguration();
 
@@ -32,7 +35,7 @@ public class AzureTestUtils {
               ? new ArrayList<NetworkConfiguration.VirtualNetworkSite>()
               : new ArrayList<NetworkConfiguration.VirtualNetworkSite>(netConf.virtualNetworkConfiguration().
                       virtualNetworkSites());
-
+      */
    }
 
    public static class SameVirtualNetworkSiteNamePredicate
