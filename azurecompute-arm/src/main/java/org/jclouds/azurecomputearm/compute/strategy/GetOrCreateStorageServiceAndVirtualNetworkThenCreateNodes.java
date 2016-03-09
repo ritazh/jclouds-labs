@@ -33,7 +33,6 @@ import org.jclouds.azurecomputearm.AzureComputeApi;
 import org.jclouds.azurecomputearm.compute.config.AzureComputeServiceContextModule.AzureComputeConstants;
 import org.jclouds.azurecomputearm.compute.options.AzureComputeTemplateOptions;
 import org.jclouds.azurecomputearm.compute.predicates.StorageServicePredicates;
-import org.jclouds.azurecomputearm.config.AzureComputeProperties;
 import org.jclouds.azurecomputearm.domain.CreateStorageServiceParams;
 import org.jclouds.azurecomputearm.domain.StorageService;
 import org.jclouds.compute.config.CustomizationResponse;
@@ -89,6 +88,14 @@ public class GetOrCreateStorageServiceAndVirtualNetworkThenCreateNodes
       return super.createNodeInGroupWithNameAndTemplate(group, name, template);
    }
 
+   private String getSubscriptionId() {
+      return null; // TODO: get properly
+   }
+
+   private String getResourceGroup() {
+      return null; // TODO: get properly
+   }
+
    @Override
    public Map<?, ListenableFuture<Void>> execute(
            final String group, final int count, final Template template,
@@ -103,14 +110,14 @@ public class GetOrCreateStorageServiceAndVirtualNetworkThenCreateNodes
 
       final StorageService storageService;
       if (storageAccountName != null) {
-         if (api.getStorageAccountApi().get(storageAccountName) == null) {
+         if (api.getStorageAccountApi(getSubscriptionId(), getResourceGroup()).get(storageAccountName) == null) {
             String message = String.format("storageAccountName %s specified via AzureComputeTemplateOptions doesn't exist", storageAccountName);
             logger.error(message);
             throw new IllegalStateException(message);
          }
       } else { // get suitable or create storage service
          storageService = tryFindExistingStorageServiceAccountOrCreate(api, location, generateStorageServiceName(DEFAULT_STORAGE_ACCOUNT_PREFIX), storageAccountType);
-         templateOptions.storageAccountName(storageService.serviceName());
+         templateOptions.storageAccountName(storageService.name());
       }
 
       if (virtualNetworkName != null && templateOptions.getSubnetNames().isEmpty()) {
@@ -129,7 +136,8 @@ public class GetOrCreateStorageServiceAndVirtualNetworkThenCreateNodes
    private StorageService tryFindExistingStorageServiceAccountOrCreate(
            final AzureComputeApi api, final String location, final String storageAccountName, final String type) {
 
-      final List<StorageService> storageServices = api.getStorageAccountApi().list();
+      final List<StorageService> storageServices = api.getStorageAccountApi(getSubscriptionId(),
+              getResourceGroup()).list();
       logger.debug("Looking for a suitable existing storage account ...");
 
       final Predicate<StorageService> storageServicePredicate = and(
@@ -152,27 +160,28 @@ public class GetOrCreateStorageServiceAndVirtualNetworkThenCreateNodes
                     + "Please, try by choosing a different `storageAccountName` in templateOptions and try again", storageAccountName));
          }
          logger.debug("Creating a storage service account '%s' in location '%s' ...", storageAccountName, location);
-         final String createStorageServiceRequestId = api.getStorageAccountApi().create(
-                 CreateStorageServiceParams.builder()
-                 .serviceName(storageAccountName)
-                 .label(storageAccountName)
-                 .location(location)
-                 .accountType(StorageService.AccountType.valueOf(type))
-                 .build());
-         if (!operationSucceededPredicate.apply(createStorageServiceRequestId)) {
-            final String warnMessage = format("Create storage service account has not been completed within %sms.",
-                    azureComputeConstants.operationTimeout());
-            logger.warn(warnMessage);
-            final String illegalStateExceptionMessage = format("%s. Please, try by increasing `%s` and try again",
-                    warnMessage, AzureComputeProperties.OPERATION_TIMEOUT);
-            throw new IllegalStateException(illegalStateExceptionMessage);
+         CreateStorageServiceParams storage = api.getStorageAccountApi(getSubscriptionId(),
+                 getResourceGroup()).create(storageAccountName,
+                 location, null, null);
+         while (storage == null) {
+            try {
+               // Operation should normally take 25 seconds. Wait for that before retrying to check status
+               Thread.sleep(25 * 1000);
+            } catch (InterruptedException e) {
+               e.printStackTrace();
+            }
+            // ask status to check if storage has been created
+            storage = api.getStorageAccountApi(getSubscriptionId(),
+                    getResourceGroup()).create(storageAccountName,
+                    location, null, null);
          }
-         return api.getStorageAccountApi().get(storageAccountName);
+         return api.getStorageAccountApi(getSubscriptionId(), getResourceGroup()).get(storageAccountName);
       }
    }
 
    private boolean checkAvailability(final String name) {
-      return api.getStorageAccountApi().isAvailable(name).result();
+      return api.getStorageAccountApi(getSubscriptionId(), getResourceGroup()).isAvailable(name).
+              nameAvailable().equals("true");
    }
 
    private static String generateStorageServiceName(final String prefix) {

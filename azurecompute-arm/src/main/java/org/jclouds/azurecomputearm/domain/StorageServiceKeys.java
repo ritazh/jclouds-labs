@@ -17,38 +17,26 @@
 package org.jclouds.azurecomputearm.domain;
 
 import com.google.auto.value.AutoValue;
-import java.net.URL;
+import org.jclouds.json.SerializedNames;
 
 @AutoValue
 public abstract class StorageServiceKeys {
-
-   public enum KeyType {
-
-      Primary,
-      Secondary;
-
-   }
 
    StorageServiceKeys() {
    } // For AutoValue only!
 
    /**
-    * The Service Management API request URI used to perform Get Storage Account Properties requests against the storage
-    * account.
-    */
-   public abstract URL url();
-
-   /**
     * The primary access key for the storage account.
     */
-   public abstract String primary();
+   public abstract String key1();
 
    /**
     * The secondary access key for the storage account.
     */
-   public abstract String secondary();
+   public abstract String key2();
 
-   public static StorageServiceKeys create(final URL url, final String primary, final String secondary) {
-      return new AutoValue_StorageServiceKeys(url, primary, secondary);
+   @SerializedNames({"key1", "key2"})
+   public static StorageServiceKeys create(final String key1, final String key2) {
+      return new AutoValue_StorageServiceKeys(key1, key2);
    }
 }

@@ -1,0 +1,30 @@
+{
+   "id": "/subscriptions/626f67f6-8fd0-4cc3-bc02-e3ce95f7dfec/resourceGroups/jannegroup/providers/Microsoft.Storage/storageAccounts/jannenstorage",
+   "location": "westus",
+   "name": "jannenstorage",
+   "properties": {
+      "accountType": "Standard_RAGRS",
+      "creationTime": "2016-02-24T13:04:45.0890883Z",
+      "primaryEndpoints": {
+         "blob": "https://jannenstorage.blob.core.windows.net/",
+         "file": "https://jannenstorage.file.core.windows.net/",
+         "queue": "https://jannenstorage.queue.core.windows.net/",
+         "table": "https://jannenstorage.table.core.windows.net/"
+      },
+      "primaryLocation": "westus",
+      "provisioningState": "Succeeded",
+      "secondaryEndpoints": {
+         "blob": "https://jannenstorage-secondary.blob.core.windows.net/",
+         "queue": "https://jannenstorage-secondary.queue.core.windows.net/",
+         "table": "https://jannenstorage-secondary.table.core.windows.net/"
+      },
+      "secondaryLocation": "eastus",
+      "statusOfPrimary": "available",
+      "statusOfSecondary": "available"
+   },
+   "tags": {
+      "key1": "value1",
+      "key2": "value2"
+   },
+   "type": "Microsoft.Storage/storageAccounts"
+}

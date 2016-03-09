@@ -35,7 +35,7 @@ public class StorageServicePredicates {
       return new Predicate<StorageService>() {
          @Override
          public boolean apply(StorageService storageService) {
-            return storageService.storageServiceProperties().location().equals(location);
+            return storageService.storageServiceProperties().primaryLocation().equals(location);
          }
 
          @Override
@@ -51,7 +51,7 @@ public class StorageServicePredicates {
       return new Predicate<StorageService>() {
          @Override
          public boolean apply(StorageService storageService) {
-            return storageService.storageServiceProperties().status() == status;
+            return storageService.storageServiceProperties().provisioningState() == status;
          }
 
          @Override
@@ -67,7 +67,7 @@ public class StorageServicePredicates {
       return new Predicate<StorageService>() {
          @Override
          public boolean apply(StorageService storageService) {
-            return storageService.serviceName().matches(format("^%s[a-z]{10}$", defaultStorageAccountPrefix));
+            return storageService.name().matches(format("^%s[a-z]{10}$", defaultStorageAccountPrefix));
          }
 
          @Override
