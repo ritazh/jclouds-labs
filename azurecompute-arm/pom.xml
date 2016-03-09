@@ -37,7 +37,7 @@
     <test.jclouds.azurecomputearm.tenant-id>FIXME_tenant-id</test.jclouds.azurecomputearm.tenant-id>
     <!-- note that there's no prefix of "test." in the url.  This is to ensure that jclouds inteprets the value, as opposed to maven -->
     <test.azurecomputearm.endpoint>https://management.azure.com/subscriptions/${test.jclouds.azurecomputearm.subscription-id}</test.azurecomputearm.endpoint>
-    <test.azurecomputearm.api-version>2014-04-01</test.azurecomputearm.api-version>
+    <test.azurecomputearm.api-version>2014-04-01-preview</test.azurecomputearm.api-version>
     <test.azurecomputearm.build-version />
     <test.azurecomputearm.identity>/path/to/cert.p12</test.azurecomputearm.identity>
     <test.azurecomputearm.credential>password to cert</test.azurecomputearm.credential>
@@ -65,20 +65,11 @@
       <artifactId>auto-value</artifactId>
       <scope>provided</scope>
     </dependency>
-
     <dependency>
       <groupId>org.apache.jclouds</groupId>
       <artifactId>jclouds-core</artifactId>
       <version>${project.version}</version>
     </dependency>
-    <dependency>
-      <groupId>org.apache.jclouds</groupId>
-      <artifactId>jclouds-core</artifactId>
-      <version>${project.version}</version>
-      <type>test-jar</type>
-      <scope>test</scope>
-    </dependency>
-
     <dependency>
       <groupId>org.apache.jclouds.api</groupId>
       <artifactId>oauth</artifactId>
@@ -92,7 +83,6 @@
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
-
     <dependency>
       <groupId>org.apache.jclouds</groupId>
       <artifactId>jclouds-compute</artifactId>
@@ -106,8 +96,21 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.apache.jclouds</groupId>
+      <artifactId>jclouds-core</artifactId>
+      <version>${project.version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.apache.jclouds.driver</groupId>
       <artifactId>jclouds-slf4j</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.jclouds.driver</groupId>
+      <artifactId>jclouds-sshj</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
@@ -118,15 +121,9 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-    <groupId>ch.qos.logback</groupId>
-    <artifactId>logback-classic</artifactId>
-    <scope>test</scope>
-  </dependency>
-    <dependency>
-      <groupId>org.apache.jclouds.driver</groupId>
-      <artifactId>jclouds-sshj</artifactId>
-      <version>${project.parent.version}</version>
-      <scope>test</scope>
+     <groupId>ch.qos.logback</groupId>
+     <artifactId>logback-classic</artifactId>
+     <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>com.squareup.okhttp</groupId>
