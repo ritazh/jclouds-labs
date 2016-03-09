@@ -21,10 +21,8 @@ import static org.testng.Assert.assertNotNull;
 
 import java.io.File;
 import java.security.PrivateKey;
-import java.util.Properties;
 
 import org.jclouds.domain.Credentials;
-import org.jclouds.azurecomputearm.oauth.v2.OAuthTestUtils;
 import org.jclouds.azurecomputearm.oauth.v2.config.PrivateKeySupplier.PrivateKeyForCredentials;
 import org.jclouds.rest.AuthorizationException;
 import org.testng.annotations.Test;
@@ -37,9 +35,9 @@ import com.google.common.io.Files;
 public class PrivateKeySupplierTest {
 
    /** Test loading the credentials by extracting a pk from a PKCS12 keystore. */
-//   public void testLoadPKString() throws Exception {
-//      assertNotNull(loadPrivateKey());
-//   }
+   public void testLoadPKString() throws Exception {
+      assertNotNull(loadPrivateKey());
+   }
 
    @Test(expectedExceptions = AuthorizationException.class)
    public void testAuthorizationExceptionIsThrownOnBadKeys() {
@@ -49,18 +47,18 @@ public class PrivateKeySupplierTest {
       supplier.get();
    }
 
-   public void testCredentialsAreLoadedOnRightAlgoAndCredentials() {
-      Properties propertied = OAuthTestUtils.defaultProperties(new Properties());
-      Credentials validCredentials = new Credentials(propertied.getProperty("oauth.identity"),
-              propertied.getProperty("oauth.credential"));
-      PrivateKeySupplier supplier = new PrivateKeySupplier(Suppliers.ofInstance(validCredentials),
-            new PrivateKeyForCredentials());
-      assertNotNull(supplier.get());
-   }
+   //public void testCredentialsAreLoadedOnRightAlgoAndCredentials() {
+   //   Properties propertied = OAuthTestUtils.defaultProperties(new Properties());
+   //   Credentials validCredentials = new Credentials(propertied.getProperty("oauth.identity"),
+   //           propertied.getProperty("oauth.credential"));
+   //   PrivateKeySupplier supplier = new PrivateKeySupplier(Suppliers.ofInstance(validCredentials),
+   //         new PrivateKeyForCredentials());
+   //   assertNotNull(supplier.get());
+   //}
 
    public static PrivateKey loadPrivateKey() throws Exception {
       PrivateKeySupplier supplier = new PrivateKeySupplier(ofInstance(new Credentials("foo",
-            Files.asCharSource(new File("src/test/resources/testpk.pem"), Charsets.UTF_8).read())),
+            Files.asCharSource(new File("src/test/resources/testpk-oauth-arm.pem"), Charsets.UTF_8).read())),
             new PrivateKeyForCredentials());
       return supplier.get();
    }
