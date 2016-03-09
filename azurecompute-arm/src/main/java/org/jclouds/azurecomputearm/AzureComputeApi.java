@@ -55,7 +55,7 @@ public interface AzureComputeApi extends Closeable {
     * @see <a href="https://msdn.microsoft.com/en-us/library/azure/dn790546.aspx">docs</a>
     */
    @Delegate
-   ResourceGroupApi getResourceGroupApi();
+   ResourceGroupApi getResourceGroupApi(@PathParam("subscriptionid") String subscriptionid);
 
    @Delegate
    AffinityGroupApi getAffinityGroupApi();
