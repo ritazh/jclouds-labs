@@ -17,13 +17,14 @@
 package org.jclouds.azurecomputearm.domain;
 
 import com.google.auto.value.AutoValue;
-import java.util.Date;
-import java.util.Map;
 import org.jclouds.javax.annotation.Nullable;
 import org.jclouds.json.SerializedNames;
 
+import java.util.Date;
+import java.util.Map;
+
 @AutoValue
-public abstract class StorageService {
+public abstract class StorageServiceUpdateParams {
 
    public enum AccountType {
 
@@ -90,21 +91,24 @@ public abstract class StorageService {
       }
    }
 
+   @Nullable
    @AutoValue
-   public abstract static class StorageServiceProperties {
+   public abstract static class StorageServiceUpdateProperties {
 
-      StorageServiceProperties() {
+       StorageServiceUpdateProperties() {
       } // For AutoValue only!
 
        /**
         * Specifies whether the account supports locally-redundant storage, geo-redundant storage, zone-redundant
         * storage, or read access geo-redundant storage.
         */
+       @Nullable
        public abstract AccountType accountType();
 
        /**
         * Specifies the time that the storage account was created.
         */
+       @Nullable
        public abstract Date creationTime();
 
        /**
@@ -150,40 +154,21 @@ public abstract class StorageService {
       public abstract RegionStatus statusOfSecondary();
 
 
-      @SerializedNames({"accountType", "creationTime", "primaryEndpoints",  "primaryLocation",
+      @SerializedNames({"accountType", "creationTime", "primaryEndpoints", "primaryLocation",
               "provisioningState", "secondaryEndpoints", "secondaryLocation", "statusOfPrimary", "statusOfSecondary"})
-      public static StorageServiceProperties create(final AccountType accountType, final Date creationTime,
+      public static StorageServiceUpdateProperties create(final AccountType accountType, final Date creationTime,
               final Map<String, String> primaryEndpoints, final String primaryLocation, final Status provisioningState,
               final Map<String, String> secondaryEndpoints, final String secondaryLocation,
               final RegionStatus statusOfPrimary, final RegionStatus statusOfSecondary) {
 
-         return new AutoValue_StorageService_StorageServiceProperties(accountType, creationTime,
+         return new AutoValue_StorageServiceUpdateParams_StorageServiceUpdateProperties(accountType, creationTime,
                  primaryEndpoints, primaryLocation, provisioningState,
                  secondaryEndpoints, secondaryLocation, statusOfPrimary, statusOfSecondary);
       }
    }
 
-   StorageService() {
+   StorageServiceUpdateParams() {
    } // For AutoValue only!
-
-   /**
-    * Specifies the id of the storage account.
-    */
-   @Nullable
-   public abstract String id();
-
-   /**
-    * Specifies the name of the storage account. This name is the DNS prefix name and can be used to access blobs,
-    * queues, and tables in the storage account.
-    */
-   @Nullable
-   public abstract String name();
-
-   /**
-    * Specifies the location of the storage account.
-    */
-   @Nullable
-   public abstract String location();
 
    /**
     * Specifies the tags of the storage account.
@@ -192,21 +177,14 @@ public abstract class StorageService {
    public abstract Map<String, String> tags();
 
    /**
-    * Specifies the type of the storage account.
-    */
-   @Nullable
-   public abstract String type();
-
-   /**
     * Specifies the properties of the storage account.
     */
-   public abstract StorageServiceProperties storageServiceProperties();
+   public abstract StorageServiceUpdateProperties storageServiceProperties();
 
 
-   @SerializedNames({"id", "name", "location", "tags", "type", "properties"})
-   public static StorageService create(final String id,  final String name,  final String location,
-                                       final Map<String, String> tags,  final String type,
-                                       final StorageServiceProperties storageServiceProperties) {
-      return new AutoValue_StorageService(id,  name,  location,  tags, type, storageServiceProperties);
+   @SerializedNames({"tags", "properties"})
+   public static StorageServiceUpdateParams create(final Map<String, String> tags,
+                                                   final StorageServiceUpdateProperties storageServiceProperties) {
+      return new AutoValue_StorageServiceUpdateParams(tags, storageServiceProperties);
    }
 }
