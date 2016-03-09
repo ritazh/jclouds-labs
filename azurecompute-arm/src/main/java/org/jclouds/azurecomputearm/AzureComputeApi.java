@@ -67,7 +67,7 @@ public interface AzureComputeApi extends Closeable {
     * @see <a href="http://msdn.microsoft.com/en-us/library/gg441299">docs</a>
     */
    @Delegate
-   LocationApi getLocationApi();
+   LocationApi getLocationApi(@PathParam("subscriptionid") String subscriptionid);
 
    /**
     * The Service Management API includes operations for managing the cloud services beneath your subscription.

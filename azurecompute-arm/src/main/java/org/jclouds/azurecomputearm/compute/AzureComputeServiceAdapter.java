@@ -260,9 +260,12 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
                               image.eula());
    }
 
+   private String getSubscriptionId() {
+      return null; // TODO: get subscription id
+   }
    @Override
    public Iterable<Location> listLocations() {
-      return api.getLocationApi().list();
+      return api.getLocationApi(getSubscriptionId()).list();
    }
 
    @Override
