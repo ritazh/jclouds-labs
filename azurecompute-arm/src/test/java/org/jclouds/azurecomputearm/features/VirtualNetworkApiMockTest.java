@@ -79,6 +79,7 @@ public class VirtualNetworkApiMockTest extends BaseAzureComputeApiMockTest {
                 )
                 .build();
 
+
         VirtualNetwork vn = vnApi.createOrUpdateVirtualNetwork(virtualNetwork, location,  virtualNetworkProperties);
 
         String path = String.format("/subscriptions/%s/resourcegroups/%s/providers/Microsoft.Network/virtualNetworks/%s?%s", subscriptionid, resourcegroup, virtualNetwork, apiVersion);
