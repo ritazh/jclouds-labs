@@ -22,12 +22,17 @@ import com.google.common.collect.ImmutableMap;
 import org.jclouds.azurecomputearm.domain.CreateStorageServiceParams;
 import org.jclouds.azurecomputearm.domain.ResourceGroup;
 import org.jclouds.azurecomputearm.domain.StorageService;
+import org.jclouds.azurecomputearm.domain.Subnet;
+import org.jclouds.azurecomputearm.domain.VirtualNetwork;
 import org.jclouds.azurecomputearm.features.StorageAccountApi;
+import org.jclouds.azurecomputearm.features.SubnetApi;
+import org.jclouds.azurecomputearm.features.VirtualNetworkApi;
 import org.jclouds.azurecomputearm.util.ConflictManagementPredicate;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -36,7 +41,7 @@ public class BaseAzureComputeApiLiveTest extends AbstractAzureComputeApiLiveTest
 
    public static final String DEFAULT_ADDRESS_SPACE = "10.0.0.0/20";
 
-   public static final String DEFAULT_SUBNET_ADDRESS_SPACE = "10.0.0.0/23";
+   public static final String DEFAULT_SUBNET_ADDRESS_SPACE = "10.2.0.0/23";
 
    public static final String VIRTUAL_NETWORK_NAME = "jclouds-virtual-network-live-test";
 
@@ -144,6 +149,40 @@ public class BaseAzureComputeApiLiveTest extends AbstractAzureComputeApiLiveTest
       return ss;
    }
 
+   protected VirtualNetwork getOrCreateVirtualNetwork(final String virtualNetworkName) {
+
+      VirtualNetworkApi vnApi = api.getVirtualNetworkApi(getSubscriptionId(), getResourceGroupName());
+      VirtualNetwork vn = vnApi.getVirtualNetwork(virtualNetworkName);
+
+      if (vn != null) {
+         return vn;
+      }
+
+      final VirtualNetwork.VirtualNetworkProperties virtualNetworkProperties =
+              VirtualNetwork.VirtualNetworkProperties.builder()
+                      .addressSpace(
+                              VirtualNetwork.AddressSpace.builder()
+                                      .addressPrefixes(Arrays.asList(DEFAULT_VIRTUALNETWORK_ADDRESS_PREFIX)).build()
+                      ).build();
+
+      vn = vnApi.createOrUpdateVirtualNetwork(VIRTUAL_NETWORK_NAME, LOCATION, virtualNetworkProperties);
+      return vn;
+   }
+
+   protected Subnet getOrCreateSubnet(final String subnetName, final String virtualNetworkName){
+
+      SubnetApi subnetApi = api.getSubnetApi(getSubscriptionId(), getResourceGroupName(), virtualNetworkName);
+      Subnet subnet = subnetApi.getSubnet(subnetName);
+
+      if (subnet != null){
+         return subnet;
+      }
+
+      Subnet.SubnetProperties properties = Subnet.SubnetProperties.builder().addressPrefix(DEFAULT_SUBNET_ADDRESS_SPACE).build();
+      subnet = subnetApi.createOrUpdateSubnet(subnetName, properties);
+
+      return subnet;
+   }
 //
 //   protected Deployment getOrCreateDeployment(final String serviceName, final DeploymentParams params) {
 //      Deployment deployment = api.getDeploymentApiForService(serviceName).get(params.name());
