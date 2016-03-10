@@ -20,26 +20,26 @@ import java.io.Closeable;
 
 import javax.ws.rs.PathParam;
 
-import org.jclouds.azurecomputearm.features.ResourceGroupApi;
-
 import org.jclouds.azurecomputearm.features.AffinityGroupApi;
-
 import org.jclouds.azurecomputearm.features.CloudServiceApi;
 import org.jclouds.azurecomputearm.features.DeploymentApi;
 import org.jclouds.azurecomputearm.features.DiskApi;
 import org.jclouds.azurecomputearm.features.LocationApi;
+import org.jclouds.azurecomputearm.features.NetworkInterfaceCardApi;
 import org.jclouds.azurecomputearm.features.NetworkSecurityGroupApi;
 import org.jclouds.azurecomputearm.features.OSImageApi;
 import org.jclouds.azurecomputearm.features.OperationApi;
 import org.jclouds.azurecomputearm.features.ReservedIPAddressApi;
+import org.jclouds.azurecomputearm.features.ResourceGroupApi;
 import org.jclouds.azurecomputearm.features.ServiceCertificatesApi;
 import org.jclouds.azurecomputearm.features.StorageAccountApi;
 import org.jclouds.azurecomputearm.features.SubscriptionApi;
 import org.jclouds.azurecomputearm.features.TrafficManagerApi;
+import org.jclouds.azurecomputearm.features.VMImageApi;
 import org.jclouds.azurecomputearm.features.VirtualMachineApi;
 import org.jclouds.azurecomputearm.features.VirtualNetworkApi;
-import org.jclouds.azurecomputearm.features.VMImageApi;
 import org.jclouds.azurecomputearm.features.SubnetApi;
+
 import org.jclouds.rest.annotations.Delegate;
 
 /**
@@ -146,6 +146,16 @@ public interface AzureComputeApi extends Closeable {
    @Delegate
    VirtualNetworkApi getVirtualNetworkApi(@PathParam("subscriptionid") String subscriptionid,
                                           @PathParam("resourcegroup") String resourcegroup);
+
+
+   /**
+    * The Network Interface Card API includes operations for managing the NICs in your subscription.
+    *
+    * @see <a href="https://msdn.microsoft.com/en-us/library/mt163668.aspx">docs</a>
+    */
+   @Delegate
+   NetworkInterfaceCardApi getNetworkInterfaceCardApi(@PathParam("subscriptionid") String subscriptionid,
+                                                      @PathParam("resourcegroup") String resourcegroup);
 
    /**
     * The Service Management API includes operations for managing the storage accounts in your subscription.
