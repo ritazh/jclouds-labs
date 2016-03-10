@@ -138,10 +138,11 @@ public interface AzureComputeApi extends Closeable {
    /**
     * The Service Management API includes operations for managing the storage accounts in your subscription.
     *
-    * @see <a href="http://msdn.microsoft.com/en-us/library/ee460790.aspx">docs</a>
+    * @see <https://msdn.microsoft.com/en-us/library/mt163683.aspx">docs</a>
     */
    @Delegate
-   StorageAccountApi getStorageAccountApi();
+   StorageAccountApi getStorageAccountApi(@PathParam("subscriptionId") String subscriptionId,
+                                          @PathParam("resourceGroup") String resourceGroup);
 
    /**
     * The Service Management API includes operations for managing the Network Security Groups in your subscription.
