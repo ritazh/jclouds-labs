@@ -39,6 +39,7 @@ import org.jclouds.azurecomputearm.features.TrafficManagerApi;
 import org.jclouds.azurecomputearm.features.VirtualMachineApi;
 import org.jclouds.azurecomputearm.features.VirtualNetworkApi;
 import org.jclouds.azurecomputearm.features.VMImageApi;
+import org.jclouds.azurecomputearm.features.SubnetApi;
 import org.jclouds.rest.annotations.Delegate;
 
 /**
@@ -126,6 +127,16 @@ public interface AzureComputeApi extends Closeable {
     */
    @Delegate
    SubscriptionApi getSubscriptionApi();
+
+   /**
+    * The Subnet API includes operations for managing the subnets in your virtual network.
+    *
+    * @see <a href="https://msdn.microsoft.com/en-us/library/azure/mt163621.aspx">docs</a>
+    */
+   @Delegate
+   SubnetApi getSubnetApi(@PathParam("subscriptionid") String subscriptionid,
+                          @PathParam("resourcegroup") String resourcegroup,
+                          @PathParam("virtualnetwork") String virtualnetwork);
 
    /**
     * The Virtual Network API includes operations for managing the virtual networks in your subscription.
