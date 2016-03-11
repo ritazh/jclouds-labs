@@ -128,12 +128,13 @@ public interface AzureComputeApi extends Closeable {
    SubscriptionApi getSubscriptionApi();
 
    /**
-    * The Service Management API includes operations for managing the virtual networks in your subscription.
+    * The Virtual Network API includes operations for managing the virtual networks in your subscription.
     *
-    * @see <a href="http://msdn.microsoft.com/en-us/library/jj157182.aspx">docs</a>
+    * @see <a href="https://msdn.microsoft.com/en-us/library/azure/mt163661.aspx">docs</a>
     */
    @Delegate
-   VirtualNetworkApi getVirtualNetworkApi();
+   VirtualNetworkApi getVirtualNetworkApi(@PathParam("subscriptionid") String subscriptionid,
+                                          @PathParam("resourcegroup") String resourcegroup);
 
    /**
     * The Service Management API includes operations for managing the storage accounts in your subscription.
