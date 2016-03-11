@@ -19,14 +19,19 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.testng.Assert.assertNotNull;
 
 import com.google.common.collect.ImmutableMap;
+
 import org.jclouds.azurecomputearm.domain.CreateStorageServiceParams;
+import org.jclouds.azurecomputearm.domain.IpConfiguration;
+import org.jclouds.azurecomputearm.domain.NetworkInterfaceCard;
 import org.jclouds.azurecomputearm.domain.ResourceGroup;
 import org.jclouds.azurecomputearm.domain.StorageService;
 import org.jclouds.azurecomputearm.domain.Subnet;
 import org.jclouds.azurecomputearm.domain.VirtualNetwork;
 import org.jclouds.azurecomputearm.features.StorageAccountApi;
 import org.jclouds.azurecomputearm.features.SubnetApi;
+import org.jclouds.azurecomputearm.features.NetworkInterfaceCardApi;
 import org.jclouds.azurecomputearm.features.VirtualNetworkApi;
+
 import org.jclouds.azurecomputearm.util.ConflictManagementPredicate;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
@@ -34,6 +39,7 @@ import org.testng.annotations.BeforeClass;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -50,6 +56,8 @@ public class BaseAzureComputeApiLiveTest extends AbstractAzureComputeApiLiveTest
    public static final String LOCATION = "westeurope";
 
    public static final String DEFAULT_VIRTUALNETWORK_ADDRESS_PREFIX = "10.2.0.0/16";
+
+   public static final String NETWORKINTERFACECARD_NAME = "jcloudsNic";
 
    public static final String IMAGE_NAME
            = "b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-14_04_1-LTS-amd64-server-20150123-en-us-30GB";
@@ -183,6 +191,43 @@ public class BaseAzureComputeApiLiveTest extends AbstractAzureComputeApiLiveTest
 
       return subnet;
    }
+
+
+   protected NetworkInterfaceCard getOrCreateNetworkInterfaceCard(final String networkInterfaceCardName){
+
+      NetworkInterfaceCardApi nicApi = api.getNetworkInterfaceCardApi(getSubscriptionId(), getResourceGroupName());
+      NetworkInterfaceCard nic = nicApi.getNetworkInterfaceCard(networkInterfaceCardName);
+
+      if (nic != null){
+         return nic;
+      }
+
+      VirtualNetwork vn = getOrCreateVirtualNetwork(VIRTUAL_NETWORK_NAME);
+
+      Subnet subnet = getOrCreateSubnet(DEFAULT_SUBNET_NAME, VIRTUAL_NETWORK_NAME);
+
+      //Create properties object
+      final NetworkInterfaceCard.NetworkInterfaceCardProperties networkInterfaceCardProperties =
+              NetworkInterfaceCard.NetworkInterfaceCardProperties.builder()
+                      .ipConfigurations(
+                              Arrays.asList(
+                                      IpConfiguration.builder()
+                                              .name("myipconfig")
+                                              .properties(
+                                                      IpConfiguration.IpConfigurationProperties.builder()
+                                                              .subnet(Subnet.builder().id(subnet.id()).build())
+                                                              .privateIPAllocationMethod("Dynamic")
+                                                              .build()
+                                              )
+                                              .build()
+                              )
+                      )
+                      .build();
+      final Map<String, String> tags = ImmutableMap.of("jclouds", "livetest");
+      nic = nicApi.createOrUpdateNetworkInterfaceCard(NETWORKINTERFACECARD_NAME, LOCATION, networkInterfaceCardProperties, tags);
+      return  nic;
+   }
+
 //
 //   protected Deployment getOrCreateDeployment(final String serviceName, final DeploymentParams params) {
 //      Deployment deployment = api.getDeploymentApiForService(serviceName).get(params.name());
