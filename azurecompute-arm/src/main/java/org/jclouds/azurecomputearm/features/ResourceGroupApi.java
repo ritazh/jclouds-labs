@@ -32,16 +32,19 @@ import org.jclouds.Fallbacks.EmptyListOnNotFoundOr404;
 import org.jclouds.Fallbacks.NullOnNotFoundOr404;
 import org.jclouds.Fallbacks.VoidOnNotFoundOr404;
 import org.jclouds.azurecomputearm.domain.ResourceGroup;
+import org.jclouds.azurecomputearm.functions.StatusCodeParser;
 import org.jclouds.javax.annotation.Nullable;
 import org.jclouds.azurecomputearm.oauth.v2.filters.OAuthFilter;
+import org.jclouds.rest.annotations.QueryParams;
+import org.jclouds.rest.annotations.RequestFilters;
+import org.jclouds.rest.annotations.SelectJson;
 import org.jclouds.rest.annotations.Fallback;
 import org.jclouds.rest.annotations.MapBinder;
 import org.jclouds.rest.annotations.PayloadParam;
-
 import org.jclouds.rest.annotations.PATCH;
-import org.jclouds.rest.annotations.RequestFilters;
-import org.jclouds.rest.annotations.QueryParams;
-import org.jclouds.rest.annotations.SelectJson;
+import org.jclouds.rest.annotations.ResponseParser;
+
+
 import org.jclouds.rest.binders.BindToJsonPayload;
 
 /**
@@ -88,8 +91,9 @@ public interface ResourceGroupApi extends Closeable{
 
    @Named("resourcegroup:delete")
    @DELETE
+   @ResponseParser(StatusCodeParser.class)
    @Path("resourcegroups/{name}")
    @Fallback(VoidOnNotFoundOr404.class)
-   void delete(@PathParam("name") String name);
+   String delete(@PathParam("name") String name);
 }
 
