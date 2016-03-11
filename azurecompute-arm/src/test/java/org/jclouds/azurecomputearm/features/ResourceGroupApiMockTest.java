@@ -19,8 +19,8 @@ package org.jclouds.azurecomputearm.features;
 import static com.google.common.collect.Iterables.isEmpty;
 import static com.google.common.collect.Iterables.size;
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.assertNull;
 
 import java.util.HashMap;
 import java.util.List;
@@ -126,13 +126,14 @@ public class ResourceGroupApiMockTest extends BaseAzureComputeApiMockTest {
 
 
       assertEquals(resourceGroup.tags().size(), 0);
+      assertEquals(resourceGroup.properties().provisioningState(), "Succeeded");
 
       assertEquals(server.getRequestCount(), 1);
       assertSent(server, "PATCH", requestUrl + "/jcloudstest" + version, "{\"tags\":{}}");
    }
 
    public void testDeleteResourceGroup() throws InterruptedException {
-      server.enqueue(response204());
+      server.enqueue(response202());
 
       api.getResourceGroupApi(subscriptionid).delete("jcloudstest");
 
