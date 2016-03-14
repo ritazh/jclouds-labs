@@ -17,12 +17,10 @@
 package org.jclouds.azurecomputearm.features;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.assertNotNull;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
-import static com.google.common.collect.Iterables.isEmpty;
 
 import java.util.HashMap;
 import java.util.List;
@@ -31,14 +29,21 @@ import org.jclouds.azurecomputearm.domain.ResourceGroup;
 import org.jclouds.azurecomputearm.internal.BaseAzureComputeApiLiveTest;
 
 import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 @Test(groups = "live", testName = "ResourceGroupApiLiveTest")
 public class ResourceGroupApiLiveTest extends BaseAzureComputeApiLiveTest {
 
    final String subscriptionid =  getSubscriptionId();
-   private static final String GROUP_NAME = "jcloudstest";
-           //String.format("%3.24s",System.getProperty("user.name") + RAND + "-ResourceGroup");
+   String resourcegroup;
+
+   @BeforeClass
+   @Override
+   public void setup(){
+      super.setup();
+      resourcegroup = getResourceGroupName();
+   }
 
    private ResourceGroupApi api() {
       return api.getResourceGroupApi(subscriptionid);
@@ -47,13 +52,14 @@ public class ResourceGroupApiLiveTest extends BaseAzureComputeApiLiveTest {
    @Test(dependsOnMethods = "testCreate")
    public void testList() {
       final List<ResourceGroup> resourceGroups = api().list();
-      assertFalse(isEmpty(resourceGroups));
+
+      assertTrue(resourceGroups.size() > 0);
 
       final ResourceGroup matching = Iterables.find(resourceGroups, new Predicate<ResourceGroup>() {
 
          @Override
          public boolean apply(final ResourceGroup group) {
-            return GROUP_NAME.equals(group.name());
+            return resourcegroup.equals(group.name());
          }
       });
       assertNotNull(matching);
@@ -61,20 +67,22 @@ public class ResourceGroupApiLiveTest extends BaseAzureComputeApiLiveTest {
 
    @Test(dependsOnMethods = "testCreate")
    public void testRead() {
-      final ResourceGroup group = api().get(GROUP_NAME);
+      final ResourceGroup group = api().get(resourcegroup);
       assertNotNull(group);
-      assertEquals(group.name(), GROUP_NAME);
+      assertEquals(group.name(), resourcegroup);
+      assertEquals(group.location(), LOCATION);
    }
 
    public void testCreate() {
       HashMap<String, String> tags = new HashMap<String, String>();
       tags.put("tagname1", "tagvalue1");
 
-      final ResourceGroup resourceGroup = api().create("jcloudstest", "West US", tags);
+      final ResourceGroup resourceGroup = api().create("jcloudstest", LOCATION, tags);
       assertEquals(resourceGroup.name(), "jcloudstest");
-      assertEquals(resourceGroup.location(), "westus");
+      assertEquals(resourceGroup.location(), LOCATION);
       assertEquals(resourceGroup.tags().size(), 1);
       assertTrue(resourceGroup.id().contains("jcloudstest"));
+      assertEquals(resourceGroup.properties().provisioningState(), "Succeeded");
    }
 
    @Test(dependsOnMethods = "testCreate")
@@ -83,12 +91,15 @@ public class ResourceGroupApiLiveTest extends BaseAzureComputeApiLiveTest {
 
       final ResourceGroup resourceGroup = api().update("jcloudstest", tags);
 
-
       assertEquals(resourceGroup.tags().size(), 0);
+      assertEquals(resourceGroup.properties().provisioningState(), "Succeeded");
    }
 
    @AfterClass(alwaysRun = true)
    public void testDelete() throws Exception {
-      api().delete(GROUP_NAME);
+      String statusCode =  api().delete(resourcegroup);
+      assertTrue(statusCode.equals("202"));
+      statusCode =  api().delete("jcloudstest");
+      assertTrue(statusCode.equals("202"));
    }
 }

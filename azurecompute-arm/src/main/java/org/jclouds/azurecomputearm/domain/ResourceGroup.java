@@ -21,19 +21,120 @@ import java.util.HashMap;
 import org.jclouds.javax.annotation.Nullable;
 import org.jclouds.json.SerializedNames;
 
+
 @AutoValue
 public abstract class ResourceGroup {
+
+   @AutoValue
+   public abstract static class ResourceGroupProperties{
+
+      public ResourceGroupProperties() {
+      }// For AutoValue only!
+
+      @Nullable
+      public abstract String provisioningState();
+
+      @SerializedNames({"provisioningState"})
+      public static ResourceGroupProperties create(final String provisioningState) {
+         return new AutoValue_ResourceGroup_ResourceGroupProperties(provisioningState);
+      }
+
+      public Builder toBuilder() {
+         return builder().fromResourceGroupProperties(this);
+      }
+
+      public static Builder builder() {
+         return new Builder();
+      }
+
+      public static final class Builder {
+
+         private String provisioningState;
+
+         public Builder provisioningState(final String provisioningState) {
+            this.provisioningState = provisioningState;
+            return this;
+         }
+
+         public ResourceGroupProperties build() {
+            return ResourceGroupProperties.create(provisioningState);
+         }
+
+         public Builder fromResourceGroupProperties(final ResourceGroupProperties resourceGroupProperties) {
+            return provisioningState(resourceGroupProperties.provisioningState());
+         }
+      }
+   }
+
+   public ResourceGroup() {}
 
    public abstract String id();
    public abstract String name();
    public abstract String location();
    @Nullable
    public abstract HashMap<String, String> tags();
+   public abstract ResourceGroupProperties properties();
 
-   @SerializedNames({"id", "name", "location", "tags"})
-   public static ResourceGroup create(String id, String name, String location, HashMap<String, String> tags) {
-      return new AutoValue_ResourceGroup(id, name, location, tags);
+   @SerializedNames({"id", "name", "location", "tags", "properties"})
+   public static ResourceGroup create(String id, String name, String location, HashMap<String, String> tags, ResourceGroupProperties properties) {
+      return new AutoValue_ResourceGroup(id, name, location, tags, properties);
    }
 
-   ResourceGroup() {}
+   public Builder toBuilder() {
+      return builder().fromResourceGroup(this);
+   }
+
+   public static Builder builder() {
+      return new Builder();
+   }
+
+   public static final class Builder {
+
+      private String id;
+
+      private String name;
+
+      private String location;
+
+      private HashMap<String, String> tags;
+
+      private ResourceGroupProperties resourceGroupProperties;
+
+      public Builder name(final String name) {
+         this.name = name;
+         return this;
+      }
+
+      public Builder id(final String id) {
+         this.id = id;
+         return this;
+      }
+
+      public Builder location(final String location) {
+         this.location = location;
+         return this;
+      }
+
+      public Builder tags(final HashMap<String, String> tags) {
+         this.tags = tags;
+         return this;
+      }
+
+      public Builder resourceGroupProperties(final ResourceGroupProperties resourceGroupProperties) {
+         this.resourceGroupProperties = resourceGroupProperties;
+         return this;
+      }
+
+      public ResourceGroup build() {
+         return ResourceGroup.create(name, id, location, tags, resourceGroupProperties);
+      }
+
+      public Builder fromResourceGroup(final ResourceGroup resourceGroup) {
+         return name(resourceGroup.name()).
+                 id(resourceGroup.id()).
+                 location(resourceGroup.location()).
+                 tags(resourceGroup.tags()).
+                 resourceGroupProperties(resourceGroup.properties());
+      }
+   }
 }
