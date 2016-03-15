@@ -87,14 +87,13 @@ public interface AzureComputeApi extends Closeable {
    DeploymentApi getDeploymentApiForService(@PathParam("serviceName") String serviceName);
 
    /**
-    * The Service Management API includes operations for managing the virtual machines in your subscription.
+    * The Virtual Machine API includes operations for managing the virtual machines in your subscription.
     *
-    * @see <a href="http://msdn.microsoft.com/en-us/library/jj157206">docs</a>
+    * @see <a href="https://msdn.microsoft.com/en-us/library/azure/mt163630.aspx">docs</a>
     */
-   // TODO: revisit once we have multi-level @Delegate working
    @Delegate
-   VirtualMachineApi getVirtualMachineApiForDeploymentInService(@PathParam("deploymentName") String deploymentName,
-           @PathParam("serviceName") String serviceName);
+   VirtualMachineApi getVirtualMachineApi(@PathParam("subscriptionId") String subscriptionId,
+                                          @PathParam("resourceGroup") String resourceGroup);
 
    /**
     * The Service Management API includes operations for managing the OS images in your subscription.
