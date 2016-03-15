@@ -86,7 +86,7 @@ public class DeploymentToNodeMetadata implements Function<Deployment, NodeMetada
 
    private final OSImageToImage osImageToImage;
 
-   private final RoleSizeToHardware roleSizeToHardware;
+   private final VMSizeToHardware vmSizeToHardware;
 
    private final Map<String, Credentials> credentialStore;
 
@@ -95,12 +95,12 @@ public class DeploymentToNodeMetadata implements Function<Deployment, NodeMetada
            AzureComputeApi api,
            @Memoized Supplier<Set<? extends Location>> locations,
            GroupNamingConvention.Factory namingConvention, OSImageToImage osImageToImage,
-           RoleSizeToHardware roleSizeToHardware, Map<String, Credentials> credentialStore) {
+           VMSizeToHardware vmSizeToHardware, Map<String, Credentials> credentialStore) {
 
       this.nodeNamingConvention = namingConvention.createWithoutPrefix();
       this.locations = checkNotNull(locations, "locations");
       this.osImageToImage = osImageToImage;
-      this.roleSizeToHardware = roleSizeToHardware;
+      this.vmSizeToHardware = vmSizeToHardware;
       this.credentialStore = credentialStore;
       this.api = api;
    }
@@ -121,19 +121,6 @@ public class DeploymentToNodeMetadata implements Function<Deployment, NodeMetada
                  firstMatch(LocationPredicates.idEquals(cloudService.location())).
                  orNull());
       }
-
-      /* TODO
-       if (from.getDatacenter() != null) {
-       builder.location(from(locations.get()).firstMatch(
-       LocationPredicates.idEquals(from.getDatacenter().getId() + "")).orNull());
-       }
-       builder.hardware(roleSizeToHardware.apply(from.instanceSize()));
-       Image image = osImageToImage.apply(from);
-       if (image != null) {
-       builder.imageId(image.getId());
-       builder.operatingSystem(image.getOperatingSystem());
-       }
-       */
       if (from.status() != null) {
          final Optional<RoleInstance> roleInstance = tryFindFirstRoleInstanceInDeployment(from);
          if (roleInstance.isPresent() && roleInstance.get().instanceStatus() != null) {

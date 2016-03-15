@@ -116,7 +116,7 @@ public final class DeploymentParamsToXML implements Binder {
                  .e("SourceImageName").t(params.sourceImageName()).up()
                  .e("OS").t(params.os() == LINUX ? "Linux" : "Windows").up()
                  .up() //OSVirtualHardDisk
-                 .e("RoleSize").t(params.size().getText()).up()
+                 .e("Size").t(params.size()).up()
                  .up() //Role
                  .up(); //RoleList
          if (params.virtualNetworkName() != null) {
