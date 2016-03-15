@@ -79,6 +79,10 @@ public class BaseAzureComputeApiLiveTest extends AbstractAzureComputeApiLiveTest
       return storageServiceName;
    }
 
+   protected String getLocation() {
+      return LOCATION;
+   }
+
    protected String getSubscriptionId() {
       String subscriptionId = null;
       if (System.getProperties().containsKey("test.azurecompute-arm.subscriptionid"))

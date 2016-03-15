@@ -16,7 +16,13 @@
  */
 package org.jclouds.azurecomputearm.features;
 
-import java.util.List;
+import org.jclouds.Fallbacks.EmptyListOnNotFoundOr404;
+import org.jclouds.azurecomputearm.domain.VMSize;
+import org.jclouds.azurecomputearm.oauth.v2.filters.OAuthFilter;
+import org.jclouds.rest.annotations.Fallback;
+import org.jclouds.rest.annotations.QueryParams;
+import org.jclouds.rest.annotations.RequestFilters;
+import org.jclouds.rest.annotations.SelectJson;
 
 import javax.inject.Named;
 import javax.ws.rs.Consumes;
@@ -24,35 +30,19 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import java.util.List;
 
-import org.jclouds.Fallbacks.EmptyListOnNotFoundOr404;
-import org.jclouds.azurecomputearm.domain.Location;
-import org.jclouds.azurecomputearm.oauth.v2.filters.OAuthFilter;
-import org.jclouds.rest.annotations.QueryParams;
-import org.jclouds.rest.annotations.RequestFilters;
-import org.jclouds.rest.annotations.SelectJson;
-import org.jclouds.rest.annotations.Fallback;
-
-/**
- * This Azure Resource Manager API provides all of the locations that are available for resource providers
- * <p/>
- *
- * @see <a href="https://msdn.microsoft.com/en-US/library/azure/dn790540.aspx">docs</a>
- */
-@Path("/subscriptions/{subscriptionid}")
+@Path("/subscriptions/{subscriptionid}/providers/Microsoft.Compute/locations/{location}")
+@QueryParams(keys = "api-version", values = "2015-06-15")
 @RequestFilters(OAuthFilter.class)
-@QueryParams(keys = "api-version", values = "2015-11-01")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-public interface LocationApi {
+public interface VMSizeApi {
 
-   /**
-    * The List Locations operation lists all of the data center locations that are valid for your subscription.
-    */
-   @Named("ListLocations")
+   @Named("vmSizes:list")
    @GET
-   @Path("/locations")
+   @Path("/vmSizes")
    @SelectJson("value")
    @Fallback(EmptyListOnNotFoundOr404.class)
-   List<Location> list();
+   List<VMSize> list();
 }
