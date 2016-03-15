@@ -17,11 +17,9 @@
 package org.jclouds.azurecomputearm.config;
 
 
-import java.net.URI;
+//import java.net.URI;
 
 import org.jclouds.azurecomputearm.AzureComputeApi;
-import org.jclouds.azurecomputearm.domain.options.ListOptions;
-import org.jclouds.azurecomputearm.functions.LinkToListOptions;
 import org.jclouds.azurecomputearm.handlers.AzureComputeErrorHandler;
 import org.jclouds.http.HttpErrorHandler;
 import org.jclouds.http.annotation.ClientError;
@@ -35,10 +33,7 @@ import org.jclouds.rest.ConfiguresHttpApi;
 import org.jclouds.rest.config.HttpApiModule;
 import org.jclouds.azurecomputearm.oauth.v2.config.OAuthScopes;
 
-
-import com.google.common.base.Function;
 import com.google.inject.Scopes;
-import com.google.inject.TypeLiteral;
 
 @ConfiguresHttpApi
 public class AzureComputeHttpApiModule extends HttpApiModule<AzureComputeApi> {
@@ -63,7 +58,5 @@ public class AzureComputeHttpApiModule extends HttpApiModule<AzureComputeApi> {
       install(new AzureComputeParserModule());
       super.configure();
       bind(OAuthScopes.class).toInstance(OAuthScopes.ReadOrWriteScopes.create("read", "read write"));
-      bind(new TypeLiteral<Function<URI, ListOptions>>() {
-      }).to(LinkToListOptions.class);
    }
 }
