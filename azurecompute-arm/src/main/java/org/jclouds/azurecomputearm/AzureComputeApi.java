@@ -38,6 +38,7 @@ import org.jclouds.azurecomputearm.features.TrafficManagerApi;
 import org.jclouds.azurecomputearm.features.VMImageApi;
 import org.jclouds.azurecomputearm.features.VirtualMachineApi;
 import org.jclouds.azurecomputearm.features.VirtualNetworkApi;
+import org.jclouds.azurecomputearm.features.VMSizeApi;
 import org.jclouds.azurecomputearm.features.SubnetApi;
 
 import org.jclouds.rest.annotations.Delegate;
@@ -62,13 +63,20 @@ public interface AzureComputeApi extends Closeable {
    AffinityGroupApi getAffinityGroupApi();
 
    /**
-    * The Service Management API includes operations for listing the available data center locations for a cloud service
-    * in your subscription.
+    * This Azure Resource Manager API provides all of the locations that are available for resource providers
     *
-    * @see <a href="http://msdn.microsoft.com/en-us/library/gg441299">docs</a>
+    * @see <a href="https://msdn.microsoft.com/en-US/library/azure/dn790540.aspx">docs</a>
     */
    @Delegate
    LocationApi getLocationApi(@PathParam("subscriptionid") String subscriptionid);
+
+   /**
+    * This Azure Resource Manager API lists all available virtual machine sizes for a subscription in a given region
+    *
+    * @see <a href="https://msdn.microsoft.com/en-us/library/azure/mt269440.aspx">docs</a>
+    */
+   @Delegate
+   VMSizeApi getVMSizeApi(@PathParam("subscriptionid") String subscriptionid, @PathParam("location") String location);
 
    /**
     * The Service Management API includes operations for managing the cloud services beneath your subscription.
