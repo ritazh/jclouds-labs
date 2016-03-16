@@ -40,7 +40,7 @@ import org.jclouds.azurecomputearm.features.VirtualMachineApi;
 import org.jclouds.azurecomputearm.features.VirtualNetworkApi;
 import org.jclouds.azurecomputearm.features.VMSizeApi;
 import org.jclouds.azurecomputearm.features.SubnetApi;
-
+import org.jclouds.azurecomputearm.features.PublicIPAddressApi;
 import org.jclouds.rest.annotations.Delegate;
 
 /**
@@ -163,6 +163,15 @@ public interface AzureComputeApi extends Closeable {
    @Delegate
    NetworkInterfaceCardApi getNetworkInterfaceCardApi(@PathParam("subscriptionid") String subscriptionid,
                                                       @PathParam("resourcegroup") String resourcegroup);
+
+   /**
+    * The Public IP Address API includes operations for managing public ID Addresses for NICs in your subscription.
+    *
+    * @see <a href="https://msdn.microsoft.com/en-us/library/azure/mt163638.aspx">docs</a>
+    */
+   @Delegate
+   PublicIPAddressApi getPublicIPAddressApi(@PathParam("subscriptionid") String subscriptionid,
+                                         @PathParam("resourcegroup") String resourcegroup);
 
    /**
     * The Service Management API includes operations for managing the storage accounts in your subscription.

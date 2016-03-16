@@ -17,9 +17,9 @@
 package org.jclouds.azurecomputearm.features;
 
 import com.google.common.collect.ImmutableMap;
+import org.jclouds.azurecomputearm.domain.IdReference;
 import org.jclouds.azurecomputearm.domain.IpConfiguration;
 import org.jclouds.azurecomputearm.domain.NetworkInterfaceCard;
-import org.jclouds.azurecomputearm.domain.Subnet;
 import org.jclouds.azurecomputearm.internal.BaseAzureComputeApiMockTest;
 import org.testng.annotations.Test;
 
@@ -90,7 +90,7 @@ public class NetworkInterfaceCardApiMockTest extends BaseAzureComputeApiMockTest
                                     .name("myipconfig")
                                     .properties(
                                             IpConfiguration.IpConfigurationProperties.builder()
-                                                .subnet(Subnet.builder().id(SubnetID).build())
+                                                .subnet(IdReference.create(SubnetID))
                                                 .privateIPAllocationMethod("Dynamic")
                                                 .build()
                                     )
