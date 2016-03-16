@@ -40,12 +40,15 @@ public abstract class IpConfiguration{
         public abstract String privateIPAllocationMethod();
 
         @Nullable
-        public abstract Subnet subnet();
+        public abstract IdReference subnet();
 
-        @SerializedNames({"provisioningState", "privateIPAddress", "privateIPAllocationMethod", "subnet"})
-        public static IpConfigurationProperties create(final String provisioningState, final String privateIPAddress, final String privateIPAllocationMethod, final Subnet subnet) {
+        @Nullable
+        public  abstract  IdReference publicIPAddress();
 
-            return new AutoValue_IpConfiguration_IpConfigurationProperties(provisioningState, privateIPAddress, privateIPAllocationMethod, subnet);
+        @SerializedNames({"provisioningState", "privateIPAddress", "privateIPAllocationMethod", "subnet", "publicIPAddress"})
+        public static IpConfigurationProperties create(final String provisioningState, final String privateIPAddress, final String privateIPAllocationMethod, final IdReference subnet, final IdReference publicIPAddress) {
+
+            return new AutoValue_IpConfiguration_IpConfigurationProperties(provisioningState, privateIPAddress, privateIPAllocationMethod, subnet, publicIPAddress);
         }
 
         public Builder toBuilder() {
@@ -64,7 +67,9 @@ public abstract class IpConfiguration{
 
             private String privateIPAllocationMethod;
 
-            private Subnet subnet;
+            private IdReference subnet;
+
+            private IdReference publicIPAddress;
 
             public Builder provisioningState(final String provisioningState) {
                 this.provisioningState = provisioningState;
@@ -81,20 +86,26 @@ public abstract class IpConfiguration{
                 return this;
             }
 
-            public Builder subnet(final Subnet subnet) {
+            public Builder subnet(final IdReference subnet) {
                 this.subnet = subnet;
                 return this;
             }
 
+            public Builder publicIPAddress(final IdReference publicIPAddress) {
+                this.publicIPAddress = publicIPAddress;
+                return this;
+            }
+
             public IpConfigurationProperties build() {
-                return IpConfigurationProperties.create(provisioningState, privateIPAddress, privateIPAllocationMethod, subnet);
+                return IpConfigurationProperties.create(provisioningState, privateIPAddress, privateIPAllocationMethod, subnet, publicIPAddress);
             }
 
             public Builder fromIpConfigurationProperties(final IpConfigurationProperties ipConfigurationProperties) {
                 return provisioningState(ipConfigurationProperties.provisioningState()).
                         privateIPAddress(ipConfigurationProperties.privateIPAddress()).
                         privateIPAllocationMethod(ipConfigurationProperties.privateIPAllocationMethod()).
-                        subnet(ipConfigurationProperties.subnet());
+                        subnet(ipConfigurationProperties.subnet()).
+                        publicIPAddress(ipConfigurationProperties.publicIPAddress());
             }
         }
     }

@@ -17,6 +17,7 @@
 package org.jclouds.azurecomputearm.features;
 
 import com.google.common.collect.ImmutableMap;
+import org.jclouds.azurecomputearm.domain.IdReference;
 import org.jclouds.azurecomputearm.domain.IpConfiguration;
 import org.jclouds.azurecomputearm.domain.NetworkInterfaceCard;
 import org.jclouds.azurecomputearm.domain.Subnet;
@@ -85,7 +86,7 @@ public class NetworkInterfaceCardApiLiveTest extends BaseAzureComputeApiLiveTest
                                                 .name("myipconfig")
                                                 .properties(
                                                         IpConfiguration.IpConfigurationProperties.builder()
-                                                                .subnet(Subnet.builder().id(subnetID).build())
+                                                                .subnet(IdReference.create(subnetID))
                                                                 .privateIPAllocationMethod("Dynamic")
                                                                 .build()
                                                 )
