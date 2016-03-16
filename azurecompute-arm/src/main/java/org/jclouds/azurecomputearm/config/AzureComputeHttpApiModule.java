@@ -15,10 +15,6 @@
  * limitations under the License.
  */
 package org.jclouds.azurecomputearm.config;
-
-
-//import java.net.URI;
-
 import org.jclouds.azurecomputearm.AzureComputeApi;
 import org.jclouds.azurecomputearm.handlers.AzureComputeErrorHandler;
 import org.jclouds.http.HttpErrorHandler;

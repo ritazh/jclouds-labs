@@ -35,14 +35,14 @@ import org.jclouds.azurecomputearm.compute.config.AzureComputeServiceContextModu
 import org.jclouds.azurecomputearm.compute.functions.OSImageToImage;
 import org.jclouds.azurecomputearm.compute.options.AzureComputeTemplateOptions;
 import org.jclouds.azurecomputearm.config.AzureComputeProperties;
-import org.jclouds.azurecomputearm.domain.CloudService;
+import org.jclouds.azurecomputearm.domain.VMSize;
 import org.jclouds.azurecomputearm.domain.Deployment;
-import org.jclouds.azurecomputearm.domain.Deployment.RoleInstance;
-import org.jclouds.azurecomputearm.domain.DeploymentParams;
-import org.jclouds.azurecomputearm.domain.DeploymentParams.ExternalEndpoint;
-import org.jclouds.azurecomputearm.domain.Location;
 import org.jclouds.azurecomputearm.domain.OSImage;
-import org.jclouds.azurecomputearm.domain.RoleSize;
+import org.jclouds.azurecomputearm.domain.Location;
+import org.jclouds.azurecomputearm.domain.DeploymentParams;
+import org.jclouds.azurecomputearm.domain.CloudService;
+import org.jclouds.azurecomputearm.domain.Deployment.RoleInstance;
+import org.jclouds.azurecomputearm.domain.DeploymentParams.ExternalEndpoint;
 import org.jclouds.azurecomputearm.util.ConflictManagementPredicate;
 import org.jclouds.compute.ComputeServiceAdapter;
 import org.jclouds.compute.domain.OsFamily;
@@ -65,7 +65,7 @@ import com.google.common.collect.Sets;
  * {@link org.jclouds.compute.ComputeService}.
  */
 @Singleton
-public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deployment, RoleSize, OSImage, Location> {
+public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deployment, VMSize, OSImage, Location> {
 
    private static final String DEFAULT_LOGIN_USER = "jclouds";
 
@@ -129,7 +129,7 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
               .password(loginPassword)
               .sourceImageName(OSImageToImage.fromGeoName(template.getImage().getId())[0])
               .mediaLink(createMediaLink(storageAccountName, name))
-              .size(RoleSize.Type.fromString(template.getHardware().getName()))
+              .size(template.getHardware().getName())
               .externalEndpoints(externalEndpoints)
               .virtualNetworkName(templateOptions.getVirtualNetworkName())
               .subnetNames(templateOptions.getSubnetNames())
@@ -185,8 +185,8 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
    }
 
    @Override
-   public Iterable<RoleSize> listHardwareProfiles() {
-      return api.getSubscriptionApi().listRoleSizes();
+   public Iterable<VMSize> listHardwareProfiles() {
+      return api.getVMSizeApi(getSubscriptionId(), getLocation()).list();
    }
 
    @Override
@@ -261,6 +261,9 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
 
    private String getSubscriptionId() {
       return null; // TODO: get subscription id
+   }
+   private String getLocation() {
+      return null; // TODO: get location
    }
    @Override
    public Iterable<Location> listLocations() {

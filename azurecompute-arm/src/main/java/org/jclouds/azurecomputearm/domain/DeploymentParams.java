@@ -75,7 +75,7 @@ public abstract class DeploymentParams {
    /**
     * The size of the virtual machine to allocate. The default value is Small.
     */
-   public abstract RoleSize.Type size();
+   public abstract String size();
 
    /**
     * Specifies the name of a user to be created in the sudoers group of the virtual machine. User names are ASCII
@@ -137,7 +137,7 @@ public abstract class DeploymentParams {
    @AutoValue.Builder
    public abstract static class Builder {
       public abstract Builder name(String name);
-      public abstract Builder size(RoleSize.Type roleSize);
+      public abstract Builder size(String vmSize);
       public abstract Builder username(String username);
       public abstract Builder password(String password);
       public abstract Builder sourceImageName(String sourceImageName);
@@ -160,7 +160,7 @@ public abstract class DeploymentParams {
       }
    }
 
-   public static DeploymentParams create(String name, RoleSize.Type size, String username,
+   public static DeploymentParams create(String name, String size, String username,
                                          String password, String sourceImageName, URI mediaLink,
                                          OSImage.Type os, Set<ExternalEndpoint> externalEndpoints,
                                          String virtualNetworkName, String reservedIPName,
