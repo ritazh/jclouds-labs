@@ -21,6 +21,7 @@ import static org.testng.Assert.assertNotNull;
 import com.google.common.collect.ImmutableMap;
 
 import org.jclouds.azurecomputearm.domain.CreateStorageServiceParams;
+import org.jclouds.azurecomputearm.domain.IdReference;
 import org.jclouds.azurecomputearm.domain.IpConfiguration;
 import org.jclouds.azurecomputearm.domain.NetworkInterfaceCard;
 import org.jclouds.azurecomputearm.domain.ResourceGroup;
@@ -219,7 +220,7 @@ public class BaseAzureComputeApiLiveTest extends AbstractAzureComputeApiLiveTest
                                               .name("myipconfig")
                                               .properties(
                                                       IpConfiguration.IpConfigurationProperties.builder()
-                                                              .subnet(Subnet.builder().id(subnet.id()).build())
+                                                              .subnet(IdReference.create(subnet.id()))
                                                               .privateIPAllocationMethod("Dynamic")
                                                               .build()
                                               )

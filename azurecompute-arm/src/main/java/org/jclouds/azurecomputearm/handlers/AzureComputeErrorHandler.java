@@ -47,6 +47,9 @@ public class AzureComputeErrorHandler implements HttpErrorHandler {
                  ? String.format("%s -> %s", command.getCurrentRequest().getRequestLine(), response.getStatusLine())
                  : message;
          switch (response.getStatusCode()) {
+            case 400:
+               exception = new IllegalArgumentException(message, exception);
+               break;
             case 401:
             case 403:
                exception = new AuthorizationException(message, exception);
