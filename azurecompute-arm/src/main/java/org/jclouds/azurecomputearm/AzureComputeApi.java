@@ -219,4 +219,13 @@ public interface AzureComputeApi extends Closeable {
    */
    @Delegate
    VMImageApi getVMImageApi();
+
+   /**
+    * The Deployment API allows for the management of Azure Resource Manager resources through the use of templates.
+    *
+    * @see <a href="https://msdn.microsoft.com/en-us/library/azure/dn790549.aspx">docs</a>
+    */
+   @Delegate
+   DeploymentApi getDeploymentApi(@PathParam("subscriptionid") String subscriptionId,
+                                  @PathParam("resourcegroup") String resourceGroup);
 }

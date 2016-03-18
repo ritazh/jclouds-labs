@@ -17,60 +17,55 @@
 package org.jclouds.azurecomputearm.features;
 
 import javax.inject.Named;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.PUT;
+import javax.ws.rs.GET;
 import javax.ws.rs.Produces;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.core.MediaType;
 
 import org.jclouds.Fallbacks.NullOnNotFoundOr404;
-import org.jclouds.azurecomputearm.binders.DeploymentParamsToXML;
 import org.jclouds.azurecomputearm.domain.Deployment;
-import org.jclouds.azurecomputearm.domain.DeploymentParams;
-import org.jclouds.azurecomputearm.functions.ParseRequestIdHeader;
-import org.jclouds.azurecomputearm.xml.DeploymentHandler;
-import org.jclouds.rest.annotations.BinderParam;
+import org.jclouds.azurecomputearm.oauth.v2.filters.OAuthFilter;
+import org.jclouds.rest.annotations.QueryParams;
+import org.jclouds.rest.annotations.RequestFilters;
 import org.jclouds.rest.annotations.Fallback;
-import org.jclouds.rest.annotations.Headers;
-import org.jclouds.rest.annotations.ResponseParser;
-import org.jclouds.rest.annotations.XMLResponseParser;
+import org.jclouds.rest.annotations.Payload;
+import org.jclouds.rest.annotations.PayloadParam;
 
-@Path("/services/hostedservices/{serviceName}/deployments")
-@Headers(keys = "x-ms-version", values = "{jclouds.api-version}")
-@Consumes(MediaType.APPLICATION_XML)
+//https://management.azure.com/subscriptions/{subscription-id}/resourcegroups/{resource-group-name}/providers/microsoft.resources/deployments/{deployment-name}?api-version={api-version}
+
+/**
+ * - create deployment
+ * - delete deployment
+ * - get information about deployment
+ */
+@Path("/subscriptions/{subscriptionid}/resourcegroups/{resourcegroup}/providers/microsoft.resources/deployments")
+@QueryParams(keys = "api-version", values = "2016-02-01")
+@RequestFilters(OAuthFilter.class)
+@Consumes(MediaType.APPLICATION_JSON)
 public interface DeploymentApi {
 
    /**
-    * The Get Deployment operation returns the specified deployment from Windows Azure.
-    *
-    * @param name the unique DNS Prefix value in the Windows Azure Management Portal
+    * The Create Template Deployment operation starts the process of an ARM Template deployment.
+    * It then returns a Deployment object.
     */
-   @Named("GetDeployment")
-   @GET
-   @Path("/{name}")
-   @XMLResponseParser(DeploymentHandler.class)
+   @Named("deployment:create")
+   @Path("/{deploymentname}")
+   @Payload("{properties}")
+   @PUT
+   @Produces(MediaType.APPLICATION_JSON)
    @Fallback(NullOnNotFoundOr404.class)
-   Deployment get(@PathParam("name") String name);
-
-   @Named("CreateVirtualMachineDeployment")
-   @POST
-   @Produces(MediaType.APPLICATION_XML)
-   @ResponseParser(ParseRequestIdHeader.class)
-   String create(@BinderParam(DeploymentParamsToXML.class) DeploymentParams params);
+   Deployment createDeployment(@PathParam("deploymentname") String deploymentname,
+                               @PayloadParam("properties") String properties);
 
    /**
-    * The Delete Deployment operation deletes the specified deployment from Windows Azure.
-    *
-    * @param name the unique DNS Prefix value in the Windows Azure Management Portal
+    * Get Deployment Information returns information about the specified deployment.
     */
-   @Named("DeleteDeployment")
-   @DELETE
-   @Path("/{name}")
+   @Named("deployment:get")
+   @Path("/{deploymentname}")
+   @GET
    @Fallback(NullOnNotFoundOr404.class)
-   @ResponseParser(ParseRequestIdHeader.class)
-   String delete(@PathParam("name") String name);
-
+   Deployment getDeployment(@PathParam("deploymentname") String deploymentname);
 }

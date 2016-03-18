@@ -30,7 +30,6 @@ import org.jclouds.azurecomputearm.compute.config.AzureComputeServiceContextModu
 import org.jclouds.azurecomputearm.domain.Deployment;
 
 import org.jclouds.azurecomputearm.domain.NetworkSecurityGroup;
-import org.jclouds.azurecomputearm.domain.Role;
 import org.jclouds.azurecomputearm.domain.Rule;
 
 import org.jclouds.azurecomputearm.util.NetworkSecurityGroups;
@@ -99,10 +98,12 @@ public class AzureComputeSecurityGroupExtension implements SecurityGroupExtensio
    public Set<SecurityGroup> listSecurityGroupsForNode(final String name) {
       checkNotNull(name, "name");
 
-      final Deployment deployment = api.getDeploymentApiForService(name).get(name);
-      final String virtualNetworkName = deployment.virtualNetworkName();
+      final Deployment deployment = null; //api.getDeploymentApiForService(name).get(name);
+      final String virtualNetworkName = null; //deployment.virtualNetworkName();
 
-      final List<String> subnetNames = FluentIterable.from(deployment.roleList())
+      final List<String> subnetNames = null;
+      /*
+      FluentIterable.from(deployment.roleList())
               .transformAndConcat(new Function<Role, Iterable<Role.ConfigurationSet>>() {
                  @Override
                  public Iterable<Role.ConfigurationSet> apply(final Role input) {
@@ -122,7 +123,7 @@ public class AzureComputeSecurityGroupExtension implements SecurityGroupExtensio
                  }
               })
               .toList();
-
+*/
       return FluentIterable.from(subnetNames)
               .transform(new Function<String, NetworkSecurityGroup>() {
                  @Override

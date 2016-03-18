@@ -37,12 +37,13 @@ import org.jclouds.azurecomputearm.domain.Deployment;
 import org.jclouds.azurecomputearm.domain.VMSize;
 import org.jclouds.azurecomputearm.domain.ImageReference;
 import org.jclouds.azurecomputearm.domain.Location;
+
 import org.jclouds.azurecomputearm.domain.DeploymentParams;
 import org.jclouds.azurecomputearm.domain.Publisher;
 import org.jclouds.azurecomputearm.domain.Offer;
 import org.jclouds.azurecomputearm.domain.SKU;
 import org.jclouds.azurecomputearm.domain.Version;
-import org.jclouds.azurecomputearm.domain.Deployment.RoleInstance;
+
 import org.jclouds.azurecomputearm.domain.DeploymentParams.ExternalEndpoint;
 import org.jclouds.azurecomputearm.features.OSImageApi;
 import org.jclouds.azurecomputearm.util.ConflictManagementPredicate;
@@ -138,7 +139,8 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
       if (!new ConflictManagementPredicate(api) {
          @Override
          protected String operation() {
-            return api.getDeploymentApiForService(name).create(params);
+            return "string";
+            //api.getDeploymentApiForService(name).create(params);
          }
       }.apply(name)) {
          final String illegalStateExceptionMessage = generateIllegalStateExceptionMessage(message, createCloudServiceRequestId, azureComputeConstants.operationTimeout());
@@ -155,7 +157,8 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
       if (!retry(new Predicate<String>() {
          @Override
          public boolean apply(final String name) {
-            final Deployment deployment = api.getDeploymentApiForService(name).get(name);
+            //final Deployment deployment = api.getDeploymentApiForService(name).get(name);
+            final Deployment deployment = null;
             if (deployment != null) {
                deployments.add(deployment);
             }
@@ -166,7 +169,7 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
                  name, azureComputeConstants.operationTimeout());
          logger.warn(illegalStateExceptionMessage);
 
-         api.getDeploymentApiForService(name).delete(name);
+         //api.getDeploymentApiForService(name).delete(name);
          api.getCloudServiceApi().delete(name);
 
          throw new IllegalStateException(illegalStateExceptionMessage);
@@ -347,7 +350,8 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
 
          @Override
          protected String operation() {
-            return api.getDeploymentApiForService(cloudServiceName).delete(id);
+            //return api.getDeploymentApiForService(cloudServiceName).delete(id);
+            return null;
          }
 
       }.apply(id)) {
@@ -364,6 +368,7 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
 
          @Override
          public boolean apply(Deployment deployment) {
+            /*
             deployment = api.getDeploymentApiForService(deployment.name()).get(name);
             if (deployment.roleInstanceList() == null || deployment.roleInstanceList().isEmpty()) return false;
             return Iterables.all(deployment.roleInstanceList(), new Predicate<RoleInstance>() {
@@ -381,13 +386,15 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
                   return input.instanceStatus() == Deployment.InstanceStatus.READY_ROLE;
                }
             });
+            */
+            return false;
          }
       }, azureComputeConstants.operationTimeout(), 1, SECONDS).apply(deployment)) {
          final String message = format("Role %s has not reached the READY_ROLE within %sms so it will be destroyed.",
                  deployment.name(), azureComputeConstants.operationTimeout());
          logger.warn(message);
 
-         api.getDeploymentApiForService(name).delete(name);
+         //api.getDeploymentApiForService(name).delete(name);
          api.getCloudServiceApi().delete(name);
 
          throw new IllegalStateException(message);

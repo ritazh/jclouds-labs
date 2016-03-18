@@ -36,7 +36,6 @@ import org.jclouds.azurecomputearm.domain.CloudServiceProperties;
 import org.jclouds.azurecomputearm.functions.Base64EncodeLabel;
 import org.jclouds.azurecomputearm.functions.ParseRequestIdHeader;
 import org.jclouds.azurecomputearm.xml.CloudServiceHandler;
-import org.jclouds.azurecomputearm.xml.CloudServicePropertiesHandler;
 import org.jclouds.azurecomputearm.xml.ListCloudServicesHandler;
 import org.jclouds.javax.annotation.Nullable;
 import org.jclouds.rest.annotations.Fallback;
@@ -145,7 +144,6 @@ public interface CloudServiceApi {
    @GET
    @Path("/{name}")
    @QueryParams(keys = "embed-detail", values = "true")
-   @XMLResponseParser(CloudServicePropertiesHandler.class)
    @Fallback(NullOnNotFoundOr404.class)
    @Nullable CloudServiceProperties getProperties(@PathParam("name") String name);
 }
