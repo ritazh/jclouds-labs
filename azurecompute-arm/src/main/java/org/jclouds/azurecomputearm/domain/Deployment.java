@@ -19,139 +19,36 @@ package org.jclouds.azurecomputearm.domain;
 import static com.google.common.collect.ImmutableList.copyOf;
 
 import java.util.List;
+import java.util.Map;
 
+import com.google.common.collect.ImmutableMap;
 import org.jclouds.javax.annotation.Nullable;
 
 import com.google.auto.value.AutoValue;
+import org.jclouds.json.SerializedNames;
 
 @AutoValue
 public abstract class Deployment {
 
-   public enum Slot {
-
-      PRODUCTION,
-      STAGING,
-      UNRECOGNIZED;
-
-      public static Slot fromString(final String text) {
-         if (text != null) {
-            for (Slot slot : Slot.values()) {
-               if (text.equalsIgnoreCase(slot.name())) {
-                  return slot;
-               }
-            }
-         }
-         return UNRECOGNIZED;
-      }
-   }
-
-   public enum Status {
-
+   public enum ProvisioningState {
+      ACCEPTED("Accepted"),
+      READY("Ready"),
+      CANCELED("Canceled"),
+      FAILED("Failed"),
+      DELETED("Deleted"),
+      SUCCEEDED("Succeeded"),
       RUNNING("Running"),
-      SUSPENDED("Suspended"),
-      RUNNING_TRANSITIONING("RunningTransitioning"),
-      SUSPENDED_TRANSITIONING("SuspendedTransitioning"),
-      STARTING("Starting"),
-      SUSPENDING("Suspending"),
-      DEPLOYING("Deploying"),
-      DELETING("Deleting"),
       UNRECOGNIZED("");
 
       private final String key;
 
-      private Status(final String key) {
+      private ProvisioningState(final String key) {
          this.key = key;
       }
 
-      public static Status fromString(final String text) {
+      public static ProvisioningState fromString(final String text) {
          if (text != null) {
-            for (Status status : Status.values()) {
-               if (text.equalsIgnoreCase(status.key)) {
-                  return status;
-               }
-            }
-         }
-         return UNRECOGNIZED;
-      }
-   }
-
-   public enum InstanceStatus {
-
-      ROLE_STATE_UNKNOWN("RoleStateUnknown"),
-      CREATING_VM("CreatingVM"),
-      STARTING_VM("StartingVM"),
-      CREATING_ROLE("CreatingRole"),
-      STARTING_ROLE("StartingRole"),
-      READY_ROLE("ReadyRole", false),
-      BUSY_ROLE("BusyRole"),
-      STOPPING_ROLE("StoppingRole"),
-      STOPPING_VM("StoppingVM"),
-      STOPPED_DEALLOCATED("StoppedDeallocated", false),
-      PREPARING("Preparing"),
-      DELETING_VM("DeletingVM"),
-      STOPPED_VM("StoppedVM", false),
-      RESTARTING_ROLE("RestartingRole"),
-      CYCLING_ROLE("CyclingRole"),
-      FAILED_STARTING_ROLE("FailedStartingRole", false),
-      FAILED_STARTING_VM("FailedStartingVM", false),
-      UNRESPONSIVE_ROLE("UnresponsiveRole"),
-      PROVISIONING("Provisioning"),
-      PROVISIONING_FAILED("ProvisioningFailed", false),
-      /**
-       * Not parsable into one of the above.
-       */
-      UNRECOGNIZED("");
-
-      private final String key;
-
-      private final boolean _transient;
-
-      private InstanceStatus(final String key) {
-         this(key, true);
-      }
-
-      private InstanceStatus(final String key, final boolean _transient) {
-         this.key = key;
-         this._transient = _transient;
-      }
-
-      public boolean isTransient() {
-         return _transient;
-      }
-
-      public static InstanceStatus fromString(final String text) {
-         if (text != null) {
-            for (InstanceStatus status : InstanceStatus.values()) {
-               if (text.equalsIgnoreCase(status.key)) {
-                  return status;
-               }
-            }
-         }
-         return UNRECOGNIZED;
-      }
-   }
-
-   public enum PowerState {
-
-      STARTING("Starting"),
-      STARTED("Started"),
-      STOPPING("Stopping"),
-      STOPPED("Stopped"),
-      UNKNOWN("Unknown"),
-      /**
-       * Not parsable into one of the above.
-       */
-      UNRECOGNIZED("");
-
-      private final String key;
-
-      private PowerState(final String key) {
-         this.key = key;
-      }
-
-      public static PowerState fromString(final String text) {
-         if (text != null) {
-            for (PowerState state : PowerState.values()) {
+            for (ProvisioningState state : ProvisioningState.values()) {
                if (text.equalsIgnoreCase(state.key)) {
                   return state;
                }
@@ -161,155 +58,568 @@ public abstract class Deployment {
       }
    }
 
-   @AutoValue
-   public abstract static class VirtualIP {
+   public enum DeploymentMode {
+      INCREMENTAL("Incremental"),
+      COMPLETE("Complete"),
+      UNRECOGNIZED("");
 
-      public abstract String address();
+      private final String key;
 
-      public abstract Boolean isDnsProgrammed();
+      private DeploymentMode(final String key) { this.key = key; }
 
-      public abstract String name();
-
-      VirtualIP() { // For AutoValue only!
-      }
-
-      public static VirtualIP create(final String address, final Boolean isDnsProgrammed, final String name) {
-         return new AutoValue_Deployment_VirtualIP(address, isDnsProgrammed, name);
-      }
-   }
-
-   @AutoValue
-   public abstract static class InstanceEndpoint {
-
-      public abstract String name();
-
-      public abstract String vip();
-
-      public abstract int publicPort();
-
-      public abstract int localPort();
-
-      public abstract String protocol();
-
-      InstanceEndpoint() { // For AutoValue only!
-      }
-
-      public static InstanceEndpoint create(final String name, final String vip,
-              final int publicPort, final int localPort, final String protocol) {
-
-         return new AutoValue_Deployment_InstanceEndpoint(name, vip, publicPort, localPort, protocol);
+      public static DeploymentMode fromString(final String text) {
+         if (text != null) {
+            for (DeploymentMode mode : DeploymentMode.values()) {
+               if (text.equalsIgnoreCase(mode.key)) {
+                  return mode;
+               }
+            }
+         }
+         return UNRECOGNIZED;
       }
    }
 
    @AutoValue
-   public abstract static class RoleInstance {
+   public abstract static class TypeValue {
+      public abstract String type();
 
-      public abstract String roleName();
+      public abstract String value();
 
-      public abstract String instanceName();
+      TypeValue() { // For AutoValue only
+      }
 
-      public abstract InstanceStatus instanceStatus();
+      @SerializedNames({"type", "value"})
+      public static TypeValue create(final String type, final String value) {
+         return new AutoValue_Deployment_TypeValue(type, value);
+      }
 
-      public abstract PowerState powerState();
+      public Builder toBuilder() {
+         return builder().fromTypeValue(this);
+      }
 
-      @Nullable // null value in case of StoppedDeallocated
-      public abstract Integer instanceUpgradeDomain();
+      public static Builder builder() {
+         return new Builder();
+      }
 
-      @Nullable // null value in case of StoppedDeallocated
-      public abstract Integer instanceFaultDomain();
+      public static final class Builder {
 
-      @Nullable // null value in case of StoppedDeallocated
-      public abstract RoleSize.Type instanceSize();
+         private String type;
+         private String value;
 
-      @Nullable // null value in case of StoppedDeallocated
-      public abstract String ipAddress();
+         public Builder typeValue(final String type, final String value) {
+            this.type = type;
+            this.value = value;
+            return this;
+         }
+
+         public TypeValue build() {
+            return TypeValue.create(type, value);
+         }
+
+         public Builder fromTypeValue(final TypeValue typeValue) {
+            return typeValue(typeValue.type(), typeValue.value());
+         }
+      }
+   }
+
+   @AutoValue
+   public abstract static class ProviderResourceType {
+      @Nullable
+      public abstract String resourceType();
 
       @Nullable
-      public abstract String hostname();
+      public abstract List<String> locations();
 
       @Nullable
-      public abstract List<InstanceEndpoint> instanceEndpoints();
+      public abstract List<String> apiVersions();
 
-      RoleInstance() { // For AutoValue only!
+      @Nullable
+      public abstract Map<String, String> properties();
+
+      ProviderResourceType() { // For AutoValue only
       }
 
-      public static RoleInstance create(final String roleName, final String instanceName,
-              final InstanceStatus instanceStatus, final PowerState powerState, final Integer instanceUpgradeDomain,
-              final Integer instanceFaultDomain, final RoleSize.Type instanceSize,
-              final String ipAddress, final String hostname, final List<InstanceEndpoint> instanceEndpoints) {
+      @SerializedNames({"resourceType", "locations", "apiVersions", "properties"})
+      public static ProviderResourceType create(final String resourceType,
+                                                final List<String> locations,
+                                                final List<String> apiVersions,
+                                                final Map<String, String> properties) {
+         return new AutoValue_Deployment_ProviderResourceType(resourceType,
+                 locations == null ? null : copyOf(locations),
+                 apiVersions == null ? null : copyOf(apiVersions),
+                 properties == null ? null : ImmutableMap.copyOf(properties));
+      }
 
-         return new AutoValue_Deployment_RoleInstance(roleName, instanceName, instanceStatus, powerState,
-                 instanceUpgradeDomain, instanceFaultDomain, instanceSize, ipAddress, hostname,
-                 instanceEndpoints == null ? null : copyOf(instanceEndpoints));
+      public Builder toBuilder() {
+         return builder().fromProviderResourceType(this);
+      }
+
+      public static Builder builder() {
+         return new Builder();
+      }
+
+      public static final class Builder {
+
+         private String resourceType;
+         private List<String> locations;
+         private List<String> apiVersions;
+         private Map<String, String> properties;
+
+         public Builder providerResourceType(final String resourceType,
+                                             final List<String> locations,
+                                             final List<String> apiVersions,
+                                             final Map<String, String> properties) {
+            this.resourceType = resourceType;
+            this.locations = locations;
+            this.apiVersions = apiVersions;
+            this.properties = properties;
+            return this;
+         }
+
+         public ProviderResourceType build() {
+            return ProviderResourceType.create(resourceType, locations, apiVersions, properties);
+         }
+
+         public Builder fromProviderResourceType(final ProviderResourceType providerResourceType) {
+            return providerResourceType(providerResourceType.resourceType(),
+                                        providerResourceType.locations(),
+                                        providerResourceType.apiVersions(),
+                                        providerResourceType.properties());
+         }
       }
    }
 
-   Deployment() {
-   } // For AutoValue only!
+   @AutoValue
+   public abstract static class Provider {
+      @Nullable
+      public abstract String id();
+
+      @Nullable
+      public abstract String namespace();
+
+      @Nullable
+      public abstract String registrationState();
+
+      @Nullable
+      public abstract List<ProviderResourceType> resourceTypes();
+
+      Provider() { // For AutoValue only
+      }
+
+      @SerializedNames({"id", "namespace", "registrationState", "resourceTypes"})
+      public static Provider create(final String id,
+                                    final String namespace,
+                                    final String registrationState,
+                                    final List<ProviderResourceType> resourceTypes) {
+         return new AutoValue_Deployment_Provider(id, namespace, registrationState, resourceTypes == null ? null : copyOf(resourceTypes));
+      }
+
+      public Builder toBuilder() {
+         return builder().fromProvider(this);
+      }
+
+      public static Builder builder() {
+         return new Builder();
+      }
+
+      public static final class Builder {
+
+         private String id;
+         private String namespace;
+         private String registrationState;
+         private List<ProviderResourceType> resourceTypes;
+
+         public Builder provider(final String id, final String namespace, final String registrationState,
+                                 final List<ProviderResourceType> resourceTypes) {
+            this.id = id;
+            this.namespace = namespace;
+            this.registrationState = registrationState;
+            this.resourceTypes = resourceTypes;
+            return this;
+         }
+
+         public Provider build() {
+            return Provider.create(id, namespace, registrationState, resourceTypes);
+         }
+
+         public Builder fromProvider(final Provider provider) {
+            return provider(provider.id(), provider.namespace(), provider.registrationState(), provider.resourceTypes());
+         }
+      }
+   }
+
+   @AutoValue
+   public abstract static class BasicDependency {
+      @Nullable
+      public abstract String id();
+
+      @Nullable
+      public abstract String resourceType();
+
+      @Nullable
+      public abstract String resourceName();
+
+      BasicDependency() { // For AutoValue only
+      }
+
+      @SerializedNames({"id", "resourceType", "resourceName"})
+      public static BasicDependency create(final String id, final String resourceType, final String resourceName) {
+         return new AutoValue_Deployment_BasicDependency(id, resourceType, resourceName);
+      }
+
+      public Builder toBuilder() {
+         return builder().fromBasicDependency(this);
+      }
+
+      public static Builder builder() {
+         return new Builder();
+      }
+
+      public static final class Builder {
+
+         private String id;
+         private String resourceType;
+         private String resourceName;
+
+         public Builder basicDependency(final String id, final String resourceType, final String resourceName) {
+            this.id = id;
+            this.resourceType = resourceType;
+            this.resourceName = resourceName;
+            return this;
+         }
+
+         public BasicDependency build() {
+            return BasicDependency.create(id, resourceType, resourceName);
+         }
+
+         public Builder fromBasicDependency(final BasicDependency basicDependency) {
+            return basicDependency(basicDependency.id(), basicDependency.resourceType(), basicDependency.resourceName());
+         }
+      }
+   }
+
+   @AutoValue
+   public abstract static class Dependency {
+      @Nullable
+      public abstract List<BasicDependency> dependencies();
+
+      @Nullable
+      public abstract String id();
+
+      @Nullable
+      public abstract String resourceType();
+
+      @Nullable
+      public abstract String resourceName();
+
+      Dependency() { // For AutoValue only
+      }
+
+      @SerializedNames({"dependencies", "id", "resourceType", "resourceName"})
+      public static Dependency create(final List<BasicDependency> dependencies,
+                                      final String id,
+                                      final String resourceType,
+                                      final String resourceName) {
+         return new AutoValue_Deployment_Dependency(dependencies == null ? null : copyOf(dependencies), id, resourceType, resourceName);
+      }
+
+      public Builder toBuilder() {
+         return builder().fromDependency(this);
+      }
+
+      public static Builder builder() {
+         return new Builder();
+      }
+
+      public static final class Builder {
+
+         private List<BasicDependency> dependencies;
+         private String id;
+         private String resourceType;
+         private String resourceName;
+
+         public Builder dependency(final List<BasicDependency> dependencies,
+                                   final String id,
+                                   final String resourceType,
+                                   final String resourceName) {
+            this.dependencies = dependencies;
+            this.id = id;
+            this.resourceType = resourceType;
+            this.resourceName = resourceName;
+            return this;
+         }
+
+         public Dependency build() {
+            return Dependency.create(dependencies, id, resourceType, resourceName);
+         }
+
+         public Builder fromDependency(final Dependency dependency) {
+            return dependency(dependency.dependencies(), dependency.id(), dependency.resourceType(), dependency.resourceName());
+         }
+      }
+   }
+
+   @AutoValue
+   public abstract static class ContentLink {
+      public abstract String uri();
+
+      @Nullable
+      public abstract String contentVersion();
+
+      ContentLink() { // For AutoValue only
+      }
+
+      @SerializedNames({"uri", "contentVersion"})
+      public static ContentLink create(final String uri, final String contentVersion) {
+         return new AutoValue_Deployment_ContentLink(uri, contentVersion);
+      }
+
+      public Builder toBuilder() {
+         return builder().fromContentLink(this);
+      }
+
+      public static Builder builder() {
+         return new Builder();
+      }
+
+      public static final class Builder {
+
+         private String uri;
+         private String contentVersion;
+
+         public Builder contentLink(final String uri, final String contentVersion) {
+            this.uri = uri;
+            this.contentVersion = contentVersion;
+            return this;
+         }
+
+         public ContentLink build() {
+            return ContentLink.create(uri, contentVersion);
+         }
+
+         public Builder fromContentLink(final ContentLink contentLink) {
+            return contentLink(contentLink.uri(), contentLink.contentVersion());
+         }
+      }
+   }
+
+   @AutoValue
+   public abstract static class DeploymentProperties {
+      @Nullable
+      public abstract String provisioningState();
+
+      @Nullable
+      public abstract String correlationId();
+
+      @Nullable
+      public abstract String timestamp();
+
+      @Nullable
+      public abstract Map<String, String> outputs();
+
+      @Nullable
+      public abstract List<Provider> providers();
+
+      @Nullable
+      public abstract List<Dependency> dependencies();
+
+      // Included for completeness, but template is actually a complex type that
+      // would be difficult to model.
+      @Nullable
+      public abstract String template();
+
+      @Nullable
+      public abstract ContentLink templateLink();
+
+      // Included for completeness, but parameters is actually a complex type that
+      // would be difficult to model.
+      @Nullable
+      public abstract String parameters();
+
+      @Nullable
+      public abstract ContentLink parametersLink();
+
+      public abstract String mode();
+
+      // The entries below seem to be dynamic/not documented in the specification
+      @Nullable
+      public abstract String duration();
+
+      @Nullable
+      public abstract List<Map<String, String>> outputResources();
+
+      DeploymentProperties() { // For AutoValue only
+      }
+
+      // TODO - leaving out "template" and "parameters", those objects are quite dynamic and hard to map, placed XXX in name to have them skipped
+      @SerializedNames({"provisioningState", "correlationId", "timestamp", "outputs", "providers", "dependencies", "XXX-template", "templateLink", "XXX-parameters", "parametersLink", "mode", "duration", "outputResources"})
+      public static DeploymentProperties create(final String provisioningState,
+                                                final String correlationId,
+                                                final String timestamp,
+                                                final Map<String, String> outputs,
+                                                final List<Provider> providers,
+                                                final List<Dependency> dependencies,
+                                                final String template,
+                                                final ContentLink templateLink,
+                                                final String parameters,
+                                                final ContentLink parametersLink,
+                                                final String mode,
+                                                final String duration,
+                                                final List<Map<String, String>> outputResources) {
+         return new AutoValue_Deployment_DeploymentProperties(provisioningState,
+                                                              correlationId,
+                                                              timestamp,
+                                                              outputs == null ? null : ImmutableMap.copyOf(outputs),
+                                                              providers == null ? null : copyOf(providers),
+                                                              dependencies == null ? null : copyOf(dependencies),
+                                                              template,
+                                                              templateLink,
+                                                              parameters,
+                                                              parametersLink,
+                                                              mode,
+                                                              duration,
+                                                              outputResources == null ? null : copyOf(outputResources));
+      }
+
+      public Builder toBuilder() {
+         return builder().fromDeploymentProperties(this);
+      }
+
+      public static Builder builder() {
+         return new Builder();
+      }
+
+      public static final class Builder {
+
+         private String provisioningState;
+         private String correlationId;
+         private String timestamp;
+         private Map<String, String> outputs;
+         private List<Provider> providers;
+         private List<Dependency> dependencies;
+         private String template;
+         private ContentLink templateLink;
+         private String parameters;
+         private ContentLink parametersLink;
+         private String mode;
+         private String duration;
+         private List<Map<String, String>> outputResources;
+
+         public Builder deploymentProperties(final String provisioningState,
+                                             final String correlationId,
+                                             final String timestamp,
+                                             final Map<String, String> outputs,
+                                             final List<Provider> providers,
+                                             final List<Dependency> dependencies,
+                                             final String template,
+                                             final ContentLink templateLink,
+                                             final String parameters,
+                                             final ContentLink parametersLink,
+                                             final String mode,
+                                             final String duration,
+                                             final List<Map<String, String>> outputResources) {
+            this.provisioningState = provisioningState;
+            this.correlationId = correlationId;
+            this.timestamp = timestamp;
+            this.outputs = outputs;
+            this.providers = providers;
+            this.dependencies = dependencies;
+            this.template = template;
+            this.templateLink = templateLink;
+            this.parameters = parameters;
+            this.parametersLink = parametersLink;
+            this.mode = mode;
+            this.duration = duration;
+            this.outputResources = outputResources;
+            return this;
+         }
+
+         public DeploymentProperties build() {
+            return DeploymentProperties.create(provisioningState,
+                    correlationId,
+                    timestamp,
+                    outputs,
+                    providers,
+                    dependencies,
+                    template,
+                    templateLink,
+                    parameters,
+                    parametersLink,
+                    mode,
+                    duration,
+                    outputResources);
+         }
+
+         public Builder fromDeploymentProperties(final DeploymentProperties deploymentProperties) {
+            return deploymentProperties(deploymentProperties.provisioningState(),
+                    deploymentProperties.correlationId(),
+                    deploymentProperties.timestamp(),
+                    deploymentProperties.outputs(),
+                    deploymentProperties.providers(),
+                    deploymentProperties.dependencies(),
+                    deploymentProperties.template(),
+                    deploymentProperties.templateLink(),
+                    deploymentProperties.parameters(),
+                    deploymentProperties.parametersLink(),
+                    deploymentProperties.mode(),
+                    deploymentProperties.duration(),
+                    deploymentProperties.outputResources());
+         }
+      }
+   }
 
    /**
-    * The user-supplied name for this deployment.
+    * The ID associated with the template deployment.
+    */
+   @Nullable
+   public abstract String id();
+
+   /**
+    * The name associated with the template deployment.
     */
    public abstract String name();
 
    /**
-    * The environment to which the cloud service is deployed.
-    */
-   public abstract Slot slot();
-
-   public abstract Status status();
-
-   /**
-    * The user-supplied name of the deployment returned as a base-64 encoded string. This name can be used identify the
-    * deployment for your tracking purposes.
-    */
-   public abstract String label();
-
-   /**
-    * The instance state is returned as an English human-readable string that, when present, provides a snapshot of the
-    * state of the virtual machine at the time the operation was called.
-    *
-    * For example, when the instance is first being initialized a "Preparing Windows for first use." could be returned.
+    * Properties of the deployment.
     */
    @Nullable
-   public abstract String instanceStateDetails();
+   public abstract DeploymentProperties properties();
 
-   /**
-    * Error code of the latest role or VM start
-    *
-    * For VMRoles the error codes are:
-    *
-    * WaitTimeout - The virtual machine did not communicate back to Azure infrastructure within 25 minutes. Typically
-    * this indicates that the virtual machine did not start or that the guest agent is not installed.
-    *
-    * VhdTooLarge - The VHD image selected was too large for the virtual machine hosting the role.
-    *
-    * AzureInternalError – An internal error has occurred that has caused to virtual machine to fail to start. Contact
-    * support for additional assistance.
-    *
-    * For web and worker roles this field returns an error code that can be provided to Windows Azure support to assist
-    * in resolution of errors. Typically this field will be empty.
-    */
-   @Nullable
-   public abstract String instanceErrorCode();
+   Deployment() {
+   } // For AutoValue only!
 
-   public abstract List<VirtualIP> virtualIPs();
+   @SerializedNames({"id", "name", "properties"})
+   public static Deployment create(final String id, final String name, final DeploymentProperties properties) {
+      return new AutoValue_Deployment(id, name, properties);
+   }
 
-   public abstract List<RoleInstance> roleInstanceList();
+   public Builder toBuilder() {
+      return builder().fromDeployment(this);
+   }
 
-   @Nullable
-   public abstract List<Role> roleList();
+   public static Builder builder() {
+      return new Builder();
+   }
 
-   @Nullable
-   public abstract String virtualNetworkName();
+   public static final class Builder {
 
-   public static Deployment create(final String name, final Slot slot, final Status status, final String label,
-           final String instanceStateDetails, final String instanceErrorCode,
-           final List<VirtualIP> virtualIPs, final List<RoleInstance> roleInstanceList,
-           final List<Role> roles, final String virtualNetworkName) {
+      private String id;
+      private String name;
+      private DeploymentProperties properties;
 
-      return new AutoValue_Deployment(name, slot, status, label, instanceStateDetails,
-              instanceErrorCode, copyOf(virtualIPs), copyOf(roleInstanceList),
-              roles == null ? null : copyOf(roles), virtualNetworkName);
+      public Builder deployment(final String id, final String name, DeploymentProperties properties) {
+         this.id = id;
+         this.name = name;
+         this.properties = properties;
+         return this;
+      }
+
+      public Deployment build() {
+         return Deployment.create(id, name, properties);
+      }
+
+      public Builder fromDeployment(final Deployment deployment) {
+         return deployment(deployment.id(), deployment.name(), deployment.properties());
+      }
    }
 }

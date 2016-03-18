@@ -24,10 +24,10 @@ import javax.inject.Inject;
 
 import org.jclouds.azurecomputearm.AzureComputeApi;
 import org.jclouds.azurecomputearm.domain.CloudService;
+import org.jclouds.azurecomputearm.domain.ComputeNode;
 import org.jclouds.azurecomputearm.domain.Deployment;
-import org.jclouds.azurecomputearm.domain.Deployment.RoleInstance;
-import org.jclouds.collect.Memoized;
 import org.jclouds.compute.domain.NodeMetadata;
+import org.jclouds.collect.Memoized;
 import org.jclouds.compute.domain.NodeMetadataBuilder;
 import org.jclouds.compute.functions.GroupNamingConvention;
 import org.jclouds.domain.Credentials;
@@ -35,48 +35,36 @@ import org.jclouds.domain.Location;
 import org.jclouds.location.predicates.LocationPredicates;
 
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Sets;
 
 public class DeploymentToNodeMetadata implements Function<Deployment, NodeMetadata> {
 
-   private static final Map<Deployment.InstanceStatus, NodeMetadata.Status> INSTANCESTATUS_TO_NODESTATUS =
-           ImmutableMap.<Deployment.InstanceStatus, NodeMetadata.Status>builder().
-           put(Deployment.InstanceStatus.BUSY_ROLE, NodeMetadata.Status.PENDING).
-           put(Deployment.InstanceStatus.CREATING_ROLE, NodeMetadata.Status.PENDING).
-           put(Deployment.InstanceStatus.CREATING_VM, NodeMetadata.Status.PENDING).
-           put(Deployment.InstanceStatus.CYCLING_ROLE, NodeMetadata.Status.PENDING).
-           put(Deployment.InstanceStatus.DELETING_VM, NodeMetadata.Status.PENDING).
-           put(Deployment.InstanceStatus.FAILED_STARTING_ROLE, NodeMetadata.Status.ERROR).
-           put(Deployment.InstanceStatus.FAILED_STARTING_VM, NodeMetadata.Status.ERROR).
-           put(Deployment.InstanceStatus.PREPARING, NodeMetadata.Status.PENDING).
-           put(Deployment.InstanceStatus.PROVISIONING, NodeMetadata.Status.PENDING).
-           put(Deployment.InstanceStatus.READY_ROLE, NodeMetadata.Status.RUNNING).
-           put(Deployment.InstanceStatus.RESTARTING_ROLE, NodeMetadata.Status.PENDING).
-           put(Deployment.InstanceStatus.STARTING_ROLE, NodeMetadata.Status.PENDING).
-           put(Deployment.InstanceStatus.STARTING_VM, NodeMetadata.Status.PENDING).
-           put(Deployment.InstanceStatus.STOPPED_DEALLOCATED, NodeMetadata.Status.SUSPENDED).
-           put(Deployment.InstanceStatus.STOPPED_VM, NodeMetadata.Status.SUSPENDED).
-           put(Deployment.InstanceStatus.STOPPING_ROLE, NodeMetadata.Status.PENDING).
-           put(Deployment.InstanceStatus.STOPPING_VM, NodeMetadata.Status.PENDING).
-           put(Deployment.InstanceStatus.ROLE_STATE_UNKNOWN, NodeMetadata.Status.UNRECOGNIZED).
-           put(Deployment.InstanceStatus.UNRECOGNIZED, NodeMetadata.Status.UNRECOGNIZED).
-           build();
+   private static final Map<ComputeNode.Status, NodeMetadata.Status> INSTANCESTATUS_TO_NODESTATUS =
+           ImmutableMap.<ComputeNode.Status, NodeMetadata.Status>builder().
+                   put(ComputeNode.Status.GOOD, NodeMetadata.Status.RUNNING).
+                   put(ComputeNode.Status.BAD, NodeMetadata.Status.ERROR).
+                   put(ComputeNode.Status.UNRECOGNIZED, NodeMetadata.Status.UNRECOGNIZED).
+                   build();
 
-   private static final Map<Deployment.Status, NodeMetadata.Status> STATUS_TO_NODESTATUS =
-           ImmutableMap.<Deployment.Status, NodeMetadata.Status>builder().
-           put(Deployment.Status.DELETING, NodeMetadata.Status.PENDING).
-           put(Deployment.Status.SUSPENDED_TRANSITIONING, NodeMetadata.Status.PENDING).
-           put(Deployment.Status.RUNNING_TRANSITIONING, NodeMetadata.Status.PENDING).
-           put(Deployment.Status.DEPLOYING, NodeMetadata.Status.PENDING).
-           put(Deployment.Status.STARTING, NodeMetadata.Status.PENDING).
-           put(Deployment.Status.SUSPENDED, NodeMetadata.Status.SUSPENDED).
-           put(Deployment.Status.RUNNING, NodeMetadata.Status.RUNNING).
-           put(Deployment.Status.UNRECOGNIZED, NodeMetadata.Status.UNRECOGNIZED).
-           build();
+   // When using the Deployment API to deploy an ARM template, the deployment goes through
+   // stages.  Accepted -> Running -> Succeeded.  Only when the deployment has SUCCEEDED is
+   // the resource deployed using the template actually ready.
+   //
+   // To get details about the resource(s) deployed via template, one needs to query the
+   // various resources after the deployment has "SUCCEEDED".
+   private static final Map<Deployment.ProvisioningState, NodeMetadata.Status> STATUS_TO_NODESTATUS =
+           ImmutableMap.<Deployment.ProvisioningState, NodeMetadata.Status>builder().
+                   put(Deployment.ProvisioningState.ACCEPTED, NodeMetadata.Status.PENDING).
+                   put(Deployment.ProvisioningState.READY, NodeMetadata.Status.PENDING).
+                   put(Deployment.ProvisioningState.RUNNING, NodeMetadata.Status.PENDING).
+                   put(Deployment.ProvisioningState.CANCELED, NodeMetadata.Status.TERMINATED).
+                   put(Deployment.ProvisioningState.FAILED, NodeMetadata.Status.ERROR).
+                   put(Deployment.ProvisioningState.DELETED, NodeMetadata.Status.TERMINATED).
+                   put(Deployment.ProvisioningState.SUCCEEDED, NodeMetadata.Status.RUNNING).
+                   put(Deployment.ProvisioningState.UNRECOGNIZED, NodeMetadata.Status.UNRECOGNIZED).
+                   build();
 
    private final AzureComputeApi api;
 
@@ -111,8 +99,8 @@ public class DeploymentToNodeMetadata implements Function<Deployment, NodeMetada
       builder.id(from.name());
       builder.providerId(from.name());
       builder.name(from.name());
-      builder.hostname(getHostname(from));
-      builder.group(nodeNamingConvention.groupInUniqueNameOrNull(getHostname(from)));
+      //builder.hostname(getHostname(from));
+      //builder.group(nodeNamingConvention.groupInUniqueNameOrNull(getHostname(from)));
 
       // TODO: CloudService name is required (see JCLOUDS-849): waiting for JCLOUDS-853.
       final CloudService cloudService = api.getCloudServiceApi().get(from.name());
@@ -121,6 +109,20 @@ public class DeploymentToNodeMetadata implements Function<Deployment, NodeMetada
                  firstMatch(LocationPredicates.idEquals(cloudService.location())).
                  orNull());
       }
+
+      /* TODO
+       if (from.getDatacenter() != null) {
+       builder.location(from(locations.get()).firstMatch(
+       LocationPredicates.idEquals(from.getDatacenter().getId() + "")).orNull());
+       }
+       builder.hardware(roleSizeToHardware.apply(from.instanceSize()));
+       Image image = osImageToImage.apply(from);
+       if (image != null) {
+       builder.imageId(image.getId());
+       builder.operatingSystem(image.getOperatingSystem());
+       }
+
+      // TODO -- update
       if (from.status() != null) {
          final Optional<RoleInstance> roleInstance = tryFindFirstRoleInstanceInDeployment(from);
          if (roleInstance.isPresent() && roleInstance.get().instanceStatus() != null) {
@@ -148,9 +150,10 @@ public class DeploymentToNodeMetadata implements Function<Deployment, NodeMetada
          }
          builder.privateAddresses(privateIpAddresses);
       }
+      */
       return builder.build();
    }
-
+/*
    private String getHostname(final Deployment from) {
       final Optional<RoleInstance> roleInstance = tryFindFirstRoleInstanceInDeployment(from);
       return !roleInstance.isPresent() || roleInstance.get().hostname() == null
@@ -163,5 +166,5 @@ public class DeploymentToNodeMetadata implements Function<Deployment, NodeMetada
               ? Optional.<RoleInstance>absent()
               : Optional.of(deployment.roleInstanceList().get(0));
    }
-
+*/
 }
