@@ -104,12 +104,13 @@ public interface AzureComputeApi extends Closeable {
                                           @PathParam("resourceGroup") String resourceGroup);
 
    /**
-    * The Service Management API includes operations for managing the OS images in your subscription.
+    * The Azure Resource Manager API gets all the OS images in your subscription.
     *
     * @see <a href="http://msdn.microsoft.com/en-us/library/jj157175">docs</a>
     */
    @Delegate
-   OSImageApi getOSImageApi();
+   OSImageApi getOSImageApi(@PathParam("subscriptionId") String subscriptionId,
+                            @PathParam("location") String location);
 
    /**
     * The Service Management API includes operations for Tracking Asynchronous Service Management Requests.
@@ -174,7 +175,7 @@ public interface AzureComputeApi extends Closeable {
                                          @PathParam("resourcegroup") String resourcegroup);
 
    /**
-    * The Service Management API includes operations for managing the storage accounts in your subscription.
+    * The Azure Resource Manager API includes operations for managing the storage accounts in your subscription.
     *
     * @see <https://msdn.microsoft.com/en-us/library/mt163683.aspx">docs</a>
     */

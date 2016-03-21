@@ -17,7 +17,6 @@
 package org.jclouds.azurecomputearm.compute;
 
 import static com.google.common.base.Objects.firstNonNull;
-import static com.google.common.base.Predicates.notNull;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.jclouds.util.Predicates2.retry;
@@ -32,30 +31,29 @@ import javax.inject.Singleton;
 
 import org.jclouds.azurecomputearm.AzureComputeApi;
 import org.jclouds.azurecomputearm.compute.config.AzureComputeServiceContextModule.AzureComputeConstants;
-import org.jclouds.azurecomputearm.compute.functions.OSImageToImage;
 import org.jclouds.azurecomputearm.compute.options.AzureComputeTemplateOptions;
 import org.jclouds.azurecomputearm.config.AzureComputeProperties;
-import org.jclouds.azurecomputearm.domain.VMSize;
 import org.jclouds.azurecomputearm.domain.Deployment;
-import org.jclouds.azurecomputearm.domain.OSImage;
+import org.jclouds.azurecomputearm.domain.VMSize;
+import org.jclouds.azurecomputearm.domain.ImageReference;
 import org.jclouds.azurecomputearm.domain.Location;
 import org.jclouds.azurecomputearm.domain.DeploymentParams;
-import org.jclouds.azurecomputearm.domain.CloudService;
+import org.jclouds.azurecomputearm.domain.Publisher;
+import org.jclouds.azurecomputearm.domain.Offer;
+import org.jclouds.azurecomputearm.domain.SKU;
+import org.jclouds.azurecomputearm.domain.Version;
 import org.jclouds.azurecomputearm.domain.Deployment.RoleInstance;
 import org.jclouds.azurecomputearm.domain.DeploymentParams.ExternalEndpoint;
+import org.jclouds.azurecomputearm.features.OSImageApi;
 import org.jclouds.azurecomputearm.util.ConflictManagementPredicate;
 import org.jclouds.compute.ComputeServiceAdapter;
-import org.jclouds.compute.domain.OsFamily;
 import org.jclouds.compute.domain.Template;
 import org.jclouds.compute.reference.ComputeServiceConstants;
 import org.jclouds.domain.LoginCredentials;
 import org.jclouds.logging.Logger;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Predicate;
-import com.google.common.base.Splitter;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -65,7 +63,7 @@ import com.google.common.collect.Sets;
  * {@link org.jclouds.compute.ComputeService}.
  */
 @Singleton
-public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deployment, VMSize, OSImage, Location> {
+public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deployment, VMSize, ImageReference, Location> {
 
    private static final String DEFAULT_LOGIN_USER = "jclouds";
 
@@ -115,8 +113,7 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
       }
       logger.info("Cloud Service (%s) created with operation id: %s", name, createCloudServiceRequestId);
 
-      final OSImage.Type os = template.getImage().getOperatingSystem().getFamily() == OsFamily.WINDOWS ?
-              OSImage.Type.WINDOWS : OSImage.Type.LINUX;
+
       final Set<ExternalEndpoint> externalEndpoints = Sets.newHashSet();
       for (int inboundPort : inboundPorts) {
          externalEndpoints.add(ExternalEndpoint.inboundTcpToLocalPort(inboundPort, inboundPort));
@@ -124,10 +121,10 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
 
       final DeploymentParams params = DeploymentParams.builder()
               .name(name)
-              .os(os)
+              //.os(os)
               .username(loginUser)
               .password(loginPassword)
-              .sourceImageName(OSImageToImage.fromGeoName(template.getImage().getId())[0])
+              //.sourceImageName((template.getImage().getId())[0])
               .mediaLink(createMediaLink(storageAccountName, name))
               .size(template.getHardware().getName())
               .externalEndpoints(externalEndpoints)
@@ -190,40 +187,20 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
    }
 
    @Override
-   public Iterable<OSImage> listImages() {
-      final List<OSImage> osImages = Lists.newArrayList();
-      for (OSImage osImage : api.getOSImageApi().list()) {
-         if (osImage.location() == null) {
-            osImages.add(OSImage.create(
-                    osImage.name(),
-                    null,
-                    osImage.affinityGroup(),
-                    osImage.label(),
-                    osImage.description(),
-                    osImage.imageFamily(),
-                    osImage.category(),
-                    osImage.os(),
-                    osImage.publisherName(),
-                    osImage.mediaLink(),
-                    osImage.logicalSizeInGB(),
-                    osImage.eula()
-            ));
-         } else {
-            for (String actualLocation : Splitter.on(';').split(osImage.location())) {
-               osImages.add(OSImage.create(
-                       OSImageToImage.toGeoName(osImage.name(), actualLocation),
-                       actualLocation,
-                       osImage.affinityGroup(),
-                       osImage.label(),
-                       osImage.description(),
-                       osImage.imageFamily(),
-                       osImage.category(),
-                       osImage.os(),
-                       osImage.publisherName(),
-                       osImage.mediaLink(),
-                       osImage.logicalSizeInGB(),
-                       osImage.eula()
-               ));
+   public Iterable<ImageReference> listImages() {
+      final List<ImageReference> osImages = Lists.newArrayList();
+      OSImageApi osImageApi = api.getOSImageApi(getSubscriptionId(), getLocation());
+
+      Iterable<Publisher> list = osImageApi.listPublishers();
+      for (Publisher publisher : list) {
+         Iterable<Offer> offerList = osImageApi.listOffers(publisher.name());
+         for (Offer offer : offerList) {
+            Iterable<SKU> skuList = osImageApi.listSKUs(publisher.name(), offer.name());
+            for (SKU sku : skuList) {
+               Iterable<Version> versions = osImageApi.listVersions(publisher.name(), offer.name(), sku.name());
+               for (Version version : versions) {
+                  osImages.add(ImageReference.create(publisher.name(), offer.name(), sku.name(), version.name()));
+               }
             }
          }
       }
@@ -231,32 +208,33 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
    }
 
    @Override
-   public OSImage getImage(final String id) {
-      final String[] idParts = OSImageToImage.fromGeoName(id);
-      final OSImage image = Iterables.find(api.getOSImageApi().list(), new Predicate<OSImage>() {
-         @Override
-         public boolean apply(final OSImage input) {
-            return idParts[0].equals(input.name());
-         }
-      });
+   public ImageReference getImage(final String id) {
+      ImageReference imageReference = null;
+      OSImageApi osImageApi = api.getOSImageApi(getSubscriptionId(), getLocation());
 
-      return image == null
-              ? null
-              : idParts[1] == null
-                      ? image
-                      : OSImage.create(
-                              id,
-                              idParts[1],
-                              image.affinityGroup(),
-                              image.label(),
-                              image.description(),
-                              image.imageFamily(),
-                              image.category(),
-                              image.os(),
-                              image.publisherName(),
-                              image.mediaLink(),
-                              image.logicalSizeInGB(),
-                              image.eula());
+      Iterable<Publisher> list = osImageApi.listPublishers();
+      for (Publisher publisher : list) {
+         if (id.contains(publisher.name())) {
+            Iterable<Offer> offerList = osImageApi.listOffers(publisher.name());
+            for (Offer offer : offerList) {
+               if (id.contains(offer.name())) {
+                  Iterable<SKU> skuList = osImageApi.listSKUs(publisher.name(), offer.name());
+                  for (SKU sku : skuList) {
+                     if (id.contains(sku.name())) {
+                        Iterable<Version> versions = osImageApi.listVersions(publisher.name(), offer.name(), sku.name());
+                        for (Version version : versions) {
+                           if (id.contains(version.name())) {
+                              imageReference = ImageReference.create(publisher.name(), offer.name(), sku.name(), version.name());
+                              break;
+                           }
+                        }
+                     }
+                  }
+               }
+            }
+         }
+      }
+      return imageReference;
    }
 
    private String getSubscriptionId() {
@@ -272,26 +250,7 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
 
    @Override
    public Deployment getNode(final String id) {
-      return FluentIterable.from(api.getCloudServiceApi().list()).
-              transform(new Function<CloudService, Deployment>() {
-                 @Override
-                 public Deployment apply(final CloudService input) {
-                    final Deployment deployment = api.getDeploymentApiForService(input.name()).get(id);
-                    return deployment == null || deployment.roleInstanceList().isEmpty()
-                            ? null
-                            : FluentIterable.from(deployment.roleInstanceList()).allMatch(
-                                    new Predicate<RoleInstance>() {
-                                       @Override
-                                       public boolean apply(final RoleInstance input) {
-                                          return input != null && !input.instanceStatus().isTransient();
-                                       }
-                                    })
-                                    ? deployment
-                                    : null;
-                 }
-              }).
-              firstMatch(notNull()).
-              orNull();
+      return null;
    }
 
    private void trackRequest(final String requestId) {
@@ -304,45 +263,6 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
    }
 
    public Deployment internalDestroyNode(final String nodeId) {
-/*
-      Deployment deployment = getDeploymentFromNodeId(nodeId);
-
-      if (deployment == null) return null;
-
-      final String deploymentName = deployment.name();
-      String message = String.format("Deleting deployment(%s) of cloud service (%s)", nodeId, deploymentName);
-      logger.debug(message);
-
-         if (deployment != null) {
-            for (Role role : deployment.roleList()) {
-               trackRequest(api.getVirtualMachineApiForDeploymentInService(deploymentName, role.roleName()).shutdown(nodeId, POST_SHUTDOWN_ACTION));
-            }
-
-            deleteDeployment(deploymentName, nodeId);
-
-            logger.debug("Deleting cloud service (%s) ...", deploymentName);
-            trackRequest(api.getCloudServiceApi().delete(deploymentName));
-            logger.debug("Cloud service (%s) deleted.", deploymentName);
-
-            for (Role role : deployment.roleList()) {
-               final Role.OSVirtualHardDisk disk = role.osVirtualHardDisk();
-               if (disk != null) {
-                  if (!new ConflictManagementPredicate(api, operationSucceededPredicate) {
-
-                     @Override
-                     protected String operation() {
-                        return api.getDiskApi().delete(disk.diskName());
-                     }
-                  }.apply(nodeId)) {
-                     final String illegalStateExceptionMessage = generateIllegalStateExceptionMessage("Delete disk " + disk.diskName(),
-                             "Delete disk", azureComputeConstants.operationTimeout());
-                     logger.warn(illegalStateExceptionMessage);
-                  }
-               }
-            }
-         }
-      return deployment;
-      */
       return null;
    }
 
@@ -374,45 +294,20 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
 
    @Override
    public void rebootNode(final String id) {
-      final CloudService cloudService = api.getCloudServiceApi().get(id);
-      if (cloudService != null) {
-         logger.debug("Restarting %s ...", id);
-//         trackRequest(api.getVirtualMachineApiForDeploymentInService(id, cloudService.name()).restart(id));
-         logger.debug("Restarted %s", id);
-      }
+
    }
 
    @Override
    public void resumeNode(final String id) {
-      final CloudService cloudService = api.getCloudServiceApi().get(id);
-      if (cloudService != null) {
-         logger.debug("Resuming %s ...", id);
-//         trackRequest(api.getVirtualMachineApiForDeploymentInService(id, cloudService.name()).start(id));
-         logger.debug("Resumed %s", id);
-      }
    }
 
    @Override
    public void suspendNode(final String id) {
-      final CloudService cloudService = api.getCloudServiceApi().get(id);
-      if (cloudService != null) {
-         logger.debug("Suspending %s ...", id);
-//         trackRequest(api.getVirtualMachineApiForDeploymentInService(id, cloudService.name()).shutdown(id, POST_SHUTDOWN_ACTION));
-         logger.debug("Suspended %s", id);
-      }
    }
 
    @Override
    public Iterable<Deployment> listNodes() {
-      return FluentIterable.from(api.getCloudServiceApi().list()).
-              transform(new Function<CloudService, Deployment>() {
-                 @Override
-                 public Deployment apply(final CloudService cloudService) {
-                    return api.getDeploymentApiForService(cloudService.name()).get(cloudService.name());
-                 }
-              }).
-              filter(notNull()).
-              toSet();
+      return null;
    }
 
    @Override

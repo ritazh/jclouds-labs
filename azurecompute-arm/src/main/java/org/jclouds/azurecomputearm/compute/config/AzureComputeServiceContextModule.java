@@ -29,17 +29,17 @@ import javax.inject.Singleton;
 import org.jclouds.azurecomputearm.AzureComputeApi;
 import org.jclouds.azurecomputearm.compute.AzureComputeServiceAdapter;
 import org.jclouds.azurecomputearm.compute.extensions.AzureComputeSecurityGroupExtension;
+import org.jclouds.azurecomputearm.compute.functions.ImageReferenceToImage;
 import org.jclouds.azurecomputearm.compute.functions.DeploymentToNodeMetadata;
-import org.jclouds.azurecomputearm.compute.functions.LocationToLocation;
-import org.jclouds.azurecomputearm.compute.functions.OSImageToImage;
 import org.jclouds.azurecomputearm.compute.functions.VMSizeToHardware;
+import org.jclouds.azurecomputearm.compute.functions.LocationToLocation;
 import org.jclouds.azurecomputearm.compute.options.AzureComputeTemplateOptions;
 import org.jclouds.azurecomputearm.compute.strategy.GetOrCreateStorageServiceAndVirtualNetworkThenCreateNodes;
 import org.jclouds.azurecomputearm.compute.strategy.UseNodeCredentialsButOverrideFromTemplate;
 import org.jclouds.azurecomputearm.domain.VMSize;
-import org.jclouds.azurecomputearm.domain.Deployment;
-import org.jclouds.azurecomputearm.domain.OSImage;
+import org.jclouds.azurecomputearm.domain.ImageReference;
 import org.jclouds.azurecomputearm.domain.Location;
+import org.jclouds.azurecomputearm.domain.Deployment;
 import org.jclouds.azurecomputearm.util.ConflictManagementPredicate;
 import org.jclouds.compute.ComputeServiceAdapter;
 import org.jclouds.compute.config.ComputeServiceAdapterContextModule;
@@ -57,16 +57,16 @@ import com.google.inject.Provides;
 import com.google.inject.TypeLiteral;
 
 public class AzureComputeServiceContextModule
-        extends ComputeServiceAdapterContextModule<Deployment, VMSize, OSImage, Location> {
+        extends ComputeServiceAdapterContextModule<Deployment, VMSize, ImageReference, Location> {
 
    @Override
    protected void configure() {
       super.configure();
 
-      bind(new TypeLiteral<ComputeServiceAdapter<Deployment, VMSize, OSImage, Location>>() {
+      bind(new TypeLiteral<ComputeServiceAdapter<Deployment, VMSize, ImageReference, Location>>() {
       }).to(AzureComputeServiceAdapter.class);
-      bind(new TypeLiteral<Function<OSImage, org.jclouds.compute.domain.Image>>() {
-      }).to(OSImageToImage.class);
+      bind(new TypeLiteral<Function<ImageReference, org.jclouds.compute.domain.Image>>() {
+      }).to(ImageReferenceToImage.class);
       bind(new TypeLiteral<Function<VMSize, Hardware>>() {
       }).to(VMSizeToHardware.class);
       bind(new TypeLiteral<Function<Deployment, NodeMetadata>>() {
@@ -83,7 +83,7 @@ public class AzureComputeServiceContextModule
       bind(CreateNodesInGroupThenAddToSet.class).to(GetOrCreateStorageServiceAndVirtualNetworkThenCreateNodes.class);
 
       // to have the compute service adapter override default locations
-      install(new LocationsFromComputeServiceAdapterModule<Deployment, VMSize, OSImage, Location>() {
+      install(new LocationsFromComputeServiceAdapterModule<Deployment, VMSize, ImageReference, Location>() {
       });
    }
 
