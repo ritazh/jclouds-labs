@@ -59,7 +59,6 @@ public class GetOrCreateStorageServiceAndVirtualNetworkThenCreateNodes
    private static final String DEFAULT_STORAGE_SERVICE_TYPE = "Standard_GRS";
 
    private final AzureComputeApi api;
-   private final Predicate<String> operationSucceededPredicate;
    private final AzureComputeConstants azureComputeConstants;
 
    @Inject
@@ -70,14 +69,12 @@ public class GetOrCreateStorageServiceAndVirtualNetworkThenCreateNodes
            @Named("jclouds.user-threads") ListeningExecutorService userExecutor,
            Factory customizeNodeAndAddToGoodMapOrPutExceptionIntoBadMapFactory,
            AzureComputeApi api,
-           Predicate<String> operationSucceededPredicate,
            AzureComputeConstants azureComputeConstants) {
 
       super(addNodeWithGroupStrategy, listNodesStrategy, namingConvention, userExecutor,
               customizeNodeAndAddToGoodMapOrPutExceptionIntoBadMapFactory);
 
       this.api = api;
-      this.operationSucceededPredicate = operationSucceededPredicate;
       this.azureComputeConstants = azureComputeConstants;
    }
 
