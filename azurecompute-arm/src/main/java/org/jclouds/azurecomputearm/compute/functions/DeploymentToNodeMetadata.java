@@ -23,7 +23,6 @@ import java.util.Set;
 import javax.inject.Inject;
 
 import org.jclouds.azurecomputearm.AzureComputeApi;
-import org.jclouds.azurecomputearm.domain.CloudService;
 import org.jclouds.azurecomputearm.domain.ComputeNode;
 import org.jclouds.azurecomputearm.domain.Deployment;
 import org.jclouds.compute.domain.NodeMetadata;
@@ -32,11 +31,8 @@ import org.jclouds.compute.domain.NodeMetadataBuilder;
 import org.jclouds.compute.functions.GroupNamingConvention;
 import org.jclouds.domain.Credentials;
 import org.jclouds.domain.Location;
-import org.jclouds.location.predicates.LocationPredicates;
-
 import com.google.common.base.Function;
 import com.google.common.base.Supplier;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 
 public class DeploymentToNodeMetadata implements Function<Deployment, NodeMetadata> {
@@ -72,7 +68,7 @@ public class DeploymentToNodeMetadata implements Function<Deployment, NodeMetada
 
    private final GroupNamingConvention nodeNamingConvention;
 
-   private final OSImageToImage osImageToImage;
+   private final ImageReferenceToImage imageReferenceToImage;
 
    private final VMSizeToHardware vmSizeToHardware;
 
@@ -82,12 +78,12 @@ public class DeploymentToNodeMetadata implements Function<Deployment, NodeMetada
    DeploymentToNodeMetadata(
            AzureComputeApi api,
            @Memoized Supplier<Set<? extends Location>> locations,
-           GroupNamingConvention.Factory namingConvention, OSImageToImage osImageToImage,
+           GroupNamingConvention.Factory namingConvention, ImageReferenceToImage imageReferenceToImage,
            VMSizeToHardware vmSizeToHardware, Map<String, Credentials> credentialStore) {
 
       this.nodeNamingConvention = namingConvention.createWithoutPrefix();
       this.locations = checkNotNull(locations, "locations");
-      this.osImageToImage = osImageToImage;
+      this.imageReferenceToImage = imageReferenceToImage;
       this.vmSizeToHardware = vmSizeToHardware;
       this.credentialStore = credentialStore;
       this.api = api;
@@ -101,14 +97,6 @@ public class DeploymentToNodeMetadata implements Function<Deployment, NodeMetada
       builder.name(from.name());
       //builder.hostname(getHostname(from));
       //builder.group(nodeNamingConvention.groupInUniqueNameOrNull(getHostname(from)));
-
-      // TODO: CloudService name is required (see JCLOUDS-849): waiting for JCLOUDS-853.
-      final CloudService cloudService = api.getCloudServiceApi().get(from.name());
-      if (cloudService != null) {
-         builder.location(FluentIterable.from(locations.get()).
-                 firstMatch(LocationPredicates.idEquals(cloudService.location())).
-                 orNull());
-      }
 
       /* TODO
        if (from.getDatacenter() != null) {

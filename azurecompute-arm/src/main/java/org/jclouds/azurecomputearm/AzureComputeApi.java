@@ -20,22 +20,12 @@ import java.io.Closeable;
 
 import javax.ws.rs.PathParam;
 
-import org.jclouds.azurecomputearm.features.AffinityGroupApi;
-import org.jclouds.azurecomputearm.features.CloudServiceApi;
 import org.jclouds.azurecomputearm.features.DeploymentApi;
-import org.jclouds.azurecomputearm.features.DiskApi;
 import org.jclouds.azurecomputearm.features.LocationApi;
 import org.jclouds.azurecomputearm.features.NetworkInterfaceCardApi;
-import org.jclouds.azurecomputearm.features.NetworkSecurityGroupApi;
 import org.jclouds.azurecomputearm.features.OSImageApi;
-import org.jclouds.azurecomputearm.features.OperationApi;
-import org.jclouds.azurecomputearm.features.ReservedIPAddressApi;
 import org.jclouds.azurecomputearm.features.ResourceGroupApi;
-import org.jclouds.azurecomputearm.features.ServiceCertificatesApi;
 import org.jclouds.azurecomputearm.features.StorageAccountApi;
-import org.jclouds.azurecomputearm.features.SubscriptionApi;
-import org.jclouds.azurecomputearm.features.TrafficManagerApi;
-import org.jclouds.azurecomputearm.features.VMImageApi;
 import org.jclouds.azurecomputearm.features.VirtualMachineApi;
 import org.jclouds.azurecomputearm.features.VirtualNetworkApi;
 import org.jclouds.azurecomputearm.features.VMSizeApi;
@@ -59,8 +49,6 @@ public interface AzureComputeApi extends Closeable {
    @Delegate
    ResourceGroupApi getResourceGroupApi(@PathParam("subscriptionid") String subscriptionid);
 
-   @Delegate
-   AffinityGroupApi getAffinityGroupApi();
 
    /**
     * This Azure Resource Manager API provides all of the locations that are available for resource providers
@@ -78,21 +66,6 @@ public interface AzureComputeApi extends Closeable {
    @Delegate
    VMSizeApi getVMSizeApi(@PathParam("subscriptionid") String subscriptionid, @PathParam("location") String location);
 
-   /**
-    * The Service Management API includes operations for managing the cloud services beneath your subscription.
-    *
-    * @see <a href="http://msdn.microsoft.com/en-us/library/ee460812">docs</a>
-    */
-   @Delegate
-   CloudServiceApi getCloudServiceApi();
-
-   /**
-    * The Service Management API includes operations for managing the virtual machines in your subscription.
-    *
-    * @see <a href="http://msdn.microsoft.com/en-us/library/jj157206">docs</a>
-    */
-   @Delegate
-   DeploymentApi getDeploymentApiForService(@PathParam("serviceName") String serviceName);
 
    /**
     * The Virtual Machine API includes operations for managing the virtual machines in your subscription.
@@ -112,29 +85,6 @@ public interface AzureComputeApi extends Closeable {
    OSImageApi getOSImageApi(@PathParam("subscriptionId") String subscriptionId,
                             @PathParam("location") String location);
 
-   /**
-    * The Service Management API includes operations for Tracking Asynchronous Service Management Requests.
-    *
-    * @see <a href="http://msdn.microsoft.com/en-us/library/ee460791">docs</a>
-    */
-   @Delegate
-   OperationApi getOperationApi();
-
-   /**
-    * The Service Management API includes operations for managing Disks in your subscription.
-    *
-    * @see <a href="http://msdn.microsoft.com/en-us/library/jj157188">docs</a>
-    */
-   @Delegate
-   DiskApi getDiskApi();
-
-   /**
-    * The Service Management API includes operations for retrieving information about a subscription.
-    *
-    * @see <a href="http://msdn.microsoft.com/en-us/library/azure/gg715315.aspx">docs</a>
-    */
-   @Delegate
-   SubscriptionApi getSubscriptionApi();
 
    /**
     * The Subnet API includes operations for managing the subnets in your virtual network.
@@ -182,43 +132,6 @@ public interface AzureComputeApi extends Closeable {
    @Delegate
    StorageAccountApi getStorageAccountApi(@PathParam("subscriptionId") String subscriptionId,
                                           @PathParam("resourceGroup") String resourceGroup);
-
-   /**
-    * The Service Management API includes operations for managing the Network Security Groups in your subscription.
-    *
-    */
-   @Delegate
-   NetworkSecurityGroupApi getNetworkSecurityGroupApi();
-
-   /**
-    * The Service Management API includes operations for creating, updating, listing, and deleting Azure Traffic Manager
-    * profiles and definitions.
-    *
-    * @see <a href="https://msdn.microsoft.com/en-us/library/azure/hh758255.aspx">docs</a>
-    */
-   @Delegate
-   TrafficManagerApi getTrafficManaerApi();
-
-   /**
-    * The Service Management API includes operations for managing service certificates in your subscription.
-    *
-    * @see <a href="https://msdn.microsoft.com/en-us/library/azure/ee795178.aspx">docs</a>
-    */
-   @Delegate
-   ServiceCertificatesApi getServiceCertificatesApi();
-
-   /**
-    * The Service Management API includes operations for managing the reserved IP addresses in your subscription.
-    *
-    * @see <a href="https://msdn.microsoft.com/en-us/library/azure/dn722420.aspxx">docs</a>
-    */
-   @Delegate
-   ReservedIPAddressApi getReservedIPAddressApi();
-   /*
-   * The Service Management API includes operations for managing the VM Images in your subscription.
-   */
-   @Delegate
-   VMImageApi getVMImageApi();
 
    /**
     * The Deployment API allows for the management of Azure Resource Manager resources through the use of templates.
