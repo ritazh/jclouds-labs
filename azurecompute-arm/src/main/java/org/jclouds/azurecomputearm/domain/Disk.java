@@ -87,7 +87,7 @@ public abstract class Disk {
     * The operating system type of the OS image, or null if a data disk.
     */
    @Nullable
-   public abstract OSImage.Type os();
+   public abstract ImageReference image();
 
    /**
     * The location of the blob in the blob store in which the media for the image is located. The blob location belongs
@@ -119,10 +119,10 @@ public abstract class Disk {
    public abstract String sourceImage();
 
    public static Disk create(final String name, final String location, final String affinityGroup,
-           final String description, final OSImage.Type os,
+           final String description, final ImageReference image,
            final URI mediaLink, final Integer logicalSizeInGB, final Attachment attachedTo, final String sourceImage) {
 
       return new AutoValue_Disk(
-              name, location, affinityGroup, description, os, mediaLink, logicalSizeInGB, attachedTo, sourceImage);
+              name, location, affinityGroup, description, image, mediaLink, logicalSizeInGB, attachedTo, sourceImage);
    }
 }

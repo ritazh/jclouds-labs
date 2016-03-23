@@ -21,14 +21,11 @@ import static org.jclouds.azurecomputearm.config.AzureComputeProperties.OPERATIO
 import static org.jclouds.azurecomputearm.config.AzureComputeProperties.OPERATION_TIMEOUT;
 import static org.jclouds.azurecomputearm.config.AzureComputeProperties.TCP_RULE_FORMAT;
 import static org.jclouds.azurecomputearm.config.AzureComputeProperties.TCP_RULE_REGEXP;
-import java.util.concurrent.TimeUnit;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import org.jclouds.azurecomputearm.AzureComputeApi;
 import org.jclouds.azurecomputearm.compute.AzureComputeServiceAdapter;
-import org.jclouds.azurecomputearm.compute.extensions.AzureComputeSecurityGroupExtension;
 import org.jclouds.azurecomputearm.compute.functions.ImageReferenceToImage;
 import org.jclouds.azurecomputearm.compute.functions.DeploymentToNodeMetadata;
 import org.jclouds.azurecomputearm.compute.functions.VMSizeToHardware;
@@ -40,20 +37,16 @@ import org.jclouds.azurecomputearm.domain.VMSize;
 import org.jclouds.azurecomputearm.domain.ImageReference;
 import org.jclouds.azurecomputearm.domain.Location;
 import org.jclouds.azurecomputearm.domain.Deployment;
-import org.jclouds.azurecomputearm.util.ConflictManagementPredicate;
 import org.jclouds.compute.ComputeServiceAdapter;
 import org.jclouds.compute.config.ComputeServiceAdapterContextModule;
 import org.jclouds.compute.domain.Hardware;
 import org.jclouds.compute.domain.NodeMetadata;
-import org.jclouds.compute.extensions.SecurityGroupExtension;
 import org.jclouds.compute.options.TemplateOptions;
 import org.jclouds.compute.strategy.CreateNodesInGroupThenAddToSet;
 import org.jclouds.compute.strategy.PrioritizeCredentialsFromTemplate;
 
 import com.google.common.base.Function;
-import com.google.common.base.Predicate;
 import com.google.inject.Inject;
-import com.google.inject.Provides;
 import com.google.inject.TypeLiteral;
 
 public class AzureComputeServiceContextModule
@@ -78,25 +71,11 @@ public class AzureComputeServiceContextModule
 
       bind(TemplateOptions.class).to(AzureComputeTemplateOptions.class);
 
-      bind(new TypeLiteral<SecurityGroupExtension>() {
-      }).to(AzureComputeSecurityGroupExtension.class);
       bind(CreateNodesInGroupThenAddToSet.class).to(GetOrCreateStorageServiceAndVirtualNetworkThenCreateNodes.class);
 
       // to have the compute service adapter override default locations
       install(new LocationsFromComputeServiceAdapterModule<Deployment, VMSize, ImageReference, Location>() {
       });
-   }
-
-   @Provides
-   @Singleton
-   protected Predicate<String> provideOperationSucceededPredicate(
-           final AzureComputeApi api, final AzureComputeConstants azureComputeConstants) {
-      return new ConflictManagementPredicate(
-              api,
-              azureComputeConstants.operationTimeout(),
-              azureComputeConstants.operationPollInitialPeriod(),
-              azureComputeConstants.operationPollMaxPeriod(),
-              TimeUnit.MILLISECONDS);
    }
 
    @Singleton

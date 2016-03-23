@@ -17,7 +17,6 @@
 package org.jclouds.azurecomputearm.internal;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.jclouds.azurecomputearm.config.AzureComputeProperties.OPERATION_POLL_INITIAL_PERIOD;
 import static org.jclouds.azurecomputearm.config.AzureComputeProperties.OPERATION_POLL_MAX_PERIOD;
 import static org.jclouds.azurecomputearm.config.AzureComputeProperties.OPERATION_TIMEOUT;
@@ -29,18 +28,14 @@ import java.util.Random;
 import org.jclouds.apis.BaseApiLiveTest;
 import org.jclouds.azurecomputearm.AzureComputeApi;
 import org.jclouds.azurecomputearm.AzureComputeProviderMetadata;
-import org.jclouds.azurecomputearm.util.ConflictManagementPredicate;
 import org.jclouds.compute.config.ComputeServiceProperties;
 import org.jclouds.providers.ProviderMetadata;
 import org.testng.annotations.BeforeClass;
 
-import com.google.common.base.Predicate;
 
 public abstract class AbstractAzureComputeApiLiveTest extends BaseApiLiveTest<AzureComputeApi> {
 
    protected static final int RAND = new Random().nextInt(999);
-
-   protected Predicate<String> operationSucceeded;
 
    public AbstractAzureComputeApiLiveTest() {
       provider = "azurecompute-arm";
@@ -67,7 +62,6 @@ public abstract class AbstractAzureComputeApiLiveTest extends BaseApiLiveTest<Az
    @Override
    public void setup() {
       super.setup();
-      operationSucceeded = new ConflictManagementPredicate(api, 600, 5, 5, SECONDS);
    }
 
    @Override

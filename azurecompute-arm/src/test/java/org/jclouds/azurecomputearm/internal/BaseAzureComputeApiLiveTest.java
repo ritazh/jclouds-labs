@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 package org.jclouds.azurecomputearm.internal;
-import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.testng.Assert.assertNotNull;
 
 import com.google.common.collect.ImmutableMap;
@@ -33,7 +32,6 @@ import org.jclouds.azurecomputearm.features.SubnetApi;
 import org.jclouds.azurecomputearm.features.NetworkInterfaceCardApi;
 import org.jclouds.azurecomputearm.features.VirtualNetworkApi;
 
-import org.jclouds.azurecomputearm.util.ConflictManagementPredicate;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -68,7 +66,6 @@ public class BaseAzureComputeApiLiveTest extends AbstractAzureComputeApiLiveTest
 
    protected StorageService storageService;
 
-   //protected NetworkConfiguration.VirtualNetworkSite virtualNetworkSite;
 
    private String storageServiceName = null;
 
@@ -118,8 +115,6 @@ public class BaseAzureComputeApiLiveTest extends AbstractAzureComputeApiLiveTest
    @Override
    public void setup() {
       super.setup();
-
-      operationSucceeded = new ConflictManagementPredicate(api, 600, 5, 5, SECONDS);
 
       final CreateStorageServiceParams params = CreateStorageServiceParams.builder().
               location(LOCATION).
@@ -255,48 +250,4 @@ public class BaseAzureComputeApiLiveTest extends AbstractAzureComputeApiLiveTest
 //   }
 //
 //
-//   protected VirtualNetworkSite getOrCreateVirtualNetworkSite(final String virtualNetworkSiteName, String location) {
-//      final List<VirtualNetworkSite> current = AzureTestUtils.getVirtualNetworkSite(api);
-//
-//      final Optional<VirtualNetworkSite> optionalVirtualNetworkSite = tryFind(
-//              current,
-//              new SameVirtualNetworkSiteNamePredicate(virtualNetworkSiteName));
-//
-//      if (optionalVirtualNetworkSite.isPresent()) {
-//         return optionalVirtualNetworkSite.get();
-//      }
-//
-//      current.add(VirtualNetworkSite.create(UUID.randomUUID().toString(),
-//              virtualNetworkSiteName,
-//              location,
-//              AddressSpace.create(DEFAULT_ADDRESS_SPACE),
-//              ImmutableList.of(Subnet.create(DEFAULT_SUBNET_NAME, DEFAULT_SUBNET_ADDRESS_SPACE, null))));
-//
-//      final NetworkConfiguration networkConfiguration
-//              = NetworkConfiguration.create(VirtualNetworkConfiguration.create(null, current));
-//
-//      VirtualNetworkSite vns;
-//      try {
-//         vns = find(
-//                 api.getVirtualNetworkApi().getNetworkConfiguration().virtualNetworkConfiguration().
-//                 virtualNetworkSites(),
-//                 new SameVirtualNetworkSiteNamePredicate(virtualNetworkSiteName));
-//      } catch (Exception e) {
-//         assertTrue(new ConflictManagementPredicate(api) {
-//
-//            @Override
-//            protected String operation() {
-//               return api.getVirtualNetworkApi().set(networkConfiguration);
-//            }
-//         }.apply(virtualNetworkSiteName));
-//
-//         vns = find(
-//                 api.getVirtualNetworkApi().getNetworkConfiguration().virtualNetworkConfiguration().
-//                 virtualNetworkSites(),
-//                 new SameVirtualNetworkSiteNamePredicate(virtualNetworkSiteName));
-//
-//         Logger.getAnonymousLogger().log(Level.INFO, "created virtualNetworkSite: {0}", vns);
-//      }
-//      return vns;
-//   }
 }
