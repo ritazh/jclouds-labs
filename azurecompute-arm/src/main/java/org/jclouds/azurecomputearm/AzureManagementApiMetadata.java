@@ -51,10 +51,6 @@ public class AzureManagementApiMetadata extends BaseHttpApiMetadata<AzureCompute
 
    public static Properties defaultProperties() {
       final Properties properties = BaseHttpApiMetadata.defaultProperties();
-      // Sometimes SSH Authentication failure happens in Azure.
-      // It seems that the authorized key is injected after ssh has been started.
-      properties.setProperty("jclouds.ssh.max-retries", "15");
-      properties.setProperty("jclouds.ssh.retry-auth", "true");
       return properties;
    }
 
@@ -65,11 +61,10 @@ public class AzureManagementApiMetadata extends BaseHttpApiMetadata<AzureCompute
 
          id("azurecompute-arm")
                  .name("Microsoft Azure Resource Manager REST API")
-                 .version("2014-04-01-preview")
-                 .identityName("Path to Management Certificate .p12 file, or PEM string")
-                 .credentialName("Password to Management Certificate")
+                 .identityName("Azure Service Principal credential name")
+                 .credentialName("Azure Service Principal credential password")
                  .endpointName("Resource Manager Endpoint ending in your Subscription Id")
-                 .documentation(URI.create("http://msdn.microsoft.com/en-us/library/ee460799"))
+                 .documentation(URI.create("https://msdn.microsoft.com/en-us/library/azure/dn790568.aspx"))
                  .defaultProperties(AzureManagementApiMetadata.defaultProperties())
                  .view(typeToken(ComputeServiceContext.class))
                  .defaultModules(ImmutableSet.<Class<? extends Module>>builder()

@@ -15,16 +15,12 @@
  * limitations under the License.
  */
 package org.jclouds.azurecomputearm.internal;
-
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.common.util.concurrent.MoreExecutors.sameThreadExecutor;
 import static org.testng.Assert.assertEquals;
 import static org.jclouds.azurecomputearm.oauth.v2.config.AzureCredentialType.BEARER_TOKEN_CREDENTIALS;
 import static org.jclouds.oauth.v2.config.OAuthProperties.CREDENTIAL_TYPE;
 
 import java.io.IOException;
-import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
@@ -41,7 +37,6 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Resources;
-import com.google.common.reflect.TypeToken;
 import com.google.gson.JsonParser;
 import com.google.inject.Module;
 import com.squareup.okhttp.mockwebserver.MockResponse;
@@ -86,10 +81,6 @@ public class BaseAzureComputeApiMockTest {
       api.close();
    }
 
-   protected Properties overrides() {
-      return new Properties();
-   }
-
    protected String url(String path) {
       return server.getUrl(path).toString();
    }
@@ -115,20 +106,6 @@ public class BaseAzureComputeApiMockTest {
       } catch (IOException e) {
          throw Throwables.propagate(e);
       }
-   }
-
-   protected <T> T onlyObjectFromResource(String resourceName, TypeToken<Map<String, T>> type) {
-      // Assume JSON objects passed here will be in the form: { "entity": { ... } }
-      String text = stringFromResource(resourceName);
-      Map<String, T> object = json.fromJson(text, type.getType());
-      checkArgument(!object.isEmpty(), "The given json does not contain any object: %s", text);
-      checkArgument(object.keySet().size() == 1, "The given json does not contain more than one object: %s", text);
-      return object.get(getOnlyElement(object.keySet()));
-   }
-
-   protected <T> T objectFromResource(String resourceName, Class<T> type) {
-      String text = stringFromResource(resourceName);
-      return json.fromJson(text, type);
    }
 
    protected RecordedRequest assertSent(MockWebServer server, String method, String path) throws InterruptedException {
