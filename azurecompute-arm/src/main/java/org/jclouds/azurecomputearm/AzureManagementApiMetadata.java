@@ -26,7 +26,7 @@ import org.jclouds.azurecomputearm.compute.config.AzureComputeServiceContextModu
 import org.jclouds.azurecomputearm.config.AzureComputeHttpApiModule;
 import org.jclouds.compute.ComputeServiceContext;
 import org.jclouds.rest.internal.BaseHttpApiMetadata;
-import org.jclouds.azurecomputearm.oauth.v2.config.OAuthModule;
+import org.jclouds.azurecomputearm.oauth.v2.config.AzureOAuthModule;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Module;
@@ -74,7 +74,7 @@ public class AzureManagementApiMetadata extends BaseHttpApiMetadata<AzureCompute
                  .view(typeToken(ComputeServiceContext.class))
                  .defaultModules(ImmutableSet.<Class<? extends Module>>builder()
                          .add(AzureComputeServiceContextModule.class)
-                         .add(OAuthModule.class)
+                         .add(AzureOAuthModule.class)
                          .add(AzureComputeHttpApiModule.class).build());
       }
 

@@ -20,8 +20,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.common.util.concurrent.MoreExecutors.sameThreadExecutor;
 import static org.testng.Assert.assertEquals;
-import static org.jclouds.azurecomputearm.oauth.v2.config.CredentialType.BEARER_TOKEN_CREDENTIALS;
-import static org.jclouds.azurecomputearm.oauth.v2.config.OAuthProperties.CREDENTIAL_TYPE;
+import static org.jclouds.azurecomputearm.oauth.v2.config.AzureCredentialType.BEARER_TOKEN_CREDENTIALS;
+import static org.jclouds.oauth.v2.config.OAuthProperties.CREDENTIAL_TYPE;
 
 import java.io.IOException;
 import java.util.Map;

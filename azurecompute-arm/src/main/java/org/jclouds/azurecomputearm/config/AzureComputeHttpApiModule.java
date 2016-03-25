@@ -27,7 +27,7 @@ import org.jclouds.location.suppliers.implicit.OnlyLocationOrFirstRegionOptional
 
 import org.jclouds.rest.ConfiguresHttpApi;
 import org.jclouds.rest.config.HttpApiModule;
-import org.jclouds.azurecomputearm.oauth.v2.config.OAuthScopes;
+import org.jclouds.oauth.v2.config.OAuthScopes;
 
 import com.google.inject.Scopes;
 

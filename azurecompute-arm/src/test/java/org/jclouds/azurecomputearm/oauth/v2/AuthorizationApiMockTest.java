@@ -21,11 +21,11 @@ import static com.google.common.io.BaseEncoding.base64Url;
 import static com.google.common.util.concurrent.MoreExecutors.sameThreadExecutor;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.jclouds.Constants.PROPERTY_MAX_RETRIES;
-import static org.jclouds.azurecomputearm.oauth.v2.config.CredentialType.CLIENT_CREDENTIALS_SECRET;
-import static org.jclouds.azurecomputearm.oauth.v2.config.OAuthProperties.JWS_ALG;
-import static org.jclouds.azurecomputearm.oauth.v2.config.OAuthProperties.CREDENTIAL_TYPE;
-import static org.jclouds.azurecomputearm.oauth.v2.config.OAuthProperties.AUDIENCE;
-import static org.jclouds.azurecomputearm.oauth.v2.config.OAuthProperties.RESOURCE;
+import static org.jclouds.azurecomputearm.oauth.v2.config.AzureCredentialType.CLIENT_CREDENTIALS_SECRET;
+import static org.jclouds.azurecomputearm.oauth.v2.config.AzureOAuthProperties.RESOURCE;
+import static org.jclouds.oauth.v2.config.OAuthProperties.JWS_ALG;
+import static org.jclouds.oauth.v2.config.OAuthProperties.CREDENTIAL_TYPE;
+import static org.jclouds.oauth.v2.config.OAuthProperties.AUDIENCE;
 import static org.jclouds.util.Strings2.toStringAndClose;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.fail;
@@ -36,10 +36,10 @@ import java.util.Properties;
 
 import org.jclouds.ContextBuilder;
 import org.jclouds.concurrent.config.ExecutorServiceModule;
-import org.jclouds.azurecomputearm.oauth.v2.config.OAuthModule;
-import org.jclouds.azurecomputearm.oauth.v2.config.OAuthScopes;
-import org.jclouds.azurecomputearm.oauth.v2.config.OAuthScopes.SingleScope;
-import org.jclouds.azurecomputearm.oauth.v2.domain.Token;
+import org.jclouds.azurecomputearm.oauth.v2.config.AzureOAuthModule;
+import org.jclouds.oauth.v2.config.OAuthScopes;
+import org.jclouds.oauth.v2.config.OAuthScopes.SingleScope;
+import org.jclouds.oauth.v2.domain.Token;
 import org.jclouds.rest.AnonymousHttpApiMetadata;
 import org.jclouds.rest.AuthorizationException;
 import org.testng.annotations.Test;
@@ -61,7 +61,7 @@ public class AuthorizationApiMockTest {
    private static final String resource = "http://management.azure.com/";
    private static final String encoded_resource = "http%3A//management.azure.com/";
 
-   public void testGenerateJWTRequest() throws Exception {
+   public void testGenerateClientSecretRequest() throws Exception {
       MockWebServer server = new MockWebServer();
 
       try {
@@ -70,7 +70,7 @@ public class AuthorizationApiMockTest {
                + "  \"token_type\" : \"Bearer\",\n" + "  \"expires_in\" : 3600\n" + "}"));
          server.play();
 
-         AuthorizationApi api = api(server.getUrl("/"));
+         AzureAuthorizationApi api = api(server.getUrl("/"));
 
          assertEquals(api.authorize_client_secret(identity, credential, resource), TOKEN);
 
@@ -95,7 +95,7 @@ public class AuthorizationApiMockTest {
          server.enqueue(new MockResponse().setResponseCode(400));
          server.play();
 
-         AuthorizationApi api = api(server.getUrl("/"));
+         AzureAuthorizationApi api = api(server.getUrl("/"));
          api.authorize_client_secret(identity, credential, resource);
          fail("An AuthorizationException should have been raised");
       } catch (AuthorizationException ex) {
@@ -107,7 +107,7 @@ public class AuthorizationApiMockTest {
 
    private final BaseEncoding encoding = base64Url().omitPadding();
 
-   private AuthorizationApi api(URL url) throws IOException {
+   private AzureAuthorizationApi api(URL url) throws IOException {
       Properties overrides = new Properties();
       overrides.setProperty("oauth.endpoint", url.toString());
       overrides.setProperty(JWS_ALG, "RS256");
@@ -117,15 +117,15 @@ public class AuthorizationApiMockTest {
       overrides.setProperty(PROPERTY_MAX_RETRIES, "1");
       overrides.setProperty("", url.toString());
 
-      return ContextBuilder.newBuilder(AnonymousHttpApiMetadata.forApi(AuthorizationApi.class))
+      return ContextBuilder.newBuilder(AnonymousHttpApiMetadata.forApi(AzureAuthorizationApi.class))
             .credentials("foo", toStringAndClose(OAuthTestUtils.class.getResourceAsStream("/testpk-oauth-arm.pem")))
             .endpoint(url.toString())
             .overrides(overrides)
-            .modules(ImmutableSet.of(new ExecutorServiceModule(sameThreadExecutor()), new OAuthModule(), new Module() {
+            .modules(ImmutableSet.of(new ExecutorServiceModule(sameThreadExecutor()), new AzureOAuthModule(), new Module() {
                @Override public void configure(Binder binder) {
                   binder.bind(OAuthScopes.class).toInstance(SingleScope.create(SCOPE));
                }
             }))
-            .buildApi(AuthorizationApi.class);
+            .buildApi(AzureAuthorizationApi.class);
    }
 }

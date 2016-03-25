@@ -18,7 +18,7 @@ package org.jclouds.azurecomputearm.features;
 
 import org.jclouds.Fallbacks.EmptyListOnNotFoundOr404;
 import org.jclouds.azurecomputearm.domain.VMSize;
-import org.jclouds.azurecomputearm.oauth.v2.filters.OAuthFilter;
+import org.jclouds.oauth.v2.filters.OAuthFilter;
 import org.jclouds.rest.annotations.Fallback;
 import org.jclouds.rest.annotations.QueryParams;
 import org.jclouds.rest.annotations.RequestFilters;

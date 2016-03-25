@@ -27,7 +27,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.jclouds.Fallbacks.NullOnNotFoundOr404;
 import org.jclouds.azurecomputearm.domain.Deployment;
-import org.jclouds.azurecomputearm.oauth.v2.filters.OAuthFilter;
+import org.jclouds.oauth.v2.filters.OAuthFilter;
 import org.jclouds.rest.annotations.QueryParams;
 import org.jclouds.rest.annotations.RequestFilters;
 import org.jclouds.rest.annotations.Fallback;

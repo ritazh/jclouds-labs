@@ -14,28 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jclouds.azurecomputearm.oauth.v2.domain;
+package org.jclouds.azurecomputearm.oauth.v2.config;
 
-import org.jclouds.json.SerializedNames;
+public final class AzureOAuthProperties {
+    /**
+     * The oauth scope, what resource is this token intended for.
+     */
+    public static final String RESOURCE = "jclouds.oauth.resource";
 
-import com.google.auto.value.AutoValue;
-
-/**
- * The oauth token, obtained upon a successful token request and ready to embed in requests.
- */
-@AutoValue
-public abstract class Token {
-   /** The access token obtained from the OAuth server. */
-   public abstract String accessToken();
-
-   /** The type of the token, e.g., {@code Bearer}. */
-   public abstract String tokenType();
-
-   /** In how many seconds this token expires. */
-   public abstract long expiresIn();
-
-   @SerializedNames({"access_token", "token_type", "expires_in"})
-   public static Token create(String accessToken, String tokenType, long expiresIn) {
-      return new AutoValue_Token(accessToken, tokenType, expiresIn);
-   }
+    private AzureOAuthProperties() {
+    }
 }

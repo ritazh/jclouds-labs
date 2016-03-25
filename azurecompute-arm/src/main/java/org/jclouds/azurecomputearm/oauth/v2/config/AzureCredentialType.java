@@ -21,21 +21,20 @@ import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /** Defines the contents of the credential field in {@link org.jclouds.ContextBuilder#credentials(String, String)}. */
-public enum CredentialType {
+public enum AzureCredentialType {
+    // TODO - this is only present to support BEARER_TOKEN_CREDENTIALS in azurecompute-arm mock tests.
+    // The expectation is that the OAuth additions in this provider should augment the OAuth v2 work
+    // in jclouds-core, but doing so here keeps the changes into a single repo/provider.
+    BEARER_TOKEN_CREDENTIALS,
 
-   BEARER_TOKEN_CREDENTIALS,
+    /** Secret is a password */
+    CLIENT_CREDENTIALS_SECRET;
 
-   /** Contents are a PEM-encoded P12 Private Key. */
-   P12_PRIVATE_KEY_CREDENTIALS,
+    @Override public String toString() {
+        return UPPER_UNDERSCORE.to(LOWER_CAMEL, name());
+    }
 
-   /** Secret is a password */
-   CLIENT_CREDENTIALS_SECRET;
-
-   @Override public String toString() {
-      return UPPER_UNDERSCORE.to(LOWER_CAMEL, name());
-   }
-
-   public static CredentialType fromValue(String credentialType) {
-      return valueOf(LOWER_CAMEL.to(UPPER_UNDERSCORE, checkNotNull(credentialType, "credentialType")));
-   }
+    public static AzureCredentialType fromValue(String credentialType) {
+        return valueOf(LOWER_CAMEL.to(UPPER_UNDERSCORE, checkNotNull(credentialType, "credentialType")));
+    }
 }

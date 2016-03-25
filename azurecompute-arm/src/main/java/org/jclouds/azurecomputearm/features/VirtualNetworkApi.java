@@ -22,7 +22,7 @@ import org.jclouds.Fallbacks.NullOnNotFoundOr404;
 
 import org.jclouds.azurecomputearm.domain.VirtualNetwork;
 
-import org.jclouds.azurecomputearm.oauth.v2.filters.OAuthFilter;
+import org.jclouds.oauth.v2.filters.OAuthFilter;
 import org.jclouds.rest.annotations.Fallback;
 import org.jclouds.rest.annotations.MapBinder;
 import org.jclouds.rest.annotations.PayloadParam;
