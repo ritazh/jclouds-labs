@@ -58,9 +58,6 @@ public class BaseAzureComputeApiLiveTest extends AbstractAzureComputeApiLiveTest
 
    public static final String NETWORKINTERFACECARD_NAME = "jcloudsNic";
 
-   public static final String IMAGE_NAME
-           = "b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-14_04_1-LTS-amd64-server-20150123-en-us-30GB";
-
    private String resourceGroupName = null;
 
 
@@ -106,8 +103,6 @@ public class BaseAzureComputeApiLiveTest extends AbstractAzureComputeApiLiveTest
    }
 
    private void deleteResourceGroup(String name) {
-      HashMap<String, String> tags = new HashMap<String, String>();
-
       api.getResourceGroupApi(getSubscriptionId()).delete(name);
    }
 
@@ -227,27 +222,4 @@ public class BaseAzureComputeApiLiveTest extends AbstractAzureComputeApiLiveTest
       nic = nicApi.createOrUpdateNetworkInterfaceCard(NETWORKINTERFACECARD_NAME, LOCATION, networkInterfaceCardProperties, tags);
       return  nic;
    }
-
-//
-//   protected Deployment getOrCreateDeployment(final String serviceName, final DeploymentParams params) {
-//      Deployment deployment = api.getDeploymentApiForService(serviceName).get(params.name());
-//      if (deployment != null) {
-//         return deployment;
-//      }
-//
-//      assertTrue(new ConflictManagementPredicate(api) {
-//
-//         @Override
-//         protected String operation() {
-//            return api.getDeploymentApiForService(serviceName).create(params);
-//         }
-//      }.apply(getStorageServiceName()));
-//
-//      deployment = api.getDeploymentApiForService(serviceName).get(params.name());
-//
-//      Logger.getAnonymousLogger().log(Level.INFO, "created deployment: {0}", deployment);
-//      return deployment;
-//   }
-//
-//
 }

@@ -17,7 +17,7 @@
 package org.jclouds.azurecomputearm.config;
 
 /**
- * Configuration properties and constants used in Azure Service Management connections.
+ * Configuration properties and constants used in Azure Resource Manager connections.
  */
 public class AzureComputeProperties {
 

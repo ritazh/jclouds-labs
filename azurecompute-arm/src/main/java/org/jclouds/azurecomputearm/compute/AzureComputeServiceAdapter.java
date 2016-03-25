@@ -15,12 +15,9 @@
  * limitations under the License.
  */
 package org.jclouds.azurecomputearm.compute;
-
-import static com.google.common.base.Objects.firstNonNull;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.jclouds.util.Predicates2.retry;
-import java.net.URI;
 import java.util.List;
 import java.util.Set;
 
@@ -31,8 +28,6 @@ import javax.inject.Singleton;
 
 import org.jclouds.azurecomputearm.AzureComputeApi;
 import org.jclouds.azurecomputearm.compute.config.AzureComputeServiceContextModule.AzureComputeConstants;
-import org.jclouds.azurecomputearm.compute.options.AzureComputeTemplateOptions;
-import org.jclouds.azurecomputearm.config.AzureComputeProperties;
 import org.jclouds.azurecomputearm.domain.Deployment;
 import org.jclouds.azurecomputearm.domain.VMSize;
 import org.jclouds.azurecomputearm.domain.ImageReference;
@@ -50,7 +45,6 @@ import org.jclouds.compute.reference.ComputeServiceConstants;
 import org.jclouds.domain.LoginCredentials;
 import org.jclouds.logging.Logger;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -65,8 +59,7 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
 
    private static final String DEFAULT_LOGIN_USER = "jclouds";
 
-   private static final String DEFAULT_LOGIN_PASSWORD = "Azur3Compute!";
-   public static final String POST_SHUTDOWN_ACTION = "StoppedDeallocated";
+   private static final String DEFAULT_LOGIN_PASSWORD = "password";
 
    @Resource
    @Named(ComputeServiceConstants.COMPUTE_LOGGER)
@@ -88,62 +81,14 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
            final String group, final String name, final Template template) {
 
       // azure-specific options
-      final AzureComputeTemplateOptions templateOptions = template.getOptions().as(AzureComputeTemplateOptions.class);
-
-      final String loginUser = firstNonNull(templateOptions.getLoginUser(), DEFAULT_LOGIN_USER);
-      final String loginPassword = firstNonNull(templateOptions.getLoginPassword(), DEFAULT_LOGIN_PASSWORD);
-      final String location = template.getLocation().getId();
-      final int[] inboundPorts = template.getOptions().getInboundPorts();
-
-      final String storageAccountName = templateOptions.getStorageAccountName();
-
-      String message = String.format("Creating a cloud service with name '%s', label '%s' in location '%s'", name, name, location);
-      logger.debug(message);
-
-//      final String createCloudServiceRequestId = api.getCloudServiceApi().createWithLabelInLocation(name, name, location);
-//      if (!operationSucceededPredicate.apply(createCloudServiceRequestId)) {
-//         final String exceptionMessage = generateIllegalStateExceptionMessage(message, createCloudServiceRequestId, azureComputeConstants.operationTimeout());
-//         logger.warn(exceptionMessage);
-//         throw new IllegalStateException(exceptionMessage);
-//      }
-//      logger.info("Cloud Service (%s) created with operation id: %s", name, createCloudServiceRequestId);
-
-
-//      final Set<ExternalEndpoint> externalEndpoints = Sets.newHashSet();
-//      for (int inboundPort : inboundPorts) {
-//         externalEndpoints.add(ExternalEndpoint.inboundTcpToLocalPort(inboundPort, inboundPort));
-//      }
-
-//      final DeploymentParams params = DeploymentParams.builder()
-//              .name(name)
-//              //.os(os)
-//              .username(loginUser)
-//              .password(loginPassword)
-//              //.sourceImageName((template.getImage().getId())[0])
-//              .mediaLink(createMediaLink(storageAccountName, name))
-//              .size(template.getHardware().getName())
-//              .externalEndpoints(externalEndpoints)
-//              .virtualNetworkName(templateOptions.getVirtualNetworkName())
-//              .subnetNames(templateOptions.getSubnetNames())
-//              .build();
+//      final AzureComputeTemplateOptions templateOptions = template.getOptions().as(AzureComputeTemplateOptions.class);
 //
-//      message = String.format("Creating a deployment with params '%s' ...", params);
-//      logger.debug(message);
+//      final String loginUser = firstNonNull(templateOptions.getLoginUser(), DEFAULT_LOGIN_USER);
+//      final String loginPassword = firstNonNull(templateOptions.getLoginPassword(), DEFAULT_LOGIN_PASSWORD);
+//      final String location = template.getLocation().getId();
 
-//      if (!new ConflictManagementPredicate(api) {
-//         @Override
-//         protected String operation() {
-//            return "string";
-//            //api.getDeploymentApiForService(name).create(params);
-//         }
-//      }.apply(name)) {
-//         final String illegalStateExceptionMessage = generateIllegalStateExceptionMessage(message, createCloudServiceRequestId, azureComputeConstants.operationTimeout());
-//         logger.warn(illegalStateExceptionMessage);
-//         logger.debug("Deleting cloud service (%s) ...", name);
-//         deleteCloudService(name);
-//         logger.debug("Cloud service (%s) deleted.", name);
-//         throw new IllegalStateException(illegalStateExceptionMessage);
-//      }
+      final String loginUser = DEFAULT_LOGIN_USER;
+      final String loginPassword = DEFAULT_LOGIN_PASSWORD;
 
       logger.info("Deployment created with name: %s", name);
 
@@ -151,7 +96,6 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
       if (!retry(new Predicate<String>() {
          @Override
          public boolean apply(final String name) {
-            //final Deployment deployment = api.getDeploymentApiForService(name).get(name);
             final Deployment deployment = null;
             if (deployment != null) {
                deployments.add(deployment);
@@ -162,9 +106,6 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
          final String illegalStateExceptionMessage = format("Deployment %s was not created within %sms so it will be destroyed.",
                  name, azureComputeConstants.operationTimeout());
          logger.warn(illegalStateExceptionMessage);
-
-         //api.getDeploymentApiForService(name).delete(name);
-         //api.getCloudServiceApi().delete(name);
 
          throw new IllegalStateException(illegalStateExceptionMessage);
       }
@@ -252,22 +193,6 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
       return null;
    }
 
-   public Deployment getDeploymentFromNodeId(final String nodeId) {
-      final List<Deployment> nodes = Lists.newArrayList();
-      retry(new Predicate<String>() {
-         @Override
-         public boolean apply(final String input) {
-            final Deployment deployment = getNode(nodeId);
-            if (deployment != null) {
-               nodes.add(deployment);
-            }
-            return !nodes.isEmpty();
-         }
-      }, 30 * 60, 1, SECONDS).apply(nodeId);
-
-      return Iterables.getFirst(nodes, null);
-   }
-
    @Override
    public void destroyNode(final String id) {
       logger.debug("Destroying %s ...", id);
@@ -304,36 +229,6 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
             return Iterables.contains(ids, input.name());
          }
       });
-   }
-
-   @VisibleForTesting
-   public static URI createMediaLink(final String storageServiceName, final String diskName) {
-      return URI.create(
-              String.format("https://%s.blob.core.windows.net/vhds/disk-%s.vhd", storageServiceName, diskName));
-   }
-
-//
-//   private void deleteDeployment(final String id, final String cloudServiceName) {
-//      if (!new ConflictManagementPredicate(api) {
-//
-//         @Override
-//         protected String operation() {
-//            //return api.getDeploymentApiForService(cloudServiceName).delete(id);
-//            return null;
-//         }
-//
-//      }.apply(id)) {
-//         final String deleteMessage = generateIllegalStateExceptionMessage("Delete deployment " + cloudServiceName,
-//                 "Deployment delete", azureComputeConstants.operationTimeout());
-//         logger.warn(deleteMessage);
-//         throw new IllegalStateException(deleteMessage);
-//      }
-//   }
-
-   public static String generateIllegalStateExceptionMessage(String prefix, final String operationId, final long timeout) {
-      final String warnMessage = format("%s - %s has not been completed within %sms.", prefix, operationId, timeout);
-      return format("%s. Please, try by increasing `%s` and try again",
-              warnMessage, AzureComputeProperties.OPERATION_TIMEOUT);
    }
 
 }

@@ -47,7 +47,7 @@ public class LocationToLocation implements Function<Location, org.jclouds.domain
    @Override
    public org.jclouds.domain.Location apply(final Location location) {
       final LocationBuilder builder = new LocationBuilder();
-      builder.id(location.name());
+      builder.id(location.id());
       builder.description(location.displayName());
       builder.parent(getOnlyElement(justProvider.get()));
 
