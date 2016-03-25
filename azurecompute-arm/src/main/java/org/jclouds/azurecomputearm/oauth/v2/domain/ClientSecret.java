@@ -20,9 +20,7 @@ import org.jclouds.json.SerializedNames;
 import com.google.auto.value.AutoValue;
 
 /**
- * Claims corresponding to a {@linkplain Token JWT Token}.
- *
- * @see <a href="https://tools.ietf.org/html/draft-ietf-oauth-json-web-token-30#section-4">registered list</a>
+ * Details corresponding the a client_credential Azure AD Oauth request 
  */
 @AutoValue
 public abstract class ClientSecret {

@@ -21,10 +21,11 @@ import com.google.common.base.Supplier;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import org.jclouds.azurecomputearm.oauth.v2.AuthorizationApi;
-import org.jclouds.azurecomputearm.oauth.v2.config.OAuthScopes;
+import org.jclouds.azurecomputearm.oauth.v2.AzureAuthorizationApi;
 import org.jclouds.azurecomputearm.oauth.v2.domain.ClientSecret;
-import org.jclouds.azurecomputearm.oauth.v2.domain.Token;
+import org.jclouds.oauth.v2.filters.OAuthFilter;
+import org.jclouds.oauth.v2.config.OAuthScopes;
+import org.jclouds.oauth.v2.domain.Token;
 import org.jclouds.domain.Credentials;
 import org.jclouds.http.HttpException;
 import org.jclouds.http.HttpRequest;
@@ -35,7 +36,7 @@ import javax.inject.Named;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.jclouds.Constants.PROPERTY_SESSION_INTERVAL;
-import static org.jclouds.azurecomputearm.oauth.v2.config.OAuthProperties.RESOURCE;
+import static org.jclouds.azurecomputearm.oauth.v2.config.AzureOAuthProperties.RESOURCE;
 
 /**
  * Authorizes new Bearer Tokens at runtime by sending up for the http request.
@@ -84,9 +85,9 @@ public class ClientCredentialsSecretFlow implements OAuthFilter {
     }
 
     static final class AuthorizeToken extends CacheLoader<ClientSecret, Token> {
-        private final AuthorizationApi api;
+        private final AzureAuthorizationApi api;
 
-        @Inject AuthorizeToken(AuthorizationApi api) {
+        @Inject AuthorizeToken(AzureAuthorizationApi api) {
             this.api = api;
         }
 

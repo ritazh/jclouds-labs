@@ -23,11 +23,12 @@ import static org.testng.Assert.assertNotNull;
 import java.util.Properties;
 
 import org.jclouds.apis.BaseApiLiveTest;
-import org.jclouds.azurecomputearm.oauth.v2.config.OAuthModule;
-import org.jclouds.azurecomputearm.oauth.v2.config.OAuthScopes;
-import org.jclouds.azurecomputearm.oauth.v2.config.OAuthScopes.SingleScope;
-import org.jclouds.azurecomputearm.oauth.v2.domain.Token;
-import org.jclouds.azurecomputearm.oauth.v2.config.OAuthProperties;
+import org.jclouds.azurecomputearm.oauth.v2.config.AzureOAuthModule;
+import org.jclouds.azurecomputearm.oauth.v2.config.AzureOAuthProperties;
+import org.jclouds.oauth.v2.config.OAuthScopes;
+import org.jclouds.oauth.v2.config.OAuthScopes.SingleScope;
+import org.jclouds.oauth.v2.domain.Token;
+import org.jclouds.oauth.v2.config.OAuthProperties;
 import org.jclouds.providers.ProviderMetadata;
 import org.testng.annotations.Test;
 
@@ -37,7 +38,7 @@ import com.google.inject.Module;
 import com.google.inject.name.Names;
 
 @Test(groups = "live", singleThreaded = true)
-public class AuthorizationApiLiveTest extends BaseApiLiveTest<AuthorizationApi> {
+public class AuthorizationApiLiveTest extends BaseApiLiveTest<AzureAuthorizationApi> {
 
    private String scope;
    private String resource;
@@ -55,12 +56,12 @@ public class AuthorizationApiLiveTest extends BaseApiLiveTest<AuthorizationApi> 
 
    /** OAuth isn't registered as a provider intentionally, so we fake one. */
    @Override protected ProviderMetadata createProviderMetadata() {
-      return forApiOnEndpoint(AuthorizationApi.class, endpoint).toBuilder().id("oauth").build();
+      return forApiOnEndpoint(AzureAuthorizationApi.class, endpoint).toBuilder().id("oauth").build();
    }
 
    @Override protected Properties setupProperties() {
       Properties props = super.setupProperties();
-      resource = checkNotNull(setIfTestSystemPropertyPresent(props, OAuthProperties.RESOURCE), "test.jclouds.oauth.resource");
+      resource = checkNotNull(setIfTestSystemPropertyPresent(props, AzureOAuthProperties.RESOURCE), "test.jclouds.oauth.resource");
       audience = checkNotNull(setIfTestSystemPropertyPresent(props, OAuthProperties.AUDIENCE), "test.jclouds.oauth.audience");
       scope = resource;
       return props;
@@ -68,7 +69,7 @@ public class AuthorizationApiLiveTest extends BaseApiLiveTest<AuthorizationApi> 
 
    @Override protected Iterable<Module> setupModules() {
       return ImmutableList.<Module>builder() //
-            .add(new OAuthModule()) //
+            .add(new AzureOAuthModule()) //
             .add(new Module() {
                @Override public void configure(Binder binder) {
                   // ContextBuilder erases oauth.endpoint, as that's the same name as the provider key.

@@ -17,10 +17,10 @@
 package org.jclouds.azurecomputearm.oauth.v2;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static org.jclouds.azurecomputearm.oauth.v2.config.CredentialType.BEARER_TOKEN_CREDENTIALS;
-import static org.jclouds.azurecomputearm.oauth.v2.config.CredentialType.CLIENT_CREDENTIALS_SECRET;
-import static org.jclouds.azurecomputearm.oauth.v2.config.OAuthProperties.AUDIENCE;
-import static org.jclouds.azurecomputearm.oauth.v2.config.OAuthProperties.CREDENTIAL_TYPE;
+import static org.jclouds.azurecomputearm.oauth.v2.config.AzureCredentialType.BEARER_TOKEN_CREDENTIALS;
+import static org.jclouds.azurecomputearm.oauth.v2.config.AzureCredentialType.CLIENT_CREDENTIALS_SECRET;
+import static org.jclouds.oauth.v2.config.OAuthProperties.AUDIENCE;
+import static org.jclouds.oauth.v2.config.OAuthProperties.CREDENTIAL_TYPE;
 
 import java.util.Properties;
 

@@ -32,7 +32,7 @@ import org.jclouds.azurecomputearm.domain.Offer;
 import org.jclouds.azurecomputearm.domain.Publisher;
 import org.jclouds.azurecomputearm.domain.SKU;
 import org.jclouds.azurecomputearm.domain.Version;
-import org.jclouds.azurecomputearm.oauth.v2.filters.OAuthFilter;
+import org.jclouds.oauth.v2.filters.OAuthFilter;
 import org.jclouds.rest.annotations.Fallback;
 import org.jclouds.rest.annotations.QueryParams;
 import org.jclouds.rest.annotations.RequestFilters;

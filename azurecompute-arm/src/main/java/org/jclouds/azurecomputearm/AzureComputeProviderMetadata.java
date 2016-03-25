@@ -21,11 +21,11 @@ import static org.jclouds.azurecomputearm.config.AzureComputeProperties.OPERATIO
 import static org.jclouds.azurecomputearm.config.AzureComputeProperties.OPERATION_TIMEOUT;
 import static org.jclouds.azurecomputearm.config.AzureComputeProperties.TCP_RULE_FORMAT;
 import static org.jclouds.azurecomputearm.config.AzureComputeProperties.TCP_RULE_REGEXP;
-import static org.jclouds.azurecomputearm.oauth.v2.config.CredentialType.CLIENT_CREDENTIALS_SECRET;
-import static org.jclouds.azurecomputearm.oauth.v2.config.OAuthProperties.AUDIENCE;
-import static org.jclouds.azurecomputearm.oauth.v2.config.OAuthProperties.RESOURCE;
-import static org.jclouds.azurecomputearm.oauth.v2.config.OAuthProperties.CREDENTIAL_TYPE;
-import static org.jclouds.azurecomputearm.oauth.v2.config.OAuthProperties.JWS_ALG;
+import static org.jclouds.azurecomputearm.oauth.v2.config.AzureCredentialType.CLIENT_CREDENTIALS_SECRET;
+import static org.jclouds.azurecomputearm.oauth.v2.config.AzureOAuthProperties.RESOURCE;
+import static org.jclouds.oauth.v2.config.OAuthProperties.AUDIENCE;
+import static org.jclouds.oauth.v2.config.OAuthProperties.CREDENTIAL_TYPE;
+import static org.jclouds.oauth.v2.config.OAuthProperties.JWS_ALG;
 
 import java.net.URI;
 import java.util.Properties;

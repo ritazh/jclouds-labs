@@ -30,7 +30,7 @@ import org.jclouds.Fallbacks;
 import org.jclouds.azurecomputearm.domain.VirtualMachine;
 import org.jclouds.azurecomputearm.domain.VirtualMachineInstance;
 import org.jclouds.azurecomputearm.domain.VirtualMachineProperties;
-import org.jclouds.azurecomputearm.oauth.v2.filters.OAuthFilter;
+import org.jclouds.oauth.v2.filters.OAuthFilter;
 import org.jclouds.rest.annotations.Fallback;
 import org.jclouds.rest.annotations.Payload;
 import org.jclouds.rest.annotations.MapBinder;

@@ -35,7 +35,7 @@ import org.jclouds.azurecomputearm.domain.StorageService;
 import org.jclouds.azurecomputearm.domain.StorageServiceKeys;
 import org.jclouds.azurecomputearm.domain.StorageServiceUpdateParams;
 import org.jclouds.azurecomputearm.functions.StatusCodeParser;
-import org.jclouds.azurecomputearm.oauth.v2.filters.OAuthFilter;
+import org.jclouds.oauth.v2.filters.OAuthFilter;
 import org.jclouds.rest.annotations.Fallback;
 import org.jclouds.rest.annotations.QueryParams;
 import org.jclouds.rest.annotations.RequestFilters;
