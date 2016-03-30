@@ -33,6 +33,7 @@ public class VMSizeToHardware implements Function<VMSize, Hardware> {
    public Hardware apply(VMSize from) {
       final HardwareBuilder builder = new HardwareBuilder().
               name(from.name()).
+              id(from.name()).
               processors(ImmutableList.of(new Processor(from.numberOfCores(), 2))).
               ram(from.memoryInMB());
       // No id or providerId from Azure
