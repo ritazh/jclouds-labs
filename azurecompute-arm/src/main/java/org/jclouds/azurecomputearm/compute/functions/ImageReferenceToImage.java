@@ -60,6 +60,7 @@ public class ImageReferenceToImage implements Function<ImageReference, Image> {
               .description(image.sku())
               .status(Image.Status.AVAILABLE)
               .version(image.version())
+              .id(image.offer() + image.sku() + image.version())
               .providerId(image.publisher());
 
       final OperatingSystem.Builder osBuilder = osFamily().apply(image);

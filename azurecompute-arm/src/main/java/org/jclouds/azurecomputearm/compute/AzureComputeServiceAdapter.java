@@ -18,6 +18,8 @@ package org.jclouds.azurecomputearm.compute;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.jclouds.util.Predicates2.retry;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -125,6 +127,7 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
    @Override
    public Iterable<ImageReference> listImages() {
       final List<ImageReference> osImages = Lists.newArrayList();
+
       OSImageApi osImageApi = api.getOSImageApi(getSubscriptionId(), getLocation());
 
       Iterable<Publisher> list = osImageApi.listPublishers();
@@ -174,11 +177,13 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
    }
 
    private String getSubscriptionId() {
-      return null; // TODO: get subscription id
+      return System.getProperty("azurecompute-arm.subscriptionid");
    }
+
    private String getLocation() {
-      return null; // TODO: get location
+      return "westus"; // TODO: get location
    }
+
    @Override
    public Iterable<Location> listLocations() {
       return api.getLocationApi(getSubscriptionId()).list();
@@ -218,7 +223,8 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
 
    @Override
    public Iterable<Deployment> listNodes() {
-      return null;
+      List<Deployment> list = new ArrayList<Deployment>(1);
+      return list;
    }
 
    @Override
