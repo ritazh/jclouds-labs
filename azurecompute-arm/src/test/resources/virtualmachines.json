@@ -36,7 +36,7 @@
         "networkProfile": {
           "networkInterfaces": [
             {
-              "id": "/subscriptions/626f67f6-8fd0-xxxx-yyyy-e3ce95f7dfec/resourceGroups/groupname/providers/Microsoft.Network/networkInterfaces/windowsmachine167"
+              "id": "/subscriptions/SUBSCRIPTIONID/resourceGroups/groupname/providers/Microsoft.Network/networkInterfaces/windowsmachine167"
             }
           ]
         },
@@ -48,7 +48,7 @@
         },
         "provisioningState": "Creating"
       },
-      "id": "/subscriptions/626f67f6-8fd0-xxxx-yyyy-e3ce95f7dfec/resourceGroups/groupname/providers/Microsoft.Compute/virtualMachines/windowsmachine",
+      "id": "/subscriptions/SUBSCRIPTIONID/resourceGroups/groupname/providers/Microsoft.Compute/virtualMachines/windowsmachine",
       "name": "windowsmachine",
       "type": "Microsoft.Compute/virtualMachines",
       "location": "westus"

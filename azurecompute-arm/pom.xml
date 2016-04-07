@@ -27,29 +27,24 @@
   </parent>
 
   <!-- TODO: when out of labs, switch to org.jclouds.provider -->
-  <artifactId>azurecomputearm</artifactId>
-  <name>jclouds azure compute arm API</name>
+  <artifactId>azurecompute-arm</artifactId>
+  <name>jclouds Azure Compute ARM API</name>
   <description>jclouds components to access an implementation of Azure's ARM Compute Service</description>
   <packaging>bundle</packaging>
 
   <properties>
-    <test.jclouds.azurecomputearm.subscription-id>FIXME_subscription-id</test.jclouds.azurecomputearm.subscription-id>
-    <test.jclouds.azurecomputearm.tenant-id>FIXME_tenant-id</test.jclouds.azurecomputearm.tenant-id>
-    <!-- note that there's no prefix of "test." in the url.  This is to ensure that jclouds inteprets the value, as opposed to maven -->
-    <test.azurecomputearm.endpoint>https://management.azure.com/subscriptions/${test.jclouds.azurecomputearm.subscription-id}</test.azurecomputearm.endpoint>
-    <test.azurecomputearm.api-version>2014-04-01-preview</test.azurecomputearm.api-version>
-    <test.azurecomputearm.build-version />
-    <test.azurecomputearm.identity>/path/to/cert.p12</test.azurecomputearm.identity>
-    <test.azurecomputearm.credential>password to cert</test.azurecomputearm.credential>
-    <jclouds.osgi.export>org.jclouds.azurecomputearm*;version="${project.version}"</jclouds.osgi.export>
+    <test.jclouds.azurecompute-arm.subscription-id>FIXME_subscription-id</test.jclouds.azurecompute-arm.subscription-id>
+    <test.jclouds.azurecompute-arm.tenant-id>FIXME_tenant-id</test.jclouds.azurecompute-arm.tenant-id>
+    <test.azurecompute-arm.endpoint>https://management.azure.com/subscriptions/${test.jclouds.azurecompute-arm.subscription-id}</test.azurecompute-arm.endpoint>
+    <test.azurecompute-arm.api-version>2014-04-01-preview</test.azurecompute-arm.api-version>
+    <test.azurecompute-arm.build-version />
+    <test.azurecompute-arm.identity>/path/to/cert.p12</test.azurecompute-arm.identity>
+    <test.azurecompute-arm.credential>password to cert</test.azurecompute-arm.credential>
+    <jclouds.osgi.export>org.jclouds.azurecompute-arm*;version="${project.version}"</jclouds.osgi.export>
     <jclouds.osgi.import>org.jclouds*;version="${project.version}",*</jclouds.osgi.import>
   </properties>
 
   <dependencies>
-    <dependency>
-      <groupId>com.jamesmurty.utils</groupId>
-      <artifactId>java-xmlbuilder</artifactId>
-    </dependency>
     <dependency>
       <groupId>org.apache.jclouds</groupId>
       <artifactId>jclouds-compute</artifactId>
@@ -126,6 +121,11 @@
      <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.apache.jclouds.driver</groupId>
+      <artifactId>jclouds-okhttp</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
       <groupId>com.squareup.okhttp</groupId>
       <artifactId>mockwebserver</artifactId>
       <scope>test</scope>
@@ -159,13 +159,13 @@
                 </goals>
                 <configuration>
                   <systemPropertyVariables>
-                    <test.azurecomputearm.endpoint>${test.azurecomputearm.endpoint}</test.azurecomputearm.endpoint>
-                    <test.azurecomputearm.api-version>${test.azurecomputearm.api-version}</test.azurecomputearm.api-version>
-                    <test.azurecomputearm.build-version>${test.azurecomputearm.build-version}</test.azurecomputearm.build-version>
-                    <test.azurecomputearm.identity>${test.azurecomputearm.identity}</test.azurecomputearm.identity>
-                    <test.azurecomputearm.credential>${test.azurecomputearm.credential}</test.azurecomputearm.credential>
-                    <test.jclouds.azurecomputearm.subscription-id>${test.jclouds.azurecomputearm.subscription-id}</test.jclouds.azurecomputearm.subscription-id>
-                    <test.jclouds.azurecomputearm.tenant-id>${test.jclouds.azurecomputearm.tenant-id}</test.jclouds.azurecomputearm.tenant-id>
+                    <test.azurecompute-arm.endpoint>${test.azurecompute-arm.endpoint}</test.azurecompute-arm.endpoint>
+                    <test.azurecompute-arm.api-version>${test.azurecompute-arm.api-version}</test.azurecompute-arm.api-version>
+                    <test.azurecompute-arm.build-version>${test.azurecompute-arm.build-version}</test.azurecompute-arm.build-version>
+                    <test.azurecompute-arm.identity>${test.azurecompute-arm.identity}</test.azurecompute-arm.identity>
+                    <test.azurecompute-arm.credential>${test.azurecompute-arm.credential}</test.azurecompute-arm.credential>
+                    <test.jclouds.azurecompute-arm.subscription-id>${test.jclouds.azurecompute-arm.subscription-id}</test.jclouds.azurecompute-arm.subscription-id>
+                    <test.jclouds.azurecompute-arm.tenant-id>${test.jclouds.azurecompute-arm.tenant-id}</test.jclouds.azurecompute-arm.tenant-id>
                   </systemPropertyVariables>
                 </configuration>
               </execution>
