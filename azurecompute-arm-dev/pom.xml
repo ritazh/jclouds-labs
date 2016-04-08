@@ -26,7 +26,7 @@
     <version>2.0.0-SNAPSHOT</version>
   </parent>
   <artifactId>azurecompute-arm-dev</artifactId>
-  <name>jclouds Azure Compute ARM API</name>
+  <name>jclouds Azure Compute ARM API Dev</name>
   <description>jclouds components to access an implementation of Azure's ARM Compute Service</description>
   <packaging>bundle</packaging>
 

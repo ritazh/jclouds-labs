@@ -2,7 +2,7 @@ jclouds Labs - Azure Compute ARM Provider
 ============
 
 Build status for azurecomputearm module:
-[![Build Status](http://devopsfunjenkins.westus.cloudapp.azure.com:8080/buildStatus/icon?job=jclouds-labs-azurecompute-arm/org.apache.jclouds.labs:azurecomputearm)](http://devopsfunjenkins.westus.cloudapp.azure.com:8080/job/jclouds-labs-azurecompute-arm/org.apache.jclouds.labs$azurecomputearm/)
+[![Build Status](http://devopsfunjenkins.westus.cloudapp.azure.com:8080/buildStatus/icon?job=jclouds-labs-azurecompute-arm/org.apache.jclouds.labs:azurecompute-arm-dev)](http://devopsfunjenkins.westus.cloudapp.azure.com:8080/job/jclouds-labs-azurecompute-arm/org.apache.jclouds.labs$azurecompute-arm-dev/)
 
 
 ## Setting Up Test Credentials
