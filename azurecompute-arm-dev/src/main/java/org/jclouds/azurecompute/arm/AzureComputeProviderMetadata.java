@@ -23,13 +23,10 @@ import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.TCP_RUL
 import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.TCP_RULE_REGEXP;
 import static org.jclouds.oauth.v2.config.CredentialType.CLIENT_CREDENTIALS_SECRET;
 import static org.jclouds.oauth.v2.config.OAuthProperties.RESOURCE;
-import static org.jclouds.oauth.v2.config.OAuthProperties.AUDIENCE;
 import static org.jclouds.oauth.v2.config.OAuthProperties.CREDENTIAL_TYPE;
-import static org.jclouds.oauth.v2.config.OAuthProperties.JWS_ALG;
 
 import java.net.URI;
 import java.util.Properties;
-
 import org.jclouds.azurecompute.arm.domain.Region;
 import org.jclouds.providers.ProviderMetadata;
 import org.jclouds.providers.internal.BaseProviderMetadata;
@@ -59,8 +56,6 @@ public class AzureComputeProviderMetadata extends BaseProviderMetadata {
       properties.setProperty(OPERATION_POLL_MAX_PERIOD, "15");
       properties.setProperty(TCP_RULE_FORMAT, "tcp_%s-%s");
       properties.setProperty(TCP_RULE_REGEXP, "tcp_\\d{1,5}-\\d{1,5}");
-      properties.put(JWS_ALG, "RS256");
-      properties.put(AUDIENCE, "https://login.microsoftonline.com/oauth2/token");
       properties.put(RESOURCE, "https://management.azure.com/");
       properties.put(CREDENTIAL_TYPE, CLIENT_CREDENTIALS_SECRET.toString());
       return properties;
@@ -81,7 +76,7 @@ public class AzureComputeProviderMetadata extends BaseProviderMetadata {
                  .endpoint("https://management.azure.com/subscriptions/SUBSCRIPTION_ID")
                  .homepage(URI.create("https://www.windowsazure.com/"))
                  .console(URI.create("https://windows.azure.com/default.aspx"))
-                 .linkedServices("azureblob", "azurequeue", "azuretable")
+                 .linkedServices("azureblob")
                  .iso3166Codes(Region.iso3166Codes())
                  .defaultProperties(AzureComputeProviderMetadata.defaultProperties());
       }

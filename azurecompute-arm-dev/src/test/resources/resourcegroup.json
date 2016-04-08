@@ -1,5 +1,5 @@
 {
-  "id": "/subscriptions/04f7ec88-8e28-41ed-8537-5e17766001f5/resourceGroups/jcloudstest",
+  "id": "/subscriptions/SUBSCRIPTIONID/resourceGroups/jcloudstest",
   "name": "jcloudstest",
   "location": "westus",
   "tags": {

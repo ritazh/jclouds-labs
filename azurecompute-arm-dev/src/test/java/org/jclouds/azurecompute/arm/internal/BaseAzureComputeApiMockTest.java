@@ -101,7 +101,7 @@ public class BaseAzureComputeApiMockTest {
    protected MockResponse response202WithHeader() {
       return new MockResponse()
               .setStatus("HTTP/1.1 202 Accepted")
-              .addHeader("Location", "https://management.azure.com/subscriptions/12345678-1234-1234-1234-123456789012/operationresults/eyJqb2JJZCI6IlJFU09VUkNFR1JPVVBERUxFVElPTkpPQi1SVEVTVC1DRU5UUkFMVVMiLCJqb2JMb2NhdGlvbiI6ImNlbnRyYWx1cyJ9?api-version=2014-04-01");
+              .addHeader("Location", "https://management.azure.com/subscriptions/SUBSCRIPTIONID/operationresults/eyJqb2JJZCI6IlJFU09VUkNFR1JPVVBERUxFVElPTkpPQi1SVEVTVC1DRU5UUkFMVVMiLCJqb2JMb2NhdGlvbiI6ImNlbnRyYWx1cyJ9?api-version=2014-04-01");
    }
 
    protected String stringFromResource(String resourceName) {

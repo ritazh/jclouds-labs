@@ -1,16 +1,16 @@
 {
    "value": [
       {
-         "id": "/subscriptions/04f7ec88-8e28-41ed-8537-5e17766001f5/resourceGroups/amqptest",
-         "name": "amqptest",
+         "id": "/subscriptions/SUBSCRIPTIONID/resourceGroups/test1",
+         "name": "test1",
          "location": "westus",
          "properties": {
             "provisioningState": "Succeeded"
          }
       },
       {
-         "id": "/subscriptions/04f7ec88-8e28-41ed-8537-5e17766001f5/resourceGroups/anpriceiot",
-         "name": "anpriceiot",
+         "id": "/subscriptions/SUBSCRIPTIONID/resourceGroups/test2",
+         "name": "test2",
          "location": "eastus",
          "tags": {},
          "properties": {
@@ -18,5 +18,5 @@
          }
       }
    ],
-   "nextLink": "https://management.azure.com/subscriptions/04f7ec88-8e28-41ed-8537-5e17766001f5/resourceGroups?api-version=2015-11-01&%24top=2&%24skiptoken=eyJuZXh0UGFydGl0aW9uS2V5IjoiMSE4IVJVTkJNalEtIiwibmV4dFJvd0tleSI6IjEhNjghTURSR04wVkRPRGc0UlRJNE5ERkZSRGcxTXpjMVJURTNOelkyTURBeFJqVmZRVTVRVWtsRFJWUkZVMVF0VjBWVFZGVlQifQ%3d%3d"
+   "nextLink": "https://management.azure.com/subscriptions/SUBSCRIPTIONID/resourceGroups?api-version=2015-11-01&%24top=2&%24skiptoken=eyJuZXh0UGFydGl0aW9uS2V5IjoiMSE4IVJVTkJNalEtIiwibmV4dFJvd0tleSI6IjEhNjghTURSR04wVkRPRGc0UlRJNE5ERkZSRGcxTXpjMVJURTNOelkyTURBeFJqVmZRVTVRVWtsRFJWUkZVMVF0VjBWVFZGVlQifQ%3d%3d"
 }
