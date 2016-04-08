@@ -17,7 +17,6 @@
 package org.jclouds.azurecompute.arm.internal;
 
 import java.util.Properties;
-import static org.jclouds.oauth.v2.config.OAuthProperties.AUDIENCE;
 import static org.jclouds.oauth.v2.config.OAuthProperties.CREDENTIAL_TYPE;
 import static org.jclouds.oauth.v2.config.CredentialType.CLIENT_CREDENTIALS_SECRET;
 
@@ -28,7 +27,6 @@ public class AzureLiveTestUtils {
        properties.put("oauth.identity", "foo");
        properties.put("oauth.credential", "password");
        properties.put("oauth.endpoint", "https://login.microsoftonline.com/oauth2/token");
-       properties.put(AUDIENCE, "https://login.microsoftonline.com/oauth2/token");
        properties.put(CREDENTIAL_TYPE, CLIENT_CREDENTIALS_SECRET.toString());
        return properties;
     }

@@ -32,9 +32,9 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.assertEquals;
+import org.jclouds.util.Predicates2;
 
 
 @Test(groups = "live", testName = "ResourceGroupApiLiveTest")
@@ -107,28 +107,18 @@ public class ResourceGroupApiLiveTest extends BaseAzureComputeApiLiveTest {
 
    @AfterClass(alwaysRun = true)
    public void testDelete() throws Exception {
-      URI uri =  api().delete(resourcegroup);
-      assertNotNull(uri);
-      assertTrue(uri.toString().contains("api-version"));
-      assertTrue(uri.toString().contains("operationresults"));
 
-      String[] params = uri.getQuery().split("&");
-      String apiversion = "";
-      for (String param : params)
-      {
-         String name = param.split("=")[0];
-         if (name.equals("api-version")){
-            apiversion = param.split("=")[1];
-            break;
-         }
+      URI uri =  api().delete("jcloudstest");
+      if (uri != null){
+         assertTrue(uri.toString().contains("api-version"));
+         assertTrue(uri.toString().contains("operationresults"));
+
+         boolean jobDone = Predicates2.retry(new Predicate<URI>() {
+            @Override public boolean apply(URI uri) {
+               return JobStatus.DONE == api.getJobApi().jobStatus(uri);
+            }
+         }, 60 * 2 * 1000 /* 2 minute timeout */).apply(uri);
+         assertTrue(jobDone, "delete operation did not complete in the configured timeout");
       }
-      JobStatus status = api.getJobApi().jobDone(uri, apiversion);
-      assertEquals(status, JobStatus.DONE);
-
-      uri =  api().delete("jcloudstest");
-      assertNotNull(uri);
-
-      uri =  api().delete("blahblah");
-      assertNull(uri);
    }
 }

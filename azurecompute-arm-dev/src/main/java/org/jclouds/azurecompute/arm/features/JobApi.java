@@ -18,11 +18,10 @@ package org.jclouds.azurecompute.arm.features;
 import java.io.Closeable;
 import java.net.URI;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.Path;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.GET;
 import org.jclouds.oauth.v2.filters.OAuthFilter;
+import org.jclouds.rest.annotations.EndpointParam;
 import org.jclouds.rest.annotations.RequestFilters;
 import org.jclouds.rest.annotations.ResponseParser;
 import org.jclouds.azurecompute.arm.functions.ParseJobStatus;
@@ -31,12 +30,11 @@ import org.jclouds.azurecompute.arm.functions.ParseJobStatus.JobStatus;
 /**
  * The Azure Resource Manager API checks for job status and progress.
  */
-@Path("/")
 
 @RequestFilters(OAuthFilter.class)
 @Consumes(MediaType.APPLICATION_JSON)
 public interface JobApi extends Closeable{
    @GET
    @ResponseParser(ParseJobStatus.class)
-   JobStatus jobDone(URI jobURI, @QueryParam("api-version") String apiversion);
+   JobStatus jobStatus(@EndpointParam URI jobURI);
 }

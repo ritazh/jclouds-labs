@@ -31,7 +31,6 @@ import org.jclouds.azurecompute.arm.AzureComputeProviderMetadata;
 import org.jclouds.compute.config.ComputeServiceProperties;
 import org.jclouds.providers.ProviderMetadata;
 
-
 public abstract class AbstractAzureComputeApiLiveTest extends BaseApiLiveTest<AzureComputeApi> {
 
    protected static final int RAND = new Random().nextInt(999);

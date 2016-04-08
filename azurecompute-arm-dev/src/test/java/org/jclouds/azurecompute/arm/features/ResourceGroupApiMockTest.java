@@ -25,7 +25,6 @@ import java.util.List;
 import com.google.common.collect.ImmutableMap;
 
 import org.jclouds.azurecompute.arm.domain.ResourceGroup;
-import org.jclouds.azurecompute.arm.functions.ParseJobStatus.JobStatus;
 import org.jclouds.azurecompute.arm.internal.BaseAzureComputeApiMockTest;
 import org.testng.annotations.Test;
 import static org.testng.Assert.assertTrue;
@@ -35,9 +34,9 @@ import static org.testng.Assert.assertEquals;
 @Test(groups = "unit", testName = "ResourceGroupApiMockTest", singleThreaded = true)
 public class ResourceGroupApiMockTest extends BaseAzureComputeApiMockTest {
 
-   private final String subscriptionid = "SUBSCRIPTIONID";
-   private final String requestUrl = "/subscriptions/" + subscriptionid + "/resourcegroups";
-   private final String version = "?api-version=2015-01-01";
+   final String subscriptionid = "SUBSCRIPTIONID";
+   final String requestUrl = "/subscriptions/" + subscriptionid + "/resourcegroups";
+   final String version = "?api-version=2015-01-01";
 
    public void testListResourceGroups() throws InterruptedException {
       server.enqueue(jsonResponse("/resourcegroups.json"));
@@ -134,10 +133,6 @@ public class ResourceGroupApiMockTest extends BaseAzureComputeApiMockTest {
       assertEquals(server.getRequestCount(), 1);
       assertSent(server, "DELETE", requestUrl + "/jcloudstest" + version);
       assertNotNull(uri);
-
-      server.enqueue(response200());
-      JobStatus status = api.getJobApi().jobDone(uri, uri.getQuery());
-      assertEquals(status, JobStatus.DONE);
 
       assertTrue(uri.toString().contains("api-version"));
       assertTrue(uri.toString().contains("operationresults"));
