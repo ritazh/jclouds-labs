@@ -19,6 +19,7 @@ package org.jclouds.azurecompute.arm.compute;
 import com.google.inject.Module;
 import org.jclouds.azurecompute.arm.AzureComputeProviderMetadata;
 import org.jclouds.azurecompute.arm.compute.options.AzureComputeArmTemplateOptions;
+import org.jclouds.azurecompute.arm.config.AzureComputeProperties;
 import org.jclouds.azurecompute.arm.internal.AzureLiveTestUtils;
 import org.jclouds.compute.RunNodesException;
 import org.jclouds.compute.config.ComputeServiceProperties;
@@ -44,16 +45,6 @@ import static org.jclouds.compute.predicates.NodePredicates.inGroup;
 @Test(groups = "live", testName = "AzureComputeServiceContextLiveTest")
 public class AzureComputeServiceContextLiveTest extends BaseComputeServiceContextLiveTest {
 
-   public  final String OPERATION_TIMEOUT = "jclouds.azurecompute.operation.timeout";
-
-   public  final String OPERATION_POLL_INITIAL_PERIOD = "jclouds.azurecompute..operation.poll.initial.period";
-
-   public  final String OPERATION_POLL_MAX_PERIOD = "jclouds.azurecompute.operation.poll.max.period";
-
-   public  final String TCP_RULE_FORMAT = "jclouds.azurecompute.tcp.rule.format";
-
-   public  final String TCP_RULE_REGEXP = "jclouds.azurecompute.tcp.rule.regexp";
-
    @Override
    protected Module getSshModule() {
       return new SshjSshClientModule();
@@ -64,11 +55,11 @@ public class AzureComputeServiceContextLiveTest extends BaseComputeServiceContex
 
       properties.put(ComputeServiceProperties.POLL_INITIAL_PERIOD, 1000);
       properties.put(ComputeServiceProperties.POLL_MAX_PERIOD, 10000);
-      properties.setProperty(OPERATION_TIMEOUT, "26000000");
-      properties.setProperty(OPERATION_POLL_INITIAL_PERIOD, "5");
-      properties.setProperty(OPERATION_POLL_MAX_PERIOD, "15");
-      properties.setProperty(TCP_RULE_FORMAT, "tcp_%s-%s");
-      properties.setProperty(TCP_RULE_REGEXP, "tcp_\\d{1,5}-\\d{1,5}");
+      properties.setProperty(AzureComputeProperties.OPERATION_TIMEOUT, "26000000");
+      properties.setProperty(AzureComputeProperties.OPERATION_POLL_INITIAL_PERIOD, "5");
+      properties.setProperty(AzureComputeProperties.OPERATION_POLL_MAX_PERIOD, "15");
+      properties.setProperty(AzureComputeProperties.TCP_RULE_FORMAT, "tcp_%s-%s");
+      properties.setProperty(AzureComputeProperties.TCP_RULE_REGEXP, "tcp_\\d{1,5}-\\d{1,5}");
       long scriptTimeout = TimeUnit.MILLISECONDS.convert(20, TimeUnit.MINUTES);
       properties.setProperty(TIMEOUT_SCRIPT_COMPLETE, scriptTimeout + "");
       properties.setProperty(TIMEOUT_NODE_RUNNING, scriptTimeout + "");
@@ -108,7 +99,7 @@ public class AzureComputeServiceContextLiveTest extends BaseComputeServiceContex
 
    @Test(dependsOnMethods = "testLinuxNode")
    public void testWindowsNode() throws RunNodesException {
-      final String groupName = String.format("win%s", System.getProperty("user.name"));
+      final String groupName = String.format("win%s", System.getProperty("user.name").substring(0, 3));
       final TemplateBuilder templateBuilder = view.getComputeService().templateBuilder();
       templateBuilder.imageId("WindowsServer2016-Technical-Preview-with-Containers");
       templateBuilder.hardwareId("Standard_A0");
