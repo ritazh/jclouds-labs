@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.ImmutableMap;
+import org.jclouds.domain.JsonBall;
 import org.jclouds.javax.annotation.Nullable;
 
 import com.google.auto.value.AutoValue;
@@ -103,17 +104,17 @@ public abstract class Deployment {
       public abstract List<String> apiVersions();
 
       @Nullable
-      public abstract Map<String, String> properties();
+      public abstract Map<String, JsonBall> properties();
 
       @SerializedNames({"resourceType", "locations", "apiVersions", "properties"})
       public static ProviderResourceType create(final String resourceType,
                                                 final List<String> locations,
                                                 final List<String> apiVersions,
-                                                @Nullable final Map<String, String> properties) {
+                                                @Nullable final Map<String, JsonBall> properties) {
          return new AutoValue_Deployment_ProviderResourceType(resourceType,
                  locations == null ? null : copyOf(locations),
                  apiVersions == null ? null : copyOf(apiVersions),
-                 properties == null ? ImmutableMap.<String, String>builder().build() : ImmutableMap.copyOf(properties));
+                 properties == null ? ImmutableMap.<String, JsonBall>builder().build() : ImmutableMap.copyOf(properties));
       }
    }
 
@@ -205,7 +206,7 @@ public abstract class Deployment {
       public abstract String timestamp();
 
       @Nullable
-      public abstract Map<String, String> outputs();
+      public abstract Map<String, JsonBall> outputs();
 
       @Nullable
       public abstract List<Provider> providers();
@@ -213,18 +214,14 @@ public abstract class Deployment {
       @Nullable
       public abstract List<Dependency> dependencies();
 
-      // Included for completeness, but template is actually a complex type that
-      // would be difficult to model.
       @Nullable
-      public abstract String template();
+      public abstract Map<String, JsonBall> template();
 
       @Nullable
       public abstract ContentLink templateLink();
 
-      // Included for completeness, but parameters is actually a complex type that
-      // would be difficult to model.
       @Nullable
-      public abstract String parameters();
+      public abstract Map<String, JsonBall> parameters();
 
       @Nullable
       public abstract ContentLink parametersLink();
@@ -238,17 +235,16 @@ public abstract class Deployment {
       @Nullable
       public abstract List<Map<String, String>> outputResources();
 
-      // TODO - leaving out "template" and "parameters", those objects are quite dynamic and hard to map, placed XXX in name to have them skipped
-      @SerializedNames({"provisioningState", "correlationId", "timestamp", "outputs", "providers", "dependencies", "XXX-template", "templateLink", "XXX-parameters", "parametersLink", "mode", "duration", "outputResources"})
+      @SerializedNames({"provisioningState", "correlationId", "timestamp", "outputs", "providers", "dependencies", "template", "templateLink", "parameters", "parametersLink", "mode", "duration", "outputResources"})
       public static DeploymentProperties create(final String provisioningState,
                                                 final String correlationId,
                                                 final String timestamp,
-                                                @Nullable final Map<String, String> outputs,
+                                                @Nullable final Map<String, JsonBall> outputs,
                                                 final List<Provider> providers,
                                                 final List<Dependency> dependencies,
-                                                final String template,
+                                                final Map<String, JsonBall> template,
                                                 final ContentLink templateLink,
-                                                final String parameters,
+                                                final Map<String, JsonBall> parameters,
                                                 final ContentLink parametersLink,
                                                 final String mode,
                                                 final String duration,
@@ -256,12 +252,12 @@ public abstract class Deployment {
          return new AutoValue_Deployment_DeploymentProperties(provisioningState,
                                                               correlationId,
                                                               timestamp,
-                                                              outputs == null ? ImmutableMap.<String, String>builder().build() : ImmutableMap.copyOf(outputs),
+                                                              outputs == null ? ImmutableMap.<String, JsonBall>builder().build() : ImmutableMap.copyOf(outputs),
                                                               providers == null ? null : copyOf(providers),
                                                               dependencies == null ? null : copyOf(dependencies),
-                                                              template,
+                                                              template == null ? ImmutableMap.<String, JsonBall>builder().build() : ImmutableMap.copyOf(template),
                                                               templateLink,
-                                                              parameters,
+                                                              parameters == null ? ImmutableMap.<String, JsonBall>builder().build() : ImmutableMap.copyOf(parameters),
                                                               parametersLink,
                                                               mode,
                                                               duration,
