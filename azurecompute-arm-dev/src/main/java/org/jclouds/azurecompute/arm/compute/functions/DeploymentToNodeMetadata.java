@@ -62,6 +62,17 @@ public class DeploymentToNodeMetadata implements Function<Deployment, NodeMetada
                    put(Deployment.ProvisioningState.UNRECOGNIZED, NodeMetadata.Status.UNRECOGNIZED).
                    build();
 
+   public static Deployment.ProvisioningState provisioningStateFromString(final String text) {
+      if (text != null) {
+         for (Deployment.ProvisioningState status : Deployment.ProvisioningState.values()) {
+            if (text.equalsIgnoreCase(status.name())) {
+               return status;
+            }
+         }
+      }
+      return Deployment.ProvisioningState.UNRECOGNIZED;
+   }
+
    private final AzureComputeApi api;
 
    private final Supplier<Set<? extends Location>> locations;
@@ -95,6 +106,8 @@ public class DeploymentToNodeMetadata implements Function<Deployment, NodeMetada
       builder.id(from.name());
       builder.providerId(from.name());
       builder.name(from.name());
+      NodeMetadata.Status status = STATUS_TO_NODESTATUS.get(provisioningStateFromString(from.properties().provisioningState()));
+      builder.status(status);
       //builder.hostname(getHostname(from));
       //builder.group(nodeNamingConvention.groupInUniqueNameOrNull(getHostname(from)));
 

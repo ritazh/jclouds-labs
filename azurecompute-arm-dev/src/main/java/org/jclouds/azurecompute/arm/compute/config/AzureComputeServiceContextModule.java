@@ -30,6 +30,7 @@ import org.jclouds.azurecompute.arm.compute.functions.ImageReferenceToImage;
 import org.jclouds.azurecompute.arm.compute.functions.DeploymentToNodeMetadata;
 import org.jclouds.azurecompute.arm.compute.functions.VMSizeToHardware;
 import org.jclouds.azurecompute.arm.compute.functions.LocationToLocation;
+import org.jclouds.azurecompute.arm.compute.options.AzureComputeArmTemplateOptions;
 import org.jclouds.azurecompute.arm.domain.VMSize;
 import org.jclouds.azurecompute.arm.domain.ImageReference;
 import org.jclouds.azurecompute.arm.domain.Location;
@@ -42,6 +43,7 @@ import org.jclouds.compute.domain.NodeMetadata;
 import com.google.common.base.Function;
 import com.google.inject.Inject;
 import com.google.inject.TypeLiteral;
+import org.jclouds.compute.options.TemplateOptions;
 
 public class AzureComputeServiceContextModule
         extends ComputeServiceAdapterContextModule<Deployment, VMSize, ImageReference, Location> {
@@ -63,7 +65,7 @@ public class AzureComputeServiceContextModule
       bind(new TypeLiteral<Function<Location, org.jclouds.domain.Location>>() {
       }).to(LocationToLocation.class);
 
-      //bind(TemplateOptions.class).to(AzureComputeTemplateOptions.class);
+      bind(TemplateOptions.class).to(AzureComputeArmTemplateOptions.class);
 
       //bind(CreateNodesInGroupThenAddToSet.class).to(GetOrCreateStorageServiceAndVirtualNetworkThenCreateNodes.class);
 

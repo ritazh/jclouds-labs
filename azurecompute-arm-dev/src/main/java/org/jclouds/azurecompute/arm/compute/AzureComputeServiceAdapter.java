@@ -15,11 +15,12 @@
  * limitations under the License.
  */
 package org.jclouds.azurecompute.arm.compute;
+import static com.google.common.base.Predicates.notNull;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.jclouds.util.Predicates2.retry;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -28,18 +29,20 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import com.google.common.base.Function;
+import com.google.common.collect.FluentIterable;
 import org.jclouds.azurecompute.arm.AzureComputeApi;
 import org.jclouds.azurecompute.arm.compute.config.AzureComputeServiceContextModule.AzureComputeConstants;
+
+import org.jclouds.azurecompute.arm.compute.options.AzureComputeArmTemplateOptions;
 import org.jclouds.azurecompute.arm.domain.Deployment;
-import org.jclouds.azurecompute.arm.domain.VMSize;
 import org.jclouds.azurecompute.arm.domain.ImageReference;
 import org.jclouds.azurecompute.arm.domain.Location;
-
-import org.jclouds.azurecompute.arm.domain.Publisher;
 import org.jclouds.azurecompute.arm.domain.Offer;
+import org.jclouds.azurecompute.arm.domain.Publisher;
 import org.jclouds.azurecompute.arm.domain.SKU;
-import org.jclouds.azurecompute.arm.domain.Version;
-
+import org.jclouds.azurecompute.arm.domain.VMSize;
+import org.jclouds.azurecompute.arm.domain.VirtualMachine;
 import org.jclouds.azurecompute.arm.features.OSImageApi;
 import org.jclouds.compute.ComputeServiceAdapter;
 import org.jclouds.compute.domain.Template;
@@ -59,9 +62,11 @@ import com.google.common.collect.Sets;
 @Singleton
 public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deployment, VMSize, ImageReference, Location> {
 
+   private static int runningNumber = 1;
+
    private static final String DEFAULT_LOGIN_USER = "jclouds";
 
-   private static final String DEFAULT_LOGIN_PASSWORD = "password";
+   private static final String DEFAULT_LOGIN_PASSWORD = "p@sswOrd1!";
 
    @Resource
    @Named(ComputeServiceConstants.COMPUTE_LOGGER)
@@ -78,19 +83,235 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
       this.azureComputeConstants = azureComputeConstants;
    }
 
+   private String getPutBody(String template, String mode, String parameters) {
+      String body = "{ " +
+              "\"properties\" : " +
+              "  { " +
+              "    \"template\" : " + template + ", " +
+              "    \"mode\" : \"" + mode + "\", " +
+              "    \"parameters\" : " + parameters + " " +
+              "  } " +
+              "}";
+      return body;
+   }
+
+   private String getTemplate(String name, Template template) {
+      //String osFamily = template.getImage().getOperatingSystem().getFamily().name();
+      String imageProvider = template.getImage().getProviderId();
+      String imageOffer = template.getImage().getName();
+      String imageSku = template.getImage().getDescription();
+      String vmSize = template.getHardware().getId();
+      String templateStr = "{\n" +
+            "  \"$schema\": \"https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#\",\n" +
+            "  \"contentVersion\": \"1.0.0.0\",\n" +
+            "  \"parameters\": {\n" +
+            "    \"adminUsername\": {\n" +
+            "      \"type\": \"string\",\n" +
+            "      \"metadata\": {\n" +
+            "        \"description\": \"User name for the Virtual Machine.\"\n" +
+            "      }\n" +
+            "    },\n" +
+            "    \"adminPassword\": {\n" +
+            "      \"type\": \"securestring\",\n" +
+            "      \"metadata\": {\n" +
+            "        \"description\": \"Password for the Virtual Machine.\"\n" +
+            "      }\n" +
+            "    },\n" +
+            "    \"dnsLabelPrefix\": {\n" +
+            "      \"type\": \"string\",\n" +
+            "      \"metadata\": {\n" +
+            "        \"description\": \"Unique DNS Name for the Public IP used to access the Virtual Machine.\"\n" +
+            "      }\n" +
+            "    },\n" +
+            "    \"vmLocation\": {\n" +
+            "      \"type\": \"string\",\n" +
+            "      \"metadata\": {\n" +
+            "        \"description\": \"Location id.\"\n" +
+            "      }\n" +
+            "    },\n" +
+            "    \"OSVersion\": {\n" +
+            "      \"type\": \"string\",\n" +
+            "      \"metadata\": {\n" +
+            "        \"description\": \"The OS version for the VM. \"\n" +
+            "      }\n" +
+            "    }\n" +
+            "  },\n" +
+            "  \"variables\": {\n" +
+            "    \"storageAccountName\": \"" + name.replaceAll("[^A-Za-z0-9 ]", "") + "savm\",\n" +
+            "    \"location\": \"[resourceGroup().location]\",\n" +
+            "    \"dataDisk1VhdName\": \"datadisk1\",\n" +
+            "    \"imagePublisher\": \"" + imageProvider +  "\",\n" +
+            "    \"imageOffer\": \"" + imageOffer + "\",\n" +
+            "    \"OSDiskName\": \"osdiskforvmsimple\",\n" +
+            "    \"nicName\": \"myVMNic" + name + "\",\n" +
+            "    \"addressPrefix\": \"10.0.0.0/16\",\n" +
+            "    \"subnetName\": \"Subnet" + name + "\",\n" +
+            "    \"subnetPrefix\": \"10.0.0.0/24\",\n" +
+            "    \"storageAccountType\": \"Standard_LRS\",\n" +
+            "    \"publicIPAddressName\": \"PublicIP" + name + "\",\n" +
+            "    \"publicIPAddressType\": \"Dynamic\",\n" +
+            "    \"vmStorageAccountContainerName\": \"vhds\",\n" +
+            "    \"vmName\": \"" + name + "\",\n" +
+            "    \"vmSize\": \"" + vmSize + "\",\n" +
+            "    \"virtualNetworkName\": \"VNET" + name + "\",\n" +
+            "    \"vnetID\": \"[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]\",\n" +
+            "    \"subnetRef\": \"[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]\",\n" +
+            "    \"apiVersion\": \"2015-06-15\"\n" +
+            "  },\n" +
+            "  \"resources\": [\n" +
+            "    {\n" +
+            "      \"type\": \"Microsoft.Storage/storageAccounts\",\n" +
+            "      \"name\": \"[variables('storageAccountName')]\",\n" +
+            "      \"apiVersion\": \"[variables('apiVersion')]\",\n" +
+            "      \"location\": \"[parameters('vmLocation')]\",\n" +
+            "      \"properties\": {\n" +
+            "        \"accountType\": \"[variables('storageAccountType')]\"\n" +
+            "      }\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"apiVersion\": \"[variables('apiVersion')]\",\n" +
+            "      \"type\": \"Microsoft.Network/publicIPAddresses\",\n" +
+            "      \"name\": \"[variables('publicIPAddressName')]\",\n" +
+            "      \"location\": \"[parameters('vmLocation')]\",\n" +
+            "      \"properties\": {\n" +
+            "        \"publicIPAllocationMethod\": \"[variables('publicIPAddressType')]\",\n" +
+            "        \"dnsSettings\": {\n" +
+            "          \"domainNameLabel\": \"[parameters('dnsLabelPrefix')]\"\n" +
+            "        }\n" +
+            "      }\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"apiVersion\": \"[variables('apiVersion')]\",\n" +
+            "      \"type\": \"Microsoft.Network/virtualNetworks\",\n" +
+            "      \"name\": \"[variables('virtualNetworkName')]\",\n" +
+            "      \"location\": \"[parameters('vmLocation')]\",\n" +
+            "      \"properties\": {\n" +
+            "        \"addressSpace\": {\n" +
+            "          \"addressPrefixes\": [\n" +
+            "            \"[variables('addressPrefix')]\"\n" +
+            "          ]\n" +
+            "        },\n" +
+            "        \"subnets\": [\n" +
+            "          {\n" +
+            "            \"name\": \"[variables('subnetName')]\",\n" +
+            "            \"properties\": {\n" +
+            "              \"addressPrefix\": \"[variables('subnetPrefix')]\"\n" +
+            "            }\n" +
+            "          }\n" +
+            "        ]\n" +
+            "      }\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"apiVersion\": \"[variables('apiVersion')]\",\n" +
+            "      \"type\": \"Microsoft.Network/networkInterfaces\",\n" +
+            "      \"name\": \"[variables('nicName')]\",\n" +
+            "      \"location\": \"[parameters('vmLocation')]\",\n" +
+            "      \"dependsOn\": [\n" +
+            "        \"[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]\",\n" +
+            "        \"[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]\"\n" +
+            "      ],\n" +
+            "      \"properties\": {\n" +
+            "        \"ipConfigurations\": [\n" +
+            "          {\n" +
+            "            \"name\": \"ipconfig1\",\n" +
+            "            \"properties\": {\n" +
+            "              \"privateIPAllocationMethod\": \"Dynamic\",\n" +
+            "              \"publicIPAddress\": {\n" +
+            "                \"id\": \"[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]\"\n" +
+            "              },\n" +
+            "              \"subnet\": {\n" +
+            "                \"id\": \"[variables('subnetRef')]\"\n" +
+            "              }\n" +
+            "            }\n" +
+            "          }\n" +
+            "        ]\n" +
+            "      }\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"apiVersion\": \"[variables('apiVersion')]\",\n" +
+            "      \"type\": \"Microsoft.Compute/virtualMachines\",\n" +
+            "      \"name\": \"[variables('vmName')]\",\n" +
+            "      \"location\": \"[parameters('vmLocation')]\",\n" +
+            "      \"dependsOn\": [\n" +
+            "        \"[concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]\",\n" +
+            "        \"[concat('Microsoft.Network/networkInterfaces/', variables('nicName'))]\"\n" +
+            "      ],\n" +
+            "      \"properties\": {\n" +
+            "        \"hardwareProfile\": {\n" +
+            "          \"vmSize\": \"[variables('vmSize')]\"\n" +
+            "        },\n" +
+            "        \"osProfile\": {\n" +
+            "          \"computerName\": \"[variables('vmName')]\",\n" +
+            "          \"adminUsername\": \"[parameters('adminUsername')]\",\n" +
+            "          \"adminPassword\": \"[parameters('adminPassword')]\"\n" +
+            "        },\n" +
+            "        \"storageProfile\": {\n" +
+            "          \"imageReference\": {\n" +
+            "            \"publisher\": \"[variables('imagePublisher')]\",\n" +
+            "            \"offer\": \"[variables('imageOffer')]\",\n" +
+            "            \"sku\": \"[parameters('OSVersion')]\",\n" +
+            "            \"version\": \"latest\"\n" +
+            "          },\n" +
+            "          \"osDisk\": {\n" +
+            "            \"name\": \"osdisk\",\n" +
+            "            \"vhd\": {\n" +
+            "              \"uri\": \"[concat('http://',variables('storageAccountName'),'.blob.core.windows.net/',variables('vmStorageAccountContainerName'),'/',variables('OSDiskName'),'.vhd')]\"\n" +
+            "            },\n" +
+            "            \"caching\": \"ReadWrite\",\n" +
+            "            \"createOption\": \"FromImage\"\n" +
+            "          },\n" +
+            "          \"dataDisks\": [\n" +
+            "            {\n" +
+            "              \"name\": \"datadisk1\",\n" +
+            "              \"diskSizeGB\": \"100\",\n" +
+            "              \"lun\": 0,\n" +
+            "              \"vhd\": {\n" +
+            "                \"uri\": \"[concat('http://',variables('storageAccountName'),'.blob.core.windows.net/',variables('vmStorageAccountContainerName'),'/',variables('dataDisk1VhdName'),'.vhd')]\"\n" +
+            "              },\n" +
+            "              \"createOption\": \"Empty\"\n" +
+            "            }\n" +
+            "          ]\n" +
+            "        },\n" +
+            "        \"networkProfile\": {\n" +
+            "          \"networkInterfaces\": [\n" +
+            "            {\n" +
+            "              \"id\": \"[resourceId('Microsoft.Network/networkInterfaces',variables('nicName'))]\"\n" +
+            "            }\n" +
+            "          ]\n" +
+            "        },\n" +
+            "        \"diagnosticsProfile\": {\n" +
+            "          \"bootDiagnostics\": {\n" +
+            "             \"enabled\": \"true\",\n" +
+            "             \"storageUri\": \"[concat('http://',variables('storageAccountName'),'.blob.core.windows.net')]\"\n" +
+            "          }\n" +
+            "        }\n" +
+            "      }\n" +
+            "    }\n" +
+            "  ],\n" +
+            "  \"outputs\": {\n" +
+            "     \"hostname\": {\n" +
+            "         \"type\": \"string\",\n" +
+            "         \"value\": \"[concat(parameters('dnsLabelPrefix'), '.', parameters('vmLocation'), '.cloudapp.azure.com')]\"\n" +
+            "     },\n" +
+            "     \"sshCommand\": {\n" +
+            "         \"type\": \"string\",\n" +
+            "         \"value\": \"[concat('ssh ', parameters('adminUsername'), '@', parameters('dnsLabelPrefix'), '.', parameters('vmLocation'), '.cloudapp.azure.com')]\"\n" +
+            "     } \n" +
+            "  }\n" +
+            "}";
+      return templateStr;
+   }
+
    @Override
    public NodeAndInitialCredentials<Deployment> createNodeWithGroupEncodedIntoName(
            final String group, final String name, final Template template) {
-
       // azure-specific options
-//      final AzureComputeTemplateOptions templateOptions = template.getOptions().as(AzureComputeTemplateOptions.class);
-//
-//      final String loginUser = firstNonNull(templateOptions.getLoginUser(), DEFAULT_LOGIN_USER);
-//      final String loginPassword = firstNonNull(templateOptions.getLoginPassword(), DEFAULT_LOGIN_PASSWORD);
-//      final String location = template.getLocation().getId();
+      final AzureComputeArmTemplateOptions options = template.getOptions().as(AzureComputeArmTemplateOptions.class);
 
-      final String loginUser = DEFAULT_LOGIN_USER;
-      final String loginPassword = DEFAULT_LOGIN_PASSWORD;
+      final String loginUser = autovalue.shaded.com.google.common.common.base.MoreObjects.firstNonNull(options.getLoginUser(), DEFAULT_LOGIN_USER);
+      final String loginPassword = autovalue.shaded.com.google.common.common.base.MoreObjects.firstNonNull(options.getLoginPassword(), DEFAULT_LOGIN_PASSWORD);
+      final String location = template.getLocation().getId();
+      final String osVersion = template.getImage().getDescription();
 
       logger.info("Deployment created with name: %s", name);
 
@@ -98,7 +319,31 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
       if (!retry(new Predicate<String>() {
          @Override
          public boolean apply(final String name) {
-            final Deployment deployment = null;
+            Long now = System.currentTimeMillis() + runningNumber;
+            runningNumber++;
+            String parameters = "{" +
+                    "    \"adminUsername\": {\n" +
+                    "      \"value\": \"" + loginUser + "\"\n" +
+                    "    },\n" +
+                    "    \"adminPassword\": {\n" +
+                    "      \"value\": \"" + loginPassword + "\"\n" +
+                    "    },\n" +
+                    "    \"dnsLabelPrefix\": {\n" +
+                    "      \"value\": \"" + name.replaceAll("[^A-Za-z0-9 ]", "") + "\"\n" +
+                    "    },\n" +
+                    "    \"vmLocation\": {\n" +
+                    "      \"value\": \"" + location + "\"\n" +
+                    "    },\n" +
+                    "    \"OSVersion\": {\n" +
+                    "      \"value\": \"" + osVersion + "\"\n" +
+                    "    }\n}";
+            String properties = getPutBody(getTemplate(name, template), "Incremental", parameters);
+            HashMap<String, String> tags = new HashMap<String, String>();
+            tags.put("tagname1", "tagvalue1");
+
+            String resourceGroup = api.getResourceGroupApi().create(getGroupId(), "westus", tags).name();
+            Deployment deployment = api.getDeploymentApi(getGroupId()).createDeployment(name, properties);
+
             if (deployment != null) {
                deployments.add(deployment);
             }
@@ -132,52 +377,35 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
 
       Iterable<Publisher> list = osImageApi.listPublishers();
       for (Publisher publisher : list) {
-         Iterable<Offer> offerList = osImageApi.listOffers(publisher.name());
-         for (Offer offer : offerList) {
-            Iterable<SKU> skuList = osImageApi.listSKUs(publisher.name(), offer.name());
-            for (SKU sku : skuList) {
-               Iterable<Version> versions = osImageApi.listVersions(publisher.name(), offer.name(), sku.name());
-               for (Version version : versions) {
-                  osImages.add(ImageReference.create(publisher.name(), offer.name(), sku.name(), version.name()));
+         if (publisher.name().contains("Microsoft.WindowsAzure.Compute")
+               || publisher.name().contains("MicrosoftWindowsServer")
+               || publisher.name().contains("Canonical")) {
+            Iterable<Offer> offerList = osImageApi.listOffers(publisher.name());
+            for (Offer offer : offerList) {
+               Iterable<SKU> skuList = osImageApi.listSKUs(publisher.name(), offer.name());
+               for (SKU sku : skuList) {
+                  osImages.add(ImageReference.create(publisher.name(), offer.name(), sku.name(), null));
+//                  Iterable<Version> versions = osImageApi.listVersions(publisher.name(), offer.name(), sku.name());
+//                  for (Version version : versions) {
+//                     osImages.add(ImageReference.create(publisher.name(), offer.name(), sku.name(), version.name()));
+//                  }
                }
             }
          }
       }
+
       return osImages;
    }
 
    @Override
    public ImageReference getImage(final String id) {
-      ImageReference imageReference = null;
-      OSImageApi osImageApi = api.getOSImageApi(getLocation());
-
-      Iterable<Publisher> list = osImageApi.listPublishers();
-      for (Publisher publisher : list) {
-         if (id.contains(publisher.name())) {
-            Iterable<Offer> offerList = osImageApi.listOffers(publisher.name());
-            for (Offer offer : offerList) {
-               if (id.contains(offer.name())) {
-                  Iterable<SKU> skuList = osImageApi.listSKUs(publisher.name(), offer.name());
-                  for (SKU sku : skuList) {
-                     if (id.contains(sku.name())) {
-                        Iterable<Version> versions = osImageApi.listVersions(publisher.name(), offer.name(), sku.name());
-                        for (Version version : versions) {
-                           if (id.contains(version.name())) {
-                              imageReference = ImageReference.create(publisher.name(), offer.name(), sku.name(), version.name());
-                              break;
-                           }
-                        }
-                     }
-                  }
-               }
-            }
+      Iterable<ImageReference> images = listImages();
+      for (ImageReference image : images) {
+         if (id.contains(image.offer()) && id.contains(image.sku())) {
+            return image;
          }
       }
-      return imageReference;
-   }
-
-   private String getSubscriptionId() {
-      return System.getProperty("azurecompute-arm.subscriptionid");
+      return null;
    }
 
    private String getLocation() {
@@ -191,7 +419,9 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
 
    @Override
    public Deployment getNode(final String id) {
-      return null;
+      Deployment deployment = api.getDeploymentApi(getGroupId()).getDeployment(id);
+
+      return deployment;
    }
 
    public Deployment internalDestroyNode(final String nodeId) {
@@ -215,6 +445,7 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
 
    @Override
    public void resumeNode(final String id) {
+      getNode(id);
    }
 
    @Override
@@ -223,8 +454,16 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
 
    @Override
    public Iterable<Deployment> listNodes() {
-      List<Deployment> list = new ArrayList<Deployment>(1);
-      return list;
+
+      return FluentIterable.from(api.getVirtualMachineApi(getGroupId()).list()).
+              transform(new Function<VirtualMachine, Deployment>() {
+                 @Override
+                 public Deployment apply(final VirtualMachine vm) {
+                    return api.getDeploymentApi(getGroupId()).getDeployment(vm.name());
+                 }
+              }).
+              filter(notNull()).
+              toSet();
    }
 
    @Override
@@ -235,6 +474,13 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
             return Iterables.contains(ids, input.name());
          }
       });
+   }
+
+   private String getGroupId() {
+      String group =  System.getProperty("test.azurecompute-arm.groupname");
+      if (group == null)
+         group = "jCloudsGroup1";
+      return group;
    }
 
 }
