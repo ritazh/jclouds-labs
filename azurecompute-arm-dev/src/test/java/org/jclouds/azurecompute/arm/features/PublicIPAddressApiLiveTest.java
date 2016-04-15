@@ -18,6 +18,7 @@ package org.jclouds.azurecompute.arm.features;
 
 import com.google.common.collect.ImmutableMap;
 import org.jclouds.azurecompute.arm.domain.PublicIPAddress;
+import org.jclouds.azurecompute.arm.domain.PublicIPAddressProperties;
 import org.jclouds.azurecompute.arm.internal.BaseAzureComputeApiLiveTest;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -58,8 +59,8 @@ public class PublicIPAddressApiLiveTest extends BaseAzureComputeApiLiveTest {
 
         final Map<String, String> tags = ImmutableMap.of("testkey", "testvalue");
 
-        PublicIPAddress.PublicIPProperties properties =
-                PublicIPAddress.PublicIPProperties.create(null, null, "Static", 4, null, null);
+        PublicIPAddressProperties properties =
+                PublicIPAddressProperties.create(null, null, "Static", 4, null, null);
 
         PublicIPAddress ip = ipApi.createOrUpdatePublicIPAddress(publicIpAddressName, LOCATION, tags, properties);
 
@@ -72,7 +73,7 @@ public class PublicIPAddressApiLiveTest extends BaseAzureComputeApiLiveTest {
         assertEquals(ip.properties().provisioningState(), "Updating");
         assertNull(ip.properties().ipAddress()); // as we don't get IP address until Succeeded state
         assertEquals(ip.properties().publicIPAllocationMethod(), "Static");
-        assertEquals(ip.properties().idleTimeoutInMinutes(), 4);
+        assertEquals(ip.properties().idleTimeoutInMinutes().intValue(), 4);
     }
 
     @Test(groups = "live", dependsOnMethods = "createPublicIPAddress")
@@ -101,7 +102,7 @@ public class PublicIPAddressApiLiveTest extends BaseAzureComputeApiLiveTest {
         assertEquals(ip.properties().provisioningState(), "Succeeded");
         assertNotNull(ip.properties().ipAddress()); // by this time we should have IP address already
         assertEquals(ip.properties().publicIPAllocationMethod(), "Static");
-        assertEquals(ip.properties().idleTimeoutInMinutes(), 4);
+        assertEquals(ip.properties().idleTimeoutInMinutes().intValue(), 4);
     }
 
     @Test(groups = "live", dependsOnMethods = "getPublicIPAddress")

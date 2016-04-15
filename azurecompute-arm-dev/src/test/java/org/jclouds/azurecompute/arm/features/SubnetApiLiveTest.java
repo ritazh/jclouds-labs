@@ -18,6 +18,7 @@ package org.jclouds.azurecompute.arm.features;
 
 import org.jclouds.azurecompute.arm.domain.Subnet;
 
+import org.jclouds.azurecompute.arm.domain.SubnetProperties;
 import org.jclouds.azurecompute.arm.domain.VirtualNetwork;
 import org.jclouds.azurecompute.arm.internal.BaseAzureComputeApiLiveTest;
 
@@ -68,7 +69,7 @@ public class SubnetApiLiveTest extends BaseAzureComputeApiLiveTest {
 
         //Create properties object
         //addressPrefix must match Virtual network address space!
-        Subnet.SubnetProperties properties = Subnet.SubnetProperties.create(null, DEFAULT_SUBNET_ADDRESS_SPACE, null);
+        SubnetProperties properties = SubnetProperties.create(null, DEFAULT_SUBNET_ADDRESS_SPACE, null);
 
         Subnet subnet = subnetApi.createOrUpdateSubnet(DEFAULT_SUBNET_NAME, properties);
 

@@ -18,6 +18,7 @@ package org.jclouds.azurecompute.arm.features;
 
 import com.squareup.okhttp.mockwebserver.RecordedRequest;
 import org.jclouds.azurecompute.arm.domain.Subnet;
+import org.jclouds.azurecompute.arm.domain.SubnetProperties;
 import org.jclouds.azurecompute.arm.internal.BaseAzureComputeApiMockTest;
 import org.testng.annotations.Test;
 import java.util.List;
@@ -39,7 +40,7 @@ public class SubnetApiMockTest extends BaseAzureComputeApiMockTest {
 
         final SubnetApi subnetApi = api.getSubnetApi(resourcegroup, virtualNetwork);
 
-        Subnet.SubnetProperties properties = Subnet.SubnetProperties.create(null, "10.2.0.0/24", null);
+        SubnetProperties properties = SubnetProperties.create(null, "10.2.0.0/24", null);
 
         Subnet subnet = subnetApi.createOrUpdateSubnet(subnetName, properties);
 

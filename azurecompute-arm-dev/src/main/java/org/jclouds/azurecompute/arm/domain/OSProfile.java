@@ -196,8 +196,28 @@ public abstract class OSProfile {
    public static OSProfile create(final String computerName, final String adminUsername, final String adminPassword,
                                   final String customData, final LinuxConfiguration linuxConfiguration,
                                   final WindowsConfiguration windowsConfiguration) {
+      return builder()
+              .computerName(computerName)
+              .adminUsername(adminUsername)
+              .adminPassword(adminPassword)
+              .customData(customData)
+              .linuxConfiguration(linuxConfiguration)
+              .windowsConfiguration(windowsConfiguration)
+              .build();
+   }
 
-      return new AutoValue_OSProfile(computerName, adminUsername, adminPassword, customData,
-              linuxConfiguration, windowsConfiguration);
+   public static Builder builder() {
+      return new AutoValue_OSProfile.Builder();
+   }
+
+   @AutoValue.Builder
+   public abstract static class Builder {
+      public abstract Builder computerName(String computerName);
+      public abstract Builder adminUsername(String adminUsername);
+      public abstract Builder adminPassword(String adminPassword);
+      public abstract Builder customData(String customData);
+      public abstract Builder linuxConfiguration(LinuxConfiguration linuxConfiguration);
+      public abstract Builder windowsConfiguration(WindowsConfiguration windowsConfiguration);
+      public abstract OSProfile build();
    }
 }

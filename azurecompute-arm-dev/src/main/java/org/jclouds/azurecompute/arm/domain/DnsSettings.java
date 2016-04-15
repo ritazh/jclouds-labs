@@ -16,30 +16,39 @@
  */
 package org.jclouds.azurecompute.arm.domain;
 
-import org.jclouds.javax.annotation.Nullable;
 import com.google.auto.value.AutoValue;
+import org.jclouds.javax.annotation.Nullable;
 import org.jclouds.json.SerializedNames;
 
 @AutoValue
-public abstract class Subnet {
+public abstract class DnsSettings{
+
+    public abstract String  domainNameLabel();
 
     @Nullable
-    public abstract String name();
+    public abstract String fqdn();
 
     @Nullable
-    public abstract String id();
+    public abstract String reverseFqdn();
 
-    @Nullable
-    public abstract String etag();
+    @SerializedNames({"domainNameLabel", "fqdn", "reverseFqdn"})
+    public static DnsSettings create(final String domainNameLabel, final String fqdn, final String reverseFqdn) {
+        return builder()
+                .domainNameLabel(domainNameLabel)
+                .fqdn(fqdn)
+                .reverseFqdn(reverseFqdn)
+                .build();
+    }
 
-    @Nullable
-    public abstract SubnetProperties properties();
+    public static Builder builder() {
+        return new AutoValue_DnsSettings.Builder();
+    }
 
-    @SerializedNames({"name", "id", "etag", "properties"})
-    public static Subnet create(final String name,
-                                final String id,
-                                final String etag,
-                                final SubnetProperties properties) {
-        return new AutoValue_Subnet(name, id, etag, properties);
+    @AutoValue.Builder
+    public abstract static class Builder {
+        public abstract Builder domainNameLabel(String domainNameLabel);
+        public abstract Builder fqdn(String fqdn);
+        public abstract Builder reverseFqdn(String reverseFqdn);
+        public abstract DnsSettings build();
     }
 }

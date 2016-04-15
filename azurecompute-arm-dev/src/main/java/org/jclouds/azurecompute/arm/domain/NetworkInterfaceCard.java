@@ -22,34 +22,9 @@ import org.jclouds.javax.annotation.Nullable;
 import org.jclouds.json.SerializedNames;
 
 import java.util.Map;
-import java.util.List;
-import static com.google.common.collect.ImmutableList.copyOf;
 
 @AutoValue
 public abstract class NetworkInterfaceCard {
-
-
-    @AutoValue
-    public abstract static class NetworkInterfaceCardProperties{
-
-        @Nullable
-        public abstract String provisioningState();
-
-        @Nullable
-        public abstract String resourceGuid();
-
-        @Nullable
-        public abstract Boolean enableIPForwarding();
-
-        @Nullable
-        public abstract List<IpConfiguration> ipConfigurations();
-
-        @SerializedNames({"provisioningState", "resourceGuid", "enableIPForwarding", "ipConfigurations"/*, "dnsSettings"*/})
-        public static NetworkInterfaceCardProperties create(final String provisioningState, final String resourceGuid, final Boolean enableIPForwarding, final List<IpConfiguration> ipConfigurations) {
-
-            return new AutoValue_NetworkInterfaceCard_NetworkInterfaceCardProperties(provisioningState, resourceGuid, enableIPForwarding, ipConfigurations != null ? copyOf(ipConfigurations) : null );
-        }
-    }
 
     @Nullable
     public abstract String name();

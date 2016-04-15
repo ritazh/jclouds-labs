@@ -17,6 +17,7 @@
 package org.jclouds.azurecompute.arm.domain;
 
 import com.google.auto.value.AutoValue;
+import com.google.common.collect.ImmutableList;
 import org.jclouds.javax.annotation.Nullable;
 import org.jclouds.json.SerializedNames;
 
@@ -39,12 +40,31 @@ public abstract class StorageProfile {
     * The list of the data disks of the storage profile
     */
    @Nullable
-   public abstract List<DataDisk> dataDisks();
+   public abstract ImmutableList<DataDisk> dataDisks();
 
    @SerializedNames({"imageReference", "osDisk", "dataDisks"})
    public static StorageProfile create(final ImageReference imageReference,
                                        final OSDisk osDisk, final List<DataDisk> dataDisks) {
+      StorageProfile.Builder builder = StorageProfile.builder()
+              .imageReference(imageReference)
+              .osDisk(osDisk);
 
-      return new AutoValue_StorageProfile(imageReference, osDisk, dataDisks);
+      if (dataDisks != null)
+         builder.dataDisks(dataDisks);
+
+      return  builder.build();
    }
+
+   public static Builder builder() {
+      return new AutoValue_StorageProfile.Builder();
+   }
+
+   @AutoValue.Builder
+   public abstract static class Builder {
+      public abstract Builder imageReference(ImageReference imageReference);
+      public abstract Builder osDisk(OSDisk osDisk);
+      public abstract Builder dataDisks(List<DataDisk> dataDisks);
+      public abstract StorageProfile build();
+   }
+
 }

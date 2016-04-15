@@ -24,31 +24,6 @@ import org.jclouds.json.SerializedNames;
 @AutoValue
 public abstract class IpConfiguration{
 
-    @AutoValue
-    public abstract static class IpConfigurationProperties{
-
-        @Nullable
-        public abstract String provisioningState();
-
-        @Nullable
-        public abstract String privateIPAddress();
-
-        @Nullable
-        public abstract String privateIPAllocationMethod();
-
-        @Nullable
-        public abstract IdReference subnet();
-
-        @Nullable
-        public  abstract  IdReference publicIPAddress();
-
-        @SerializedNames({"provisioningState", "privateIPAddress", "privateIPAllocationMethod", "subnet", "publicIPAddress"})
-        public static IpConfigurationProperties create(final String provisioningState, final String privateIPAddress, final String privateIPAllocationMethod, final IdReference subnet, final IdReference publicIPAddress) {
-
-            return new AutoValue_IpConfiguration_IpConfigurationProperties(provisioningState, privateIPAddress, privateIPAllocationMethod, subnet, publicIPAddress);
-        }
-    }
-
     @Nullable
     public abstract String name();
 

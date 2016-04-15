@@ -20,7 +20,7 @@ import com.google.auto.value.AutoValue;
 import org.jclouds.json.SerializedNames;
 
 @AutoValue
-public abstract class HardwareProfile {
+public abstract class HardwareProfile{
 
    /**
     * The vm size of the virtual machine.
@@ -28,8 +28,15 @@ public abstract class HardwareProfile {
    public abstract String vmSize();
 
    @SerializedNames({"vmSize"})
-   public static HardwareProfile create(final String vmSize) {
-
-      return new AutoValue_HardwareProfile(vmSize);
+   public static HardwareProfile create(final String  vmSize) {
+      return builder().vmSize(vmSize).build();
+   }
+   public static Builder builder() {
+      return new AutoValue_HardwareProfile.Builder();
+   }
+   @AutoValue.Builder
+   public abstract static class Builder {
+      public abstract Builder vmSize(String vmSize);
+      public abstract HardwareProfile build();
    }
 }

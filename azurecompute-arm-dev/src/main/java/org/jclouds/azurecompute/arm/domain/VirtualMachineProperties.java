@@ -82,7 +82,8 @@ public abstract class VirtualMachineProperties {
 
    @SerializedNames({"vmId", "licenseType", "availabilitySet", "hardwareProfile", "storageProfile", "osProfile",
       "networkProfile", "diagnosticsProfile", "provisioningState"})
-   public static VirtualMachineProperties create(final String vmId, final String licenseType,
+   public static VirtualMachineProperties create(final String vmId,
+                                                 final String licenseType,
                                                  final AvailabilitySet availabilitySet,
                                                  final HardwareProfile hardwareProfile,
                                                  final StorageProfile storageProfile,
@@ -90,8 +91,34 @@ public abstract class VirtualMachineProperties {
                                                  final NetworkProfile networkProfile,
                                                  final DiagnosticsProfile diagnosticsProfile,
                                                  final String provisioningState) {
+      return builder()
+              .vmId(vmId)
+              .licenseType(licenseType)
+              .availabilitySet(availabilitySet)
+              .hardwareProfile(hardwareProfile)
+              .storageProfile(storageProfile)
+              .osProfile(osProfile)
+              .networkProfile(networkProfile)
+              .diagnosticsProfile(diagnosticsProfile)
+              .provisioningState(provisioningState)
+              .build();
+   }
 
-      return new AutoValue_VirtualMachineProperties(vmId, licenseType, availabilitySet, hardwareProfile,
-              storageProfile, osProfile, networkProfile, diagnosticsProfile, provisioningState);
+   public static Builder builder() {
+      return new AutoValue_VirtualMachineProperties.Builder();
+   }
+
+   @AutoValue.Builder
+   public abstract static class Builder {
+      public abstract Builder vmId(String vmId);
+      public abstract Builder licenseType(String licenseType);
+      public abstract Builder availabilitySet(AvailabilitySet availabilitySet);
+      public abstract Builder hardwareProfile(HardwareProfile hardwareProfile);
+      public abstract Builder storageProfile(StorageProfile storageProfile);
+      public abstract Builder osProfile(OSProfile osProfile);
+      public abstract Builder networkProfile(NetworkProfile networkProfile);
+      public abstract Builder diagnosticsProfile(DiagnosticsProfile diagnosticsProfile);
+      public abstract Builder provisioningState(String provisioningState);
+      public abstract VirtualMachineProperties build();
    }
 }

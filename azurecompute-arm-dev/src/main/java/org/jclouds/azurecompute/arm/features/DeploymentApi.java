@@ -17,6 +17,7 @@
 package org.jclouds.azurecompute.arm.features;
 
 import javax.inject.Named;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.PUT;
@@ -45,6 +46,7 @@ import org.jclouds.rest.annotations.PayloadParam;
 @QueryParams(keys = "api-version", values = "2016-02-01")
 @RequestFilters(OAuthFilter.class)
 @Consumes(MediaType.APPLICATION_JSON)
+@Produces(MediaType.APPLICATION_JSON)
 public interface DeploymentApi {
 
    /**
@@ -68,4 +70,15 @@ public interface DeploymentApi {
    @GET
    @Fallback(NullOnNotFoundOr404.class)
    Deployment getDeployment(@PathParam("deploymentname") String deploymentname);
+
+   /**
+    * Validate Deployment validates deployment template before deployment
+    */
+   @Named("deployment:validate")
+   @Path("/{deploymentname}/validate")
+   @Payload("{properties}")
+   @POST
+   @Fallback(NullOnNotFoundOr404.class)
+   Deployment validateDeployment(@PathParam("deploymentname") String deploymentname,
+                                 @PayloadParam("properties") String properties);
 }

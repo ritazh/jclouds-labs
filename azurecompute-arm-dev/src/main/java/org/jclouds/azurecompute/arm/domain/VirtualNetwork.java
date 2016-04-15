@@ -16,11 +16,7 @@
  */
 package org.jclouds.azurecompute.arm.domain;
 
-import static com.google.common.collect.ImmutableList.copyOf;
-
 import java.util.Map;
-import java.util.List;
-
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableMap;
 import org.jclouds.javax.annotation.Nullable;
@@ -28,38 +24,6 @@ import org.jclouds.json.SerializedNames;
 
 @AutoValue
 public abstract class VirtualNetwork {
-
-    @AutoValue
-    public abstract static class AddressSpace{
-
-        public abstract List<String> addressPrefixes();
-
-        @SerializedNames({"addressPrefixes"})
-        public static AddressSpace create(final List<String> addressPrefixes) {
-            return new AutoValue_VirtualNetwork_AddressSpace(copyOf(addressPrefixes));
-        }
-    }
-
-    @AutoValue
-    public abstract static class VirtualNetworkProperties{
-
-        @Nullable
-        public abstract String provisioningState();
-
-        @Nullable
-        public abstract String resourceGuid();
-
-        public abstract AddressSpace addressSpace();
-
-        @Nullable
-        public abstract List<Subnet> subnets();
-
-        @SerializedNames({"provisioningState", "resourceGuid", "addressSpace", "subnets"})
-        public static VirtualNetworkProperties create(final String provisioningState, final String resourceGuid, final AddressSpace addressSpace, final List<Subnet> subnets) {
-
-            return new AutoValue_VirtualNetwork_VirtualNetworkProperties(provisioningState, resourceGuid, addressSpace, subnets != null ? copyOf(subnets) : null);
-        }
-    }
 
     @Nullable
     public abstract String name();

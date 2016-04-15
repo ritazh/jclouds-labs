@@ -55,7 +55,26 @@ public abstract class OSDisk {
    @SerializedNames({"osType", "name", "vhd", "caching", "createOption"})
    public static OSDisk create(final String osType, final String name, final VHD vhd,
                                final String caching, final String createOption) {
+      return builder()
+              .osType(osType)
+              .name(name)
+              .vhd(vhd)
+              .caching(caching)
+              .createOption(createOption)
+              .build();
+   }
 
-      return new AutoValue_OSDisk(osType, name, vhd, caching, createOption);
+   public static Builder builder() {
+      return new AutoValue_OSDisk.Builder();
+   }
+
+   @AutoValue.Builder
+   public abstract static class Builder {
+      public abstract Builder osType(String osType);
+      public abstract Builder name(String name);
+      public abstract Builder caching(String caching);
+      public abstract Builder createOption(String createOption);
+      public abstract Builder vhd(VHD vhd);
+      public abstract OSDisk build();
    }
 }

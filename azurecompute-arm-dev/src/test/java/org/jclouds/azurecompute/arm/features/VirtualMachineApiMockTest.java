@@ -18,6 +18,7 @@ package org.jclouds.azurecompute.arm.features;
 
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import org.jclouds.azurecompute.arm.domain.HardwareProfile;
+import org.jclouds.azurecompute.arm.domain.IdReference;
 import org.jclouds.azurecompute.arm.domain.ImageReference;
 import org.jclouds.azurecompute.arm.domain.VirtualMachine;
 import org.jclouds.azurecompute.arm.domain.VHD;
@@ -120,11 +121,11 @@ public class VirtualMachineApiMockTest extends BaseAzureComputeApiMockTest {
       OSProfile.WindowsConfiguration windowsConfig = OSProfile.WindowsConfiguration.create(false, null, null, true,
               null);
       OSProfile osProfile = OSProfile.create("windowsmachine", "azureuser", null, null, null, windowsConfig);
-      NetworkProfile.NetworkInterfaceId networkInterface =
-              NetworkProfile.NetworkInterfaceId.create("/subscriptions/SUBSCRIPTIONID" +
+      IdReference networkInterface =
+              IdReference.create("/subscriptions/SUBSCRIPTIONID" +
                       "/resourceGroups/groupname/providers/Microsoft.Network/networkInterfaces/" +
                       "windowsmachine167");
-      List<NetworkProfile.NetworkInterfaceId> networkInterfaces = new ArrayList<NetworkProfile.NetworkInterfaceId>();
+      List<IdReference> networkInterfaces = new ArrayList<IdReference>();
       networkInterfaces.add(networkInterface);
       NetworkProfile networkProfile = NetworkProfile.create(networkInterfaces);
       DiagnosticsProfile.BootDiagnostics bootDiagnostics = DiagnosticsProfile.BootDiagnostics.create(true,
