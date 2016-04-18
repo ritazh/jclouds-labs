@@ -39,7 +39,6 @@ import org.jclouds.azurecompute.arm.domain.Deployment;
 import org.jclouds.azurecompute.arm.domain.ImageReference;
 import org.jclouds.azurecompute.arm.domain.Location;
 import org.jclouds.azurecompute.arm.domain.Offer;
-import org.jclouds.azurecompute.arm.domain.Publisher;
 import org.jclouds.azurecompute.arm.domain.SKU;
 import org.jclouds.azurecompute.arm.domain.VMSize;
 import org.jclouds.azurecompute.arm.domain.VirtualMachine;
@@ -369,31 +368,23 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
       return api.getVMSizeApi(getLocation()).list();
    }
 
+   private void getImagesFromPublisher(String publisherName, List<ImageReference> osImagesRef) {
+      OSImageApi osImageApi = api.getOSImageApi(getLocation());
+      Iterable<Offer> offerList = osImageApi.listOffers(publisherName);
+      for (Offer offer : offerList) {
+         Iterable<SKU> skuList = osImageApi.listSKUs(publisherName, offer.name());
+         for (SKU sku : skuList) {
+            osImagesRef.add(ImageReference.create(publisherName, offer.name(), sku.name(), null));
+         }
+      }
+   }
+
    @Override
    public Iterable<ImageReference> listImages() {
       final List<ImageReference> osImages = Lists.newArrayList();
-
-      OSImageApi osImageApi = api.getOSImageApi(getLocation());
-
-      Iterable<Publisher> list = osImageApi.listPublishers();
-      for (Publisher publisher : list) {
-         if (publisher.name().contains("Microsoft.WindowsAzure.Compute")
-               || publisher.name().contains("MicrosoftWindowsServer")
-               || publisher.name().contains("Canonical")) {
-            Iterable<Offer> offerList = osImageApi.listOffers(publisher.name());
-            for (Offer offer : offerList) {
-               Iterable<SKU> skuList = osImageApi.listSKUs(publisher.name(), offer.name());
-               for (SKU sku : skuList) {
-                  osImages.add(ImageReference.create(publisher.name(), offer.name(), sku.name(), null));
-//                  Iterable<Version> versions = osImageApi.listVersions(publisher.name(), offer.name(), sku.name());
-//                  for (Version version : versions) {
-//                     osImages.add(ImageReference.create(publisher.name(), offer.name(), sku.name(), version.name()));
-//                  }
-               }
-            }
-         }
-      }
-
+      getImagesFromPublisher("Microsoft.WindowsAzure.Compute", osImages);
+      getImagesFromPublisher("MicrosoftWindowsServer", osImages);
+      getImagesFromPublisher("Canonical", osImages);
       return osImages;
    }
 
@@ -409,7 +400,7 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
    }
 
    private String getLocation() {
-      return "westus"; // TODO: get location
+      return "eastasia"; // TODO: get location
    }
 
    @Override
