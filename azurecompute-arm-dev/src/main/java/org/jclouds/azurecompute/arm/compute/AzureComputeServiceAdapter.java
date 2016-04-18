@@ -307,8 +307,8 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
       // azure-specific options
       final AzureComputeArmTemplateOptions options = template.getOptions().as(AzureComputeArmTemplateOptions.class);
 
-      final String loginUser = autovalue.shaded.com.google.common.common.base.MoreObjects.firstNonNull(options.getLoginUser(), DEFAULT_LOGIN_USER);
-      final String loginPassword = autovalue.shaded.com.google.common.common.base.MoreObjects.firstNonNull(options.getLoginPassword(), DEFAULT_LOGIN_PASSWORD);
+      final String loginUser = options.getLoginUser() == null ? DEFAULT_LOGIN_USER : options.getLoginUser();
+      final String loginPassword = options.getLoginPassword() == null ? DEFAULT_LOGIN_PASSWORD : options.getLoginPassword();
       final String location = template.getLocation().getId();
       final String osVersion = template.getImage().getDescription();
 
