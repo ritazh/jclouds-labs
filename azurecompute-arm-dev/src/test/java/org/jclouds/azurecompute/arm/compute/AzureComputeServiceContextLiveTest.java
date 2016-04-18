@@ -78,6 +78,20 @@ public class AzureComputeServiceContextLiveTest extends BaseComputeServiceContex
 
 
    @Test
+   public void testDefault() throws RunNodesException {
+      final String groupName = String.format("def%s", System.getProperty("user.name"));
+      final TemplateBuilder templateBuilder = view.getComputeService().templateBuilder();
+      final Template template = templateBuilder.build();
+
+      try {
+         Set<? extends NodeMetadata> nodes = view.getComputeService().createNodesInGroup(groupName, 1, template);
+         assertThat(nodes).hasSize(1);
+      } finally {
+         view.getComputeService().destroyNodesMatching(inGroup(groupName));
+      }
+   }
+
+   @Test(dependsOnMethods = "testDefault")
    public void testLinuxNode() throws RunNodesException {
       final String groupName = String.format("ubu%s", System.getProperty("user.name"));
       final TemplateBuilder templateBuilder = view.getComputeService().templateBuilder();
