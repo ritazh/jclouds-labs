@@ -142,26 +142,12 @@ public abstract class Deployment {
    }
 
    @AutoValue
-   public abstract static class BasicDependency {
-      @Nullable
-      public abstract String id();
-
-      @Nullable
-      public abstract String resourceType();
-
-      @Nullable
-      public abstract String resourceName();
-
-      @SerializedNames({"id", "resourceType", "resourceName"})
-      public static BasicDependency create(final String id, final String resourceType, final String resourceName) {
-         return new AutoValue_Deployment_BasicDependency(id, resourceType, resourceName);
-      }
-   }
-
-   @AutoValue
    public abstract static class Dependency {
       @Nullable
-      public abstract List<BasicDependency> dependencies();
+      public abstract List<Dependency> dependencies();
+
+      @Nullable
+      public abstract List<Dependency> dependsOn();
 
       @Nullable
       public abstract String id();
@@ -172,12 +158,14 @@ public abstract class Deployment {
       @Nullable
       public abstract String resourceName();
 
-      @SerializedNames({"dependencies", "id", "resourceType", "resourceName"})
-      public static Dependency create(final List<BasicDependency> dependencies,
+      @SerializedNames({"dependencies", "dependsOn", "id", "resourceType", "resourceName"})
+      public static Dependency create(final List<Dependency> dependencies,
+                                      final List<Dependency> dependsOn,
                                       final String id,
                                       final String resourceType,
                                       final String resourceName) {
-         return new AutoValue_Deployment_Dependency(dependencies == null ? null : copyOf(dependencies), id, resourceType, resourceName);
+         return new AutoValue_Deployment_Dependency(dependencies == null ? null : copyOf(dependencies),
+               dependsOn == null ? null : copyOf(dependsOn), id, resourceType, resourceName);
       }
    }
 

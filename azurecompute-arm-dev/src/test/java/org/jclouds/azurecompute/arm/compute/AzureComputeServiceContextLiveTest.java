@@ -24,6 +24,7 @@ import org.jclouds.azurecompute.arm.internal.AzureLiveTestUtils;
 import org.jclouds.compute.RunNodesException;
 import org.jclouds.compute.config.ComputeServiceProperties;
 import org.jclouds.compute.domain.NodeMetadata;
+import org.jclouds.compute.domain.OsFamily;
 import org.jclouds.compute.domain.Template;
 import org.jclouds.compute.domain.TemplateBuilder;
 import org.jclouds.compute.internal.BaseComputeServiceContextLiveTest;
@@ -41,6 +42,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.jclouds.compute.config.ComputeServiceProperties.TIMEOUT_NODE_RUNNING;
 import static org.jclouds.compute.config.ComputeServiceProperties.TIMEOUT_SCRIPT_COMPLETE;
 import static org.jclouds.compute.predicates.NodePredicates.inGroup;
+
+
 
 @Test(groups = "live", testName = "AzureComputeServiceContextLiveTest")
 public class AzureComputeServiceContextLiveTest extends BaseComputeServiceContextLiveTest {
@@ -91,13 +94,14 @@ public class AzureComputeServiceContextLiveTest extends BaseComputeServiceContex
       }
    }
 
-   @Test(dependsOnMethods = "testDefault")
+//   @Test(dependsOnMethods = "testDefault")
    public void testLinuxNode() throws RunNodesException {
       final String groupName = String.format("ubu%s", System.getProperty("user.name"));
       final TemplateBuilder templateBuilder = view.getComputeService().templateBuilder();
-      templateBuilder.imageId("UbuntuServer12.04.5-LTS");
+      templateBuilder.osFamily(OsFamily.UBUNTU);
+      templateBuilder.osVersionMatches("14.04");
       templateBuilder.hardwareId("Standard_A0");
-      templateBuilder.locationId("eastasia");
+      templateBuilder.locationId("westus");
       final Template template = templateBuilder.build();
 
       final TemplateOptions options = template.getOptions();
