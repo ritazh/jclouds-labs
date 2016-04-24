@@ -17,14 +17,18 @@
 package org.jclouds.azurecompute.arm.compute.functions;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.Map;
 import java.util.Set;
 
 import javax.inject.Inject;
 
+import com.google.common.collect.Sets;
 import org.jclouds.azurecompute.arm.AzureComputeApi;
 import org.jclouds.azurecompute.arm.domain.ComputeNode;
 import org.jclouds.azurecompute.arm.domain.Deployment;
+import org.jclouds.azurecompute.arm.domain.PublicIPAddress;
+import org.jclouds.azurecompute.arm.domain.VMDeployment;
 import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.collect.Memoized;
 import org.jclouds.compute.domain.NodeMetadataBuilder;
@@ -34,8 +38,13 @@ import org.jclouds.domain.Location;
 import com.google.common.base.Function;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
+import org.jclouds.domain.LoginCredentials;
 
-public class DeploymentToNodeMetadata implements Function<Deployment, NodeMetadata> {
+public class DeploymentToNodeMetadata implements Function<VMDeployment, NodeMetadata> {
+
+   public static final String JCLOUDS_DEFAULT_USERNAME = "root";
+   public static final String AZURE_DEFAULT_USERNAME = "jclouds";
+   public static final String DEFAULT_LOGIN_PASSWORD = "Password1!";
 
    private static final Map<ComputeNode.Status, NodeMetadata.Status> INSTANCESTATUS_TO_NODESTATUS =
            ImmutableMap.<ComputeNode.Status, NodeMetadata.Status>builder().
@@ -101,13 +110,40 @@ public class DeploymentToNodeMetadata implements Function<Deployment, NodeMetada
    }
 
    @Override
-   public NodeMetadata apply(final Deployment from) {
+   public NodeMetadata apply(final VMDeployment from) {
       final NodeMetadataBuilder builder = new NodeMetadataBuilder();
-      builder.id(from.name());
-      builder.providerId(from.name());
-      builder.name(from.name());
-      NodeMetadata.Status status = STATUS_TO_NODESTATUS.get(provisioningStateFromString(from.properties().provisioningState()));
+      final Deployment deployment = from.deployment;
+      builder.id(deployment.name());
+      builder.providerId(deployment.name());
+      builder.name(deployment.name());
+      String group = deployment.name();
+      int index = group.lastIndexOf("-");
+      builder.group(group.substring(0, index));
+
+      NodeMetadata.Status status = STATUS_TO_NODESTATUS.get(provisioningStateFromString(deployment.properties().provisioningState()));
       builder.status(status);
+
+      Credentials credentials = credentialStore.get("node#" + from.deployment.name());
+      if (credentials != null && credentials.identity.equals(JCLOUDS_DEFAULT_USERNAME)) {
+         credentials = new Credentials(AZURE_DEFAULT_USERNAME, credentials.credential);
+      }
+      else if (credentials == null) {
+         credentials = new Credentials(AZURE_DEFAULT_USERNAME, DEFAULT_LOGIN_PASSWORD);
+      }
+      builder.credentials(LoginCredentials.fromCredentials(credentials));
+
+      final Set<String> publicIpAddresses = Sets.newLinkedHashSet();
+      if (from.ipAddressList != null) {
+         for (int c = 0; c < from.ipAddressList.size(); c++) {
+            PublicIPAddress ip = from.ipAddressList.get(c);
+            if (ip != null && ip.properties() != null && ip.properties().ipAddress() != null)
+               publicIpAddresses.add(ip.properties().ipAddress());
+         }
+         if (publicIpAddresses.size() > 0)
+            builder.publicAddresses(publicIpAddresses);
+      }
+
+
       //builder.hostname(getHostname(from));
       //builder.group(nodeNamingConvention.groupInUniqueNameOrNull(getHostname(from)));
 

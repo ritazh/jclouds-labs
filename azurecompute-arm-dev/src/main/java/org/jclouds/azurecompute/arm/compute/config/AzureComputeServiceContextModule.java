@@ -31,10 +31,10 @@ import org.jclouds.azurecompute.arm.compute.functions.DeploymentToNodeMetadata;
 import org.jclouds.azurecompute.arm.compute.functions.VMSizeToHardware;
 import org.jclouds.azurecompute.arm.compute.functions.LocationToLocation;
 import org.jclouds.azurecompute.arm.compute.options.AzureComputeArmTemplateOptions;
+import org.jclouds.azurecompute.arm.domain.VMDeployment;
 import org.jclouds.azurecompute.arm.domain.VMSize;
 import org.jclouds.azurecompute.arm.domain.ImageReference;
 import org.jclouds.azurecompute.arm.domain.Location;
-import org.jclouds.azurecompute.arm.domain.Deployment;
 import org.jclouds.compute.ComputeServiceAdapter;
 import org.jclouds.compute.config.ComputeServiceAdapterContextModule;
 import org.jclouds.compute.domain.Hardware;
@@ -46,19 +46,19 @@ import com.google.inject.TypeLiteral;
 import org.jclouds.compute.options.TemplateOptions;
 
 public class AzureComputeServiceContextModule
-        extends ComputeServiceAdapterContextModule<Deployment, VMSize, ImageReference, Location> {
+        extends ComputeServiceAdapterContextModule<VMDeployment, VMSize, ImageReference, Location> {
 
    @Override
    protected void configure() {
       super.configure();
 
-      bind(new TypeLiteral<ComputeServiceAdapter<Deployment, VMSize, ImageReference, Location>>() {
+      bind(new TypeLiteral<ComputeServiceAdapter<VMDeployment, VMSize, ImageReference, Location>>() {
       }).to(AzureComputeServiceAdapter.class);
       bind(new TypeLiteral<Function<ImageReference, org.jclouds.compute.domain.Image>>() {
       }).to(ImageReferenceToImage.class);
       bind(new TypeLiteral<Function<VMSize, Hardware>>() {
       }).to(VMSizeToHardware.class);
-      bind(new TypeLiteral<Function<Deployment, NodeMetadata>>() {
+      bind(new TypeLiteral<Function<VMDeployment, NodeMetadata>>() {
       }).to(DeploymentToNodeMetadata.class);
 
       //bind(PrioritizeCredentialsFromTemplate.class).to(UseNodeCredentialsButOverrideFromTemplate.class);
@@ -70,7 +70,7 @@ public class AzureComputeServiceContextModule
       //bind(CreateNodesInGroupThenAddToSet.class).to(GetOrCreateStorageServiceAndVirtualNetworkThenCreateNodes.class);
 
       // to have the compute service adapter override default locations
-      install(new LocationsFromComputeServiceAdapterModule<Deployment, VMSize, ImageReference, Location>() {
+      install(new LocationsFromComputeServiceAdapterModule<VMDeployment, VMSize, ImageReference, Location>() {
       });
    }
 

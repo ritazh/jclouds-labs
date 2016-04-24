@@ -15,11 +15,11 @@
  * limitations under the License.
  */
 package org.jclouds.azurecompute.arm.compute;
-import static com.google.common.base.Predicates.notNull;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.jclouds.util.Predicates2.retry;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -29,8 +29,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import com.google.common.base.Function;
-import com.google.common.collect.FluentIterable;
 import org.jclouds.azurecompute.arm.AzureComputeApi;
 import org.jclouds.azurecompute.arm.compute.config.AzureComputeServiceContextModule.AzureComputeConstants;
 
@@ -39,7 +37,9 @@ import org.jclouds.azurecompute.arm.domain.Deployment;
 import org.jclouds.azurecompute.arm.domain.ImageReference;
 import org.jclouds.azurecompute.arm.domain.Location;
 import org.jclouds.azurecompute.arm.domain.Offer;
+import org.jclouds.azurecompute.arm.domain.PublicIPAddress;
 import org.jclouds.azurecompute.arm.domain.SKU;
+import org.jclouds.azurecompute.arm.domain.VMDeployment;
 import org.jclouds.azurecompute.arm.domain.VMSize;
 import org.jclouds.azurecompute.arm.domain.VirtualMachine;
 import org.jclouds.azurecompute.arm.features.OSImageApi;
@@ -59,13 +59,13 @@ import com.google.common.collect.Sets;
  * {@link org.jclouds.compute.ComputeService}.
  */
 @Singleton
-public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deployment, VMSize, ImageReference, Location> {
+public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeployment, VMSize, ImageReference, Location> {
 
    private static int runningNumber = 1;
 
    private static final String DEFAULT_LOGIN_USER = "jclouds";
 
-   private static final String DEFAULT_LOGIN_PASSWORD = "p@sswOrd1!";
+   private static final String DEFAULT_LOGIN_PASSWORD = "Password1!";
 
    @Resource
    @Named(ComputeServiceConstants.COMPUTE_LOGGER)
@@ -302,7 +302,7 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
    }
 
    @Override
-   public NodeAndInitialCredentials<Deployment> createNodeWithGroupEncodedIntoName(
+   public NodeAndInitialCredentials<VMDeployment> createNodeWithGroupEncodedIntoName(
            final String group, final String name, final Template template) {
       // azure-specific options
       final AzureComputeArmTemplateOptions options = template.getOptions().as(AzureComputeArmTemplateOptions.class);
@@ -314,7 +314,7 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
 
       logger.info("Deployment created with name: %s", name);
 
-      final Set<Deployment> deployments = Sets.newHashSet();
+      final Set<VMDeployment> deployments = Sets.newHashSet();
       if (!retry(new Predicate<String>() {
          @Override
          public boolean apply(final String name) {
@@ -340,11 +340,13 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
             HashMap<String, String> tags = new HashMap<String, String>();
             tags.put("tagname1", "tagvalue1");
 
-            String resourceGroup = api.getResourceGroupApi().create(getGroupId(), "westus", tags).name();
+            String resourceGroup = api.getResourceGroupApi().create(getGroupId(), location, tags).name();
             Deployment deployment = api.getDeploymentApi(getGroupId()).createDeployment(name, properties);
 
             if (deployment != null) {
-               deployments.add(deployment);
+               VMDeployment vmDeployment = new VMDeployment();
+               vmDeployment.deployment = deployment;
+               deployments.add(vmDeployment);
             }
             return !deployments.isEmpty();
          }
@@ -356,11 +358,11 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
          throw new IllegalStateException(illegalStateExceptionMessage);
       }
 
-      final Deployment deployment = deployments.iterator().next();
+      final VMDeployment deployment = deployments.iterator().next();
 
 
-      return new NodeAndInitialCredentials<Deployment>(deployment, name,
-              LoginCredentials.builder().user(loginUser).password(loginPassword).authenticateSudo(true).build());
+      return new NodeAndInitialCredentials<VMDeployment>(deployment, name,
+              LoginCredentials.builder().user(loginUser).identity(loginUser).password(loginPassword).authenticateSudo(true).build());
    }
 
    @Override
@@ -408,14 +410,28 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
       return api.getLocationApi().list();
    }
 
-   @Override
-   public Deployment getNode(final String id) {
-      Deployment deployment = api.getDeploymentApi(getGroupId()).getDeployment(id);
+   private String getResourceGroupFromId(String id) {
+      String searchStr = "/resourceGroups/";
+      int indexStart = id.lastIndexOf(searchStr) + searchStr.length();
+      searchStr = "/providers/";
+      int indexEnd = id.lastIndexOf(searchStr);
 
-      return deployment;
+      String resourceGroup = id.substring(indexStart, indexEnd);
+      return resourceGroup;
    }
 
-   public Deployment internalDestroyNode(final String nodeId) {
+   @Override
+   public VMDeployment getNode(final String id) {
+      Deployment deployment = api.getDeploymentApi(getGroupId()).getDeployment(id);
+      String resourceGroup = getResourceGroupFromId(deployment.id());
+      VMDeployment vmDeployment = new VMDeployment();
+      vmDeployment.deployment = deployment;
+      List<PublicIPAddress> list = getIPAddresses(deployment);
+      vmDeployment.ipAddressList = list;
+      return vmDeployment;
+   }
+
+   public VMDeployment internalDestroyNode(final String nodeId) {
       return null;
    }
 
@@ -443,26 +459,55 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
    public void suspendNode(final String id) {
    }
 
-   @Override
-   public Iterable<Deployment> listNodes() {
+   private List<PublicIPAddress> getIPAddresses(Deployment deployment) {
+      List<PublicIPAddress> list = new ArrayList<PublicIPAddress>();
+      String resourceGroup = getResourceGroupFromId(deployment.id());
 
-      return FluentIterable.from(api.getVirtualMachineApi(getGroupId()).list()).
-              transform(new Function<VirtualMachine, Deployment>() {
-                 @Override
-                 public Deployment apply(final VirtualMachine vm) {
-                    return api.getDeploymentApi(getGroupId()).getDeployment(vm.name());
-                 }
-              }).
-              filter(notNull()).
-              toSet();
+      if (deployment.properties() != null && deployment.properties().dependencies() != null) {
+         List<Deployment.Dependency> dependencies = deployment.properties().dependencies();
+         for (int d = 0; d < dependencies.size(); d++) {
+            if (dependencies.get(d).resourceType().equals("Microsoft.Network/networkInterfaces")) {
+               List<Deployment.Dependency> dependsOn = dependencies.get(d).dependsOn();
+               for (int e = 0; e < dependsOn.size(); e++) {
+                  if (dependsOn.get(e).resourceType().equals("Microsoft.Network/publicIPAddresses")) {
+                     String resourceName = dependsOn.get(e).resourceName();
+                     PublicIPAddress ip = api.getPublicIPAddressApi(resourceGroup).getPublicIPAddress(resourceName);
+                     list.add(ip);
+                  }
+               }
+            }
+         }
+      }
+      return list;
    }
 
    @Override
-   public Iterable<Deployment> listNodesByIds(final Iterable<String> ids) {
-      return Iterables.filter(listNodes(), new Predicate<Deployment>() {
+   public Iterable<VMDeployment> listNodes() {
+      System.out.println("listNodes");
+
+      List<VMDeployment> deployments = new ArrayList<VMDeployment>();
+      List<VirtualMachine> machines = api.getVirtualMachineApi(getGroupId()).list();
+      for (int c = 0; c <  machines.size(); c++) {
+         VMDeployment vmDeployment = new VMDeployment();
+         Deployment deployment = api.getDeploymentApi(getGroupId()).getDeployment(machines.get(c).name());
+         vmDeployment.deployment = deployment;
+         List<PublicIPAddress> list = getIPAddresses(deployment);
+         vmDeployment.ipAddressList = list;
+         deployments.add(vmDeployment);
+      }
+      return deployments;
+   }
+
+   @Override
+   public Iterable<VMDeployment> listNodesByIds(final Iterable<String> ids) {
+      System.out.println("listNodesByIds");
+      for (String str : ids) {
+         System.out.println(str);
+      }
+      return Iterables.filter(listNodes(), new Predicate<VMDeployment>() {
          @Override
-         public boolean apply(final Deployment input) {
-            return Iterables.contains(ids, input.name());
+         public boolean apply(final VMDeployment input) {
+            return Iterables.contains(ids, input.deployment.name());
          }
       });
    }
@@ -470,7 +515,7 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<Deploym
    private String getGroupId() {
       String group =  System.getProperty("test.azurecompute-arm.groupname");
       if (group == null)
-         group = "jCloudsGroup1";
+         group = "jCloudsGroup";
       return group;
    }
 
