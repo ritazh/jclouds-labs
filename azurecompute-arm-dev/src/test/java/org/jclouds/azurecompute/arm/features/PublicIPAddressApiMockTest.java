@@ -17,7 +17,9 @@
 package org.jclouds.azurecompute.arm.features;
 
 import com.google.common.collect.ImmutableMap;
+import org.jclouds.azurecompute.arm.domain.DnsSettings;
 import org.jclouds.azurecompute.arm.domain.PublicIPAddress;
+import org.jclouds.azurecompute.arm.domain.PublicIPAddressProperties;
 import org.jclouds.azurecompute.arm.internal.BaseAzureComputeApiMockTest;
 import org.testng.annotations.Test;
 
@@ -55,7 +57,7 @@ public class PublicIPAddressApiMockTest extends BaseAzureComputeApiMockTest {
         assertEquals(ip.properties().provisioningState(), "Succeeded");
         assertEquals(ip.properties().ipAddress(), "12.123.12.123");
         assertEquals(ip.properties().publicIPAllocationMethod(), "Static");
-        assertEquals(ip.properties().idleTimeoutInMinutes(), 4);
+        assertEquals(ip.properties().idleTimeoutInMinutes().intValue(), 4);
         assertNotNull(ip.properties().dnsSettings());
         assertEquals(ip.properties().dnsSettings().domainNameLabel(), "foobar");
         assertEquals(ip.properties().dnsSettings().fqdn(), "foobar.northeurope.cloudapp.azure.com");
@@ -82,8 +84,8 @@ public class PublicIPAddressApiMockTest extends BaseAzureComputeApiMockTest {
 
         final Map<String, String> tags = ImmutableMap.of("testkey", "testvalue");
 
-        PublicIPAddress.PublicIPProperties properties = PublicIPAddress.PublicIPProperties.create(null, null, "Static", 4, null,
-                PublicIPAddress.DnsSettings.create("foobar", "foobar.northeurope.cloudapp.azure.com", null));
+        PublicIPAddressProperties properties = PublicIPAddressProperties.create(null, null, "Static", 4, null,
+                DnsSettings.create("foobar", "foobar.northeurope.cloudapp.azure.com", null));
 
         PublicIPAddress ip = ipApi.createOrUpdatePublicIPAddress(publicIpName, location, tags, properties);
 
@@ -100,7 +102,7 @@ public class PublicIPAddressApiMockTest extends BaseAzureComputeApiMockTest {
         assertEquals(ip.properties().provisioningState(), "Updating");
         assertNull(ip.properties().ipAddress()); // as we don't get IP address until Succeeded state
         assertEquals(ip.properties().publicIPAllocationMethod(), "Static");
-        assertEquals(ip.properties().idleTimeoutInMinutes(), 4);
+        assertEquals(ip.properties().idleTimeoutInMinutes().intValue(), 4);
         assertNotNull(ip.properties().dnsSettings());
         assertEquals(ip.properties().dnsSettings().domainNameLabel(), "foobar");
         assertEquals(ip.properties().dnsSettings().fqdn(), "foobar.northeurope.cloudapp.azure.com");
@@ -114,8 +116,8 @@ public class PublicIPAddressApiMockTest extends BaseAzureComputeApiMockTest {
 
         final Map<String, String> tags = ImmutableMap.of("testkey", "testvalue");
 
-        PublicIPAddress.PublicIPProperties properties = PublicIPAddress.PublicIPProperties.create(null, null, "Static", 4, null,
-                PublicIPAddress.DnsSettings.create("foobar", "foobar.northeurope.cloudapp.azure.com", null));
+        PublicIPAddressProperties properties = PublicIPAddressProperties.create(null, null, "Static", 4, null,
+                DnsSettings.create("foobar", "foobar.northeurope.cloudapp.azure.com", null));
 
         PublicIPAddress ip = ipApi.createOrUpdatePublicIPAddress(publicIpName, location, tags, properties);
 

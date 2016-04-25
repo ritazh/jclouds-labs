@@ -16,30 +16,32 @@
  */
 package org.jclouds.azurecompute.arm.domain;
 
-import org.jclouds.javax.annotation.Nullable;
+
 import com.google.auto.value.AutoValue;
+import com.google.common.collect.ImmutableList;
 import org.jclouds.json.SerializedNames;
 
+import java.util.List;
+
 @AutoValue
-public abstract class Subnet {
+public abstract class AddressSpace{
 
-    @Nullable
-    public abstract String name();
+    public abstract ImmutableList<String> addressPrefixes();
 
-    @Nullable
-    public abstract String id();
+    @SerializedNames({ "addressPrefixes" })
+    public static AddressSpace create(final List<String>  addressPrefixes) {
+        return builder()
+                .addressPrefixes(addressPrefixes)
+                .build();
+    }
 
-    @Nullable
-    public abstract String etag();
+    public static Builder builder() {
+        return new AutoValue_AddressSpace.Builder();
+    }
 
-    @Nullable
-    public abstract SubnetProperties properties();
-
-    @SerializedNames({"name", "id", "etag", "properties"})
-    public static Subnet create(final String name,
-                                final String id,
-                                final String etag,
-                                final SubnetProperties properties) {
-        return new AutoValue_Subnet(name, id, etag, properties);
+    @AutoValue.Builder
+    public abstract static class Builder {
+        public abstract Builder addressPrefixes(List<String> addressPrefixes);
+        public abstract AddressSpace build();
     }
 }

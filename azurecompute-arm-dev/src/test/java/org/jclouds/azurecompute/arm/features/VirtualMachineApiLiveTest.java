@@ -19,6 +19,7 @@ package org.jclouds.azurecompute.arm.features;
 import org.jclouds.azurecompute.arm.domain.DataDisk;
 import org.jclouds.azurecompute.arm.domain.DiagnosticsProfile;
 import org.jclouds.azurecompute.arm.domain.HardwareProfile;
+import org.jclouds.azurecompute.arm.domain.IdReference;
 import org.jclouds.azurecompute.arm.domain.ImageReference;
 import org.jclouds.azurecompute.arm.domain.NetworkInterfaceCard;
 import org.jclouds.azurecompute.arm.domain.NetworkProfile;
@@ -246,12 +247,12 @@ public class VirtualMachineApiLiveTest extends BaseAzureComputeApiLiveTest {
       OSProfile.WindowsConfiguration windowsConfig = OSProfile.WindowsConfiguration.create(false, null, null, true,
               null);
       OSProfile osProfile = OSProfile.create(getName(), "azureuser", "RFe3&432dg", null, null, windowsConfig);
-      NetworkProfile.NetworkInterfaceId networkInterface =
-              NetworkProfile.NetworkInterfaceId.create("/subscriptions/" + subscriptionid +
+      IdReference networkInterface =
+              IdReference.create("/subscriptions/" + subscriptionid +
                   "/resourceGroups/" + getResourceGroupName() + "/providers/Microsoft.Network/networkInterfaces/"
                   + nic);
-      List<NetworkProfile.NetworkInterfaceId> networkInterfaces =
-              new ArrayList<NetworkProfile.NetworkInterfaceId>();
+      List<IdReference> networkInterfaces =
+              new ArrayList<IdReference>();
       networkInterfaces.add(networkInterface);
       NetworkProfile networkProfile = NetworkProfile.create(networkInterfaces);
       DiagnosticsProfile.BootDiagnostics bootDiagnostics =

@@ -19,6 +19,7 @@ package org.jclouds.azurecompute.arm.features;
 import org.jclouds.Fallbacks.EmptyListOnNotFoundOr404;
 import org.jclouds.Fallbacks.NullOnNotFoundOr404;
 import org.jclouds.azurecompute.arm.domain.NetworkInterfaceCard;
+import org.jclouds.azurecompute.arm.domain.NetworkInterfaceCardProperties;
 import org.jclouds.azurecompute.arm.functions.StatusCodeParser;
 import org.jclouds.oauth.v2.filters.OAuthFilter;
 import org.jclouds.rest.annotations.Fallback;
@@ -61,7 +62,7 @@ public interface NetworkInterfaceCardApi {
    @Fallback(NullOnNotFoundOr404.class)
    NetworkInterfaceCard createOrUpdateNetworkInterfaceCard(@PathParam("networkinterfacecardname") String networkinterfacecardname,
                                                            @PayloadParam("location") String location,
-                                                           @PayloadParam("properties") NetworkInterfaceCard.NetworkInterfaceCardProperties properties,
+                                                           @PayloadParam("properties") NetworkInterfaceCardProperties properties,
                                                            @PayloadParam("tags") Map<String, String> tags);
 
    @Named("networkinterfacecard:get")

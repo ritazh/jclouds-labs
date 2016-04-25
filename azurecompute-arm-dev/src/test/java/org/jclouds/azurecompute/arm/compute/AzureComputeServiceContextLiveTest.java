@@ -45,7 +45,7 @@ import static org.jclouds.compute.predicates.NodePredicates.inGroup;
 
 
 
-@Test(groups = "live", testName = "AzureComputeServiceContextLiveTest")
+@Test(groups = "live", testName = "AzureComputeServiceContextLiveTest", singleThreaded = true)
 public class AzureComputeServiceContextLiveTest extends BaseComputeServiceContextLiveTest {
 
    @Override
@@ -58,7 +58,7 @@ public class AzureComputeServiceContextLiveTest extends BaseComputeServiceContex
 
       properties.put(ComputeServiceProperties.POLL_INITIAL_PERIOD, 1000);
       properties.put(ComputeServiceProperties.POLL_MAX_PERIOD, 10000);
-      properties.setProperty(AzureComputeProperties.OPERATION_TIMEOUT, "26000000");
+      properties.setProperty(AzureComputeProperties.OPERATION_TIMEOUT, "46000000");
       properties.setProperty(AzureComputeProperties.OPERATION_POLL_INITIAL_PERIOD, "5");
       properties.setProperty(AzureComputeProperties.OPERATION_POLL_MAX_PERIOD, "15");
       properties.setProperty(AzureComputeProperties.TCP_RULE_FORMAT, "tcp_%s-%s");

@@ -19,7 +19,9 @@ package org.jclouds.azurecompute.arm.features;
 import com.google.common.collect.ImmutableMap;
 import org.jclouds.azurecompute.arm.domain.IdReference;
 import org.jclouds.azurecompute.arm.domain.IpConfiguration;
+import org.jclouds.azurecompute.arm.domain.IpConfigurationProperties;
 import org.jclouds.azurecompute.arm.domain.NetworkInterfaceCard;
+import org.jclouds.azurecompute.arm.domain.NetworkInterfaceCardProperties;
 import org.jclouds.azurecompute.arm.internal.BaseAzureComputeApiMockTest;
 import org.testng.annotations.Test;
 
@@ -78,10 +80,10 @@ public class NetworkInterfaceCardApiMockTest extends BaseAzureComputeApiMockTest
 
         final String SubnetID = "/subscriptions/" + subscriptionid + "/resourceGroups/azurearmtesting/providers/Microsoft.Network/virtualNetworks/myvirtualnetwork/subnets/mysubnet";
         //Create properties object
-        final NetworkInterfaceCard.NetworkInterfaceCardProperties networkInterfaceCardProperties =
-                NetworkInterfaceCard.NetworkInterfaceCardProperties.create(null, null, null,
+        final NetworkInterfaceCardProperties networkInterfaceCardProperties =
+                NetworkInterfaceCardProperties.create(null, null, null,
                         Arrays.asList(IpConfiguration.create("myipconfig", null, null, null,
-                                IpConfiguration.IpConfigurationProperties.create(null, null, "Dynamic", IdReference.create(SubnetID), null))
+                                IpConfigurationProperties.create(null, null, "Dynamic", IdReference.create(SubnetID), null))
                         )
                 );
 

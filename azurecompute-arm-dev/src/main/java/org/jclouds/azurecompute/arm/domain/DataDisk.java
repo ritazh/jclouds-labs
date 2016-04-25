@@ -50,7 +50,31 @@ public abstract class DataDisk {
    @SerializedNames({"name", "diskSizeGB", "lun", "vhd", "createOption"})
    public static DataDisk create(final String name, final String diskSizeGB, final int lun,
                                  final VHD vhd, final String createOption) {
+      return builder()
+              .name(name)
+              .diskSizeGB(diskSizeGB)
+              .lun(lun)
+              .createOption(createOption)
+              .vhd(vhd)
+              .build();
+   }
 
-      return new AutoValue_DataDisk(name, diskSizeGB, lun, vhd, createOption);
+   public static Builder builder() {
+      return new AutoValue_DataDisk.Builder();
+   }
+
+   @AutoValue.Builder
+   public abstract static class Builder {
+      public abstract Builder name(String name);
+
+      public abstract Builder diskSizeGB(String diskSizeGB);
+
+      public abstract Builder createOption(String createOption);
+
+      public abstract Builder lun(int lun);
+
+      public abstract Builder vhd(VHD vhd);
+
+      public abstract DataDisk build();
    }
 }

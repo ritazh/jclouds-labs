@@ -22,6 +22,7 @@ import org.jclouds.Fallbacks.NullOnNotFoundOr404;
 
 import org.jclouds.azurecompute.arm.domain.VirtualNetwork;
 
+import org.jclouds.azurecompute.arm.domain.VirtualNetworkProperties;
 import org.jclouds.oauth.v2.filters.OAuthFilter;
 import org.jclouds.rest.annotations.Fallback;
 import org.jclouds.rest.annotations.MapBinder;
@@ -60,7 +61,7 @@ public interface VirtualNetworkApi {
    @Fallback(NullOnNotFoundOr404.class)
    VirtualNetwork createOrUpdateVirtualNetwork(@PathParam("virtualnetworkname") String virtualnetworkname,
                                                @PayloadParam("location") String location,
-                                               @PayloadParam("properties")VirtualNetwork.VirtualNetworkProperties properties);
+                                               @PayloadParam("properties")VirtualNetworkProperties properties);
 
    @Named("virtualnetwork:get")
    @Path("/{virtualnetworkname}")

@@ -16,30 +16,16 @@
  */
 package org.jclouds.azurecompute.arm.domain;
 
-import org.jclouds.javax.annotation.Nullable;
 import com.google.auto.value.AutoValue;
 import org.jclouds.json.SerializedNames;
 
 @AutoValue
-public abstract class Subnet {
+public abstract class DeploymentProperties {
 
-    @Nullable
-    public abstract String name();
+    public abstract DeploymentBody properties();
 
-    @Nullable
-    public abstract String id();
-
-    @Nullable
-    public abstract String etag();
-
-    @Nullable
-    public abstract SubnetProperties properties();
-
-    @SerializedNames({"name", "id", "etag", "properties"})
-    public static Subnet create(final String name,
-                                final String id,
-                                final String etag,
-                                final SubnetProperties properties) {
-        return new AutoValue_Subnet(name, id, etag, properties);
+    @SerializedNames({"properties"})
+    public static DeploymentProperties create(final DeploymentBody properties) {
+        return new AutoValue_DeploymentProperties(properties);
     }
 }

@@ -53,7 +53,24 @@ public abstract class ImageReference {
                                        final String sku,
                                        final String version) {
 
-      return new AutoValue_ImageReference(publisher,
-              offer, sku, version);
+      return builder()
+              .publisher(publisher)
+              .offer(offer)
+              .sku(sku)
+              .version(version)
+              .build();
+   }
+
+   public static Builder builder() {
+      return new AutoValue_ImageReference.Builder();
+   }
+
+   @AutoValue.Builder
+   public abstract static class Builder {
+      public abstract Builder publisher(String publisher);
+      public abstract Builder offer(String offer);
+      public abstract Builder sku(String sku);
+      public abstract Builder version(String version);
+      public abstract ImageReference build();
    }
 }

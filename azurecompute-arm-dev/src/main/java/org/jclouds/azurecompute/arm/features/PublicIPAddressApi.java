@@ -19,6 +19,7 @@ package org.jclouds.azurecompute.arm.features;
 import org.jclouds.Fallbacks.EmptyListOnNotFoundOr404;
 import org.jclouds.Fallbacks.NullOnNotFoundOr404;
 import org.jclouds.azurecompute.arm.domain.PublicIPAddress;
+import org.jclouds.azurecompute.arm.domain.PublicIPAddressProperties;
 import org.jclouds.azurecompute.arm.functions.StatusCodeParser;
 import org.jclouds.oauth.v2.filters.OAuthFilter;
 import org.jclouds.rest.annotations.Fallback;
@@ -60,9 +61,9 @@ public interface PublicIPAddressApi {
    @PUT
    @Fallback(NullOnNotFoundOr404.class)
    PublicIPAddress createOrUpdatePublicIPAddress(@PathParam("publicipaddressname") String publicipaddressname,
-                                                      @PayloadParam("location") String location,
-                                                      @PayloadParam("tags") Map<String, String> tags,
-                                                      @PayloadParam("properties") PublicIPAddress.PublicIPProperties properties);
+                                                 @PayloadParam("location") String location,
+                                                 @PayloadParam("tags") Map<String, String> tags,
+                                                 @PayloadParam("properties") PublicIPAddressProperties properties);
 
    @Named("publicipaddress:get")
    @Path("/{publicipaddressname}")

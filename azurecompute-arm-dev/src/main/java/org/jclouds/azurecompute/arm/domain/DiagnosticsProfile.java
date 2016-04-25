@@ -24,25 +24,45 @@ import org.jclouds.json.SerializedNames;
 public abstract class DiagnosticsProfile {
 
    @AutoValue
-   public abstract static class BootDiagnostics {
+   public abstract static class BootDiagnostics{
 
-      public abstract boolean enabled();
+      public abstract Boolean enabled();
 
       @Nullable
       public abstract String storageUri();
 
       @SerializedNames({"enabled", "storageUri"})
-      public static BootDiagnostics create(final boolean enabled,
-                                           final String storageUri) {
+      public static BootDiagnostics create(final Boolean enabled, final String storageUri) {
+         return builder()
+                 .enabled(enabled)
+                 .storageUri(storageUri)
+                 .build();
+      }
 
-         return new AutoValue_DiagnosticsProfile_BootDiagnostics(enabled, storageUri);
+      public static Builder builder() {
+         return new AutoValue_DiagnosticsProfile_BootDiagnostics.Builder();
+      }
+      @AutoValue.Builder
+      public abstract static class Builder {
+         public abstract Builder enabled(Boolean enabled);
+         public abstract Builder storageUri(String storageUri);
+         public abstract BootDiagnostics build();
       }
    }
 
    public abstract BootDiagnostics bootDiagnostics();
 
    @SerializedNames({"bootDiagnostics"})
-   public static DiagnosticsProfile create(final BootDiagnostics bootDiagnostics) {
-      return new AutoValue_DiagnosticsProfile(bootDiagnostics);
+   public static DiagnosticsProfile create(final BootDiagnostics  bootDiagnostics) {
+      return builder().bootDiagnostics(bootDiagnostics).build();
+   }
+   public static Builder builder() {
+      return new AutoValue_DiagnosticsProfile.Builder();
+   }
+
+   @AutoValue.Builder
+   public abstract static class Builder {
+      public abstract Builder bootDiagnostics(BootDiagnostics bootDiagnostics);
+      public abstract DiagnosticsProfile build();
    }
 }

@@ -16,7 +16,9 @@
  */
 package org.jclouds.azurecompute.arm.features;
 
+import org.jclouds.azurecompute.arm.domain.AddressSpace;
 import org.jclouds.azurecompute.arm.domain.VirtualNetwork;
+import org.jclouds.azurecompute.arm.domain.VirtualNetworkProperties;
 import org.jclouds.azurecompute.arm.internal.BaseAzureComputeApiLiveTest;
 
 import org.testng.annotations.BeforeClass;
@@ -60,9 +62,9 @@ public class VirtualNetworkApiLiveTest extends BaseAzureComputeApiLiveTest {
 
         //Create properties object
 
-        final VirtualNetwork.VirtualNetworkProperties virtualNetworkProperties =
-                VirtualNetwork.VirtualNetworkProperties.create(null, null,
-                        VirtualNetwork.AddressSpace.create(Arrays.asList(DEFAULT_VIRTUALNETWORK_ADDRESS_PREFIX)), null);
+        final VirtualNetworkProperties virtualNetworkProperties =
+                VirtualNetworkProperties.create(null, null,
+                        AddressSpace.create(Arrays.asList(DEFAULT_VIRTUALNETWORK_ADDRESS_PREFIX)), null);
 
         VirtualNetwork vn = vnApi.createOrUpdateVirtualNetwork(VIRTUAL_NETWORK_NAME, LOCATION, virtualNetworkProperties);
 

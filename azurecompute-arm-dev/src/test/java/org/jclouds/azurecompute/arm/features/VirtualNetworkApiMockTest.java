@@ -16,8 +16,10 @@
  */
 package org.jclouds.azurecompute.arm.features;
 
+import org.jclouds.azurecompute.arm.domain.AddressSpace;
 import org.jclouds.azurecompute.arm.domain.VirtualNetwork;
 
+import org.jclouds.azurecompute.arm.domain.VirtualNetworkProperties;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
@@ -65,9 +67,9 @@ public class VirtualNetworkApiMockTest extends BaseAzureComputeApiMockTest {
 
         final VirtualNetworkApi vnApi = api.getVirtualNetworkApi(resourcegroup);
 
-        final VirtualNetwork.VirtualNetworkProperties virtualNetworkProperties =
-                VirtualNetwork.VirtualNetworkProperties.create(null, null,
-                        VirtualNetwork.AddressSpace.create(Arrays.asList("10.2.0.0/16")), null);
+        final VirtualNetworkProperties virtualNetworkProperties =
+                VirtualNetworkProperties.create(null, null,
+                        AddressSpace.create(Arrays.asList("10.2.0.0/16")), null);
 
 
         VirtualNetwork vn = vnApi.createOrUpdateVirtualNetwork(virtualNetwork, location,  virtualNetworkProperties);

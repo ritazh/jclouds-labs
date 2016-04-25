@@ -28,7 +28,16 @@ public abstract class VHD {
    public abstract String uri();
 
    @SerializedNames({"uri"})
-   public static VHD create(final String uri) {
-      return new AutoValue_VHD(uri);
+   public static VHD create(final String  uri) {
+      return builder().uri(uri).build();
+   }
+
+   public static Builder builder() {
+      return new AutoValue_VHD.Builder();
+   }
+   @AutoValue.Builder
+   public abstract static class Builder {
+      public abstract Builder uri(String uri);
+      public abstract VHD build();
    }
 }

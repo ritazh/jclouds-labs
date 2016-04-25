@@ -19,14 +19,19 @@ import static org.testng.Assert.assertNotNull;
 
 import com.google.common.collect.ImmutableMap;
 
+import org.jclouds.azurecompute.arm.domain.AddressSpace;
 import org.jclouds.azurecompute.arm.domain.CreateStorageServiceParams;
 import org.jclouds.azurecompute.arm.domain.IdReference;
 import org.jclouds.azurecompute.arm.domain.IpConfiguration;
+import org.jclouds.azurecompute.arm.domain.IpConfigurationProperties;
 import org.jclouds.azurecompute.arm.domain.NetworkInterfaceCard;
+import org.jclouds.azurecompute.arm.domain.NetworkInterfaceCardProperties;
 import org.jclouds.azurecompute.arm.domain.ResourceGroup;
 import org.jclouds.azurecompute.arm.domain.StorageService;
 import org.jclouds.azurecompute.arm.domain.Subnet;
+import org.jclouds.azurecompute.arm.domain.SubnetProperties;
 import org.jclouds.azurecompute.arm.domain.VirtualNetwork;
+import org.jclouds.azurecompute.arm.domain.VirtualNetworkProperties;
 import org.jclouds.azurecompute.arm.features.StorageAccountApi;
 import org.jclouds.azurecompute.arm.features.SubnetApi;
 import org.jclouds.azurecompute.arm.features.NetworkInterfaceCardApi;
@@ -172,9 +177,9 @@ public class BaseAzureComputeApiLiveTest extends AbstractAzureComputeApiLiveTest
          return vn;
       }
 
-      final VirtualNetwork.VirtualNetworkProperties virtualNetworkProperties =
-              VirtualNetwork.VirtualNetworkProperties.create(null, null,
-                      VirtualNetwork.AddressSpace.create(Arrays.asList(DEFAULT_VIRTUALNETWORK_ADDRESS_PREFIX)), null);
+      final VirtualNetworkProperties virtualNetworkProperties =
+              VirtualNetworkProperties.create(null, null,
+                      AddressSpace.create(Arrays.asList(DEFAULT_VIRTUALNETWORK_ADDRESS_PREFIX)), null);
 
 
       vn = vnApi.createOrUpdateVirtualNetwork(VIRTUAL_NETWORK_NAME, LOCATION, virtualNetworkProperties);
@@ -190,7 +195,7 @@ public class BaseAzureComputeApiLiveTest extends AbstractAzureComputeApiLiveTest
          return subnet;
       }
 
-      Subnet.SubnetProperties properties = Subnet.SubnetProperties.create(null, DEFAULT_SUBNET_ADDRESS_SPACE, null);
+      SubnetProperties properties = SubnetProperties.create(null, DEFAULT_SUBNET_ADDRESS_SPACE, null);
       subnet = subnetApi.createOrUpdateSubnet(subnetName, properties);
 
       return subnet;
@@ -211,10 +216,10 @@ public class BaseAzureComputeApiLiveTest extends AbstractAzureComputeApiLiveTest
       Subnet subnet = getOrCreateSubnet(DEFAULT_SUBNET_NAME, VIRTUAL_NETWORK_NAME);
 
       //Create properties object
-      final NetworkInterfaceCard.NetworkInterfaceCardProperties networkInterfaceCardProperties =
-              NetworkInterfaceCard.NetworkInterfaceCardProperties.create(null, null, null,
+      final NetworkInterfaceCardProperties networkInterfaceCardProperties =
+              NetworkInterfaceCardProperties.create(null, null, null,
                       Arrays.asList(IpConfiguration.create("myipconfig", null, null, null,
-                              IpConfiguration.IpConfigurationProperties.create(null, null, "Dynamic", IdReference.create(subnet.id()), null))
+                              IpConfigurationProperties.create(null, null, "Dynamic", IdReference.create(subnet.id()), null))
                       )
               );
       final Map<String, String> tags = ImmutableMap.of("jclouds", "livetest");
