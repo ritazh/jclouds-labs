@@ -26,7 +26,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.MediaType;
 
+import org.jclouds.Fallbacks.EmptyListOnNotFoundOr404;
 import org.jclouds.Fallbacks.NullOnNotFoundOr404;
+
 import org.jclouds.azurecompute.arm.domain.Deployment;
 import org.jclouds.oauth.v2.filters.OAuthFilter;
 import org.jclouds.rest.annotations.QueryParams;
@@ -34,6 +36,9 @@ import org.jclouds.rest.annotations.RequestFilters;
 import org.jclouds.rest.annotations.Fallback;
 import org.jclouds.rest.annotations.Payload;
 import org.jclouds.rest.annotations.PayloadParam;
+import org.jclouds.rest.annotations.SelectJson;
+
+import java.util.List;
 
 //https://management.azure.com/subscriptions/{subscription-id}/resourcegroups/{resource-group-name}/providers/microsoft.resources/deployments/{deployment-name}?api-version={api-version}
 
@@ -81,4 +86,14 @@ public interface DeploymentApi {
    @Fallback(NullOnNotFoundOr404.class)
    Deployment validateDeployment(@PathParam("deploymentname") String deploymentname,
                                  @PayloadParam("properties") String properties);
+
+   /**
+    * List all deployments in a resource group
+    */
+   @Named("deployment:list")
+   @GET
+   @SelectJson("value")
+   @Fallback(EmptyListOnNotFoundOr404.class)
+   List<Deployment> listDeployments();
+
 }

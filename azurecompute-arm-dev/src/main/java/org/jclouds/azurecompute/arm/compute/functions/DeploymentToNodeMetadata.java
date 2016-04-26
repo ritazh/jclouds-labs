@@ -29,6 +29,7 @@ import org.jclouds.azurecompute.arm.domain.ComputeNode;
 import org.jclouds.azurecompute.arm.domain.Deployment;
 import org.jclouds.azurecompute.arm.domain.PublicIPAddress;
 import org.jclouds.azurecompute.arm.domain.VMDeployment;
+import org.jclouds.azurecompute.arm.util.DeploymentTemplateBuilder;
 import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.collect.Memoized;
 import org.jclouds.compute.domain.NodeMetadataBuilder;
@@ -43,8 +44,8 @@ import org.jclouds.domain.LoginCredentials;
 public class DeploymentToNodeMetadata implements Function<VMDeployment, NodeMetadata> {
 
    public static final String JCLOUDS_DEFAULT_USERNAME = "root";
-   public static final String AZURE_DEFAULT_USERNAME = "jclouds";
-   public static final String DEFAULT_LOGIN_PASSWORD = "Password1!";
+   public static final String AZURE_DEFAULT_USERNAME = DeploymentTemplateBuilder.DEFAULT_LOGIN_USER;
+   public static final String DEFAULT_LOGIN_PASSWORD = DeploymentTemplateBuilder.DEFAULT_LOGIN_PASSWORD;
 
    private static final Map<ComputeNode.Status, NodeMetadata.Status> INSTANCESTATUS_TO_NODESTATUS =
            ImmutableMap.<ComputeNode.Status, NodeMetadata.Status>builder().

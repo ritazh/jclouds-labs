@@ -26,6 +26,8 @@ import com.squareup.okhttp.mockwebserver.MockResponse;
 import org.jclouds.azurecompute.arm.internal.BaseAzureComputeApiMockTest;
 import org.testng.annotations.Test;
 
+import java.util.List;
+
 @Test(groups = "unit", testName = "DeploymentApiMockTest", singleThreaded = true)
 public class DeploymentApiMockTest extends BaseAzureComputeApiMockTest {
 
@@ -77,6 +79,17 @@ public class DeploymentApiMockTest extends BaseAzureComputeApiMockTest {
         Deployment deployment = deploymentApi.getDeployment(deploymentName);
         assertTrue(deployment != null);
         assertEquals(ProvisioningState.fromString(deployment.properties().provisioningState()), ProvisioningState.SUCCEEDED);
+    }
+
+    @Test
+    public void testListDeployment() throws Exception
+    {
+        final DeploymentApi deploymentApi = api.getDeploymentApi(resourceGroup);
+
+        // check if deployment succeeded
+        server.enqueue(jsonResponse("/listdeployments.json"));
+        List<Deployment> deployments = deploymentApi.listDeployments();
+        assertTrue(deployments.size() > 0);
     }
 
     @Test

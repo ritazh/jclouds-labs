@@ -22,6 +22,8 @@ import org.jclouds.azurecompute.arm.internal.BaseAzureComputeApiLiveTest;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import java.util.List;
+
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.assertNotNull;
 
@@ -97,6 +99,13 @@ public class DeploymentApiLiveTest extends BaseAzureComputeApiLiveTest {
         ProvisioningState state = ProvisioningState.fromString(deployment.properties().provisioningState());
         assertTrue(state == ProvisioningState.SUCCEEDED);
     }
+
+    @Test(dependsOnMethods = "testCreate")
+    public void testListDeployments() {
+        List<Deployment> deployments = api().listDeployments();
+        assertTrue(deployments.size() > 0);
+    }
+
 
     private DeploymentApi api() {
         return api.getDeploymentApi(resourceGroup);

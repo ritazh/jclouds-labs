@@ -53,25 +53,29 @@ import java.util.Map;
 public class DeploymentTemplateBuilder {
 
     private String name;
+    private String group;
     private Template template;
     private AzureComputeArmTemplateOptions options;
     private List<ResourceDefinition> resources;
     private Map<String, String> variables;
     private String loginUser;
     private String loginPassword;
+    private String location;
 
-    private static final String DEFAULT_LOGIN_USER = "jclouds";
-    private static final String DEFAULT_LOGIN_PASSWORD = "p@sswOrd1!";
+    public static final String DEFAULT_LOGIN_USER = "jclouds";
+    public static final String DEFAULT_LOGIN_PASSWORD = "Password1!";
     private static final String DEPLOYMENT_MODE = "Incremental";
 
-    public DeploymentTemplateBuilder(String name, Template template){
-        this.name = name.replaceAll("[^A-Za-z0-9 ]", "");
+    public DeploymentTemplateBuilder(String group, String name, Template template){
+        this.name = name;
+        this.group = group;
         this.template = template;
         this.options = template.getOptions().as(AzureComputeArmTemplateOptions.class);
         this.variables = new HashMap<String, String>();
         this.resources = new ArrayList<ResourceDefinition>();
         this.loginUser = options.getLoginUser() == null ? DEFAULT_LOGIN_USER : options.getLoginUser();
         this.loginPassword = options.getLoginPassword() == null ? DEFAULT_LOGIN_PASSWORD : options.getLoginPassword();
+        this.location = template.getLocation().getId();
     }
 
     public String getLoginUserUsername(){
@@ -110,13 +114,14 @@ public class DeploymentTemplateBuilder {
 
 
     private void addStorageResource() {
-        String storageAccountName = name + "storage";
+        String storageAccountName = name.replaceAll("[^A-Za-z0-9 ]", "") + "storage";
+
         variables.put("storageAccountName", storageAccountName);
 
         ResourceDefinition storageAccount = ResourceDefinition.builder()
                 .name("[variables('storageAccountName')]")
                 .type("Microsoft.Storage/storageAccounts")
-                .location("[resourceGroup().location]")
+                .location(location)
                 .apiVersion("2015-06-15")
                 .properties(
                         StorageServiceProperties.builder()
@@ -129,9 +134,9 @@ public class DeploymentTemplateBuilder {
     }
 
     private void addVirtualNetworkResource() {
-        String virtualNetworkName = name + "virtualnetwork";
+        String virtualNetworkName = group + "virtualnetwork";
         String vnAddresSpacePrefix = "10.0.0.0/16";
-        String subnetName = name + "subnet";
+        String subnetName = group + "subnet";
         String subnetAddressPrefix = "10.0.0.0/24";
 
         variables.put("virtualNetworkName", virtualNetworkName);
@@ -156,7 +161,7 @@ public class DeploymentTemplateBuilder {
         ResourceDefinition virtualNetwork = ResourceDefinition.builder()
             .name("[variables('virtualNetworkName')]")
             .type("Microsoft.Network/virtualNetworks")
-            .location("[resourceGroup().location]")
+            .location(location)
             .apiVersion("2015-06-15")
             .properties(properties)
             .build();
@@ -182,7 +187,7 @@ public class DeploymentTemplateBuilder {
         ResourceDefinition publicIpAddress = ResourceDefinition.builder()
                 .name("[variables('publicIPAddressName')]")
                 .type("Microsoft.Network/publicIPAddresses")
-                .location("[resourceGroup().location]")
+                .location(location)
                 .apiVersion("2015-06-15")
                 .properties(properties.build())
                 .build();
@@ -217,7 +222,7 @@ public class DeploymentTemplateBuilder {
         ResourceDefinition networkInterfaceCard = ResourceDefinition.builder()
                 .name("[variables('networkInterfaceCardName')]")
                 .type("Microsoft.Network/networkInterfaces")
-                .location("[resourceGroup().location]")
+                .location(location)
                 .apiVersion("2015-06-15")
                 .dependsOn(Arrays.asList("[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]",
                                          "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]"))
@@ -257,14 +262,13 @@ public class DeploymentTemplateBuilder {
         //Build Image Reference
         final String imagePublisher = template.getImage().getProviderId();
         final String imageOffer = template.getImage().getName();
-        final String imageSku = template.getImage().getDescription();
-        final String osVersion = "latest"; //template.getImage().getVersion();
+        final String imageSku = template.getImage().getVersion();
 
         ImageReference imageReference = ImageReference.builder()
                 .publisher(imagePublisher)
                 .offer(imageOffer)
                 .sku(imageSku)
-                .version(osVersion)
+                .version("latest")
                 .build();
 
         //Build OsDisk
@@ -334,11 +338,11 @@ public class DeploymentTemplateBuilder {
                 .diagnosticsProfile(diagnosticsProfile)
                 .build();
 
-        variables.put("virtualMachineName", name + "VirtualMachine");
+        variables.put("virtualMachineName", name);
         ResourceDefinition virtualMachine = ResourceDefinition.builder()
                 .name("[variables('virtualMachineName')]")
                 .type("Microsoft.Compute/virtualMachines")
-                .location("[resourceGroup().location]")
+                .location(location)
                 .apiVersion("2015-06-15")
                 .dependsOn(Arrays.asList("[concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]",
                         "[concat('Microsoft.Network/networkInterfaces/', variables('networkInterfaceCardName'))]"))

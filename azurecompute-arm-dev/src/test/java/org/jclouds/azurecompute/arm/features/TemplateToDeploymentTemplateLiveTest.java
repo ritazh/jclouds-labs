@@ -16,6 +16,7 @@
  */
 package org.jclouds.azurecompute.arm.features;
 
+import com.google.common.net.UrlEscapers;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.jclouds.azurecompute.arm.compute.options.AzureComputeArmTemplateOptions;
@@ -69,7 +70,9 @@ public class TemplateToDeploymentTemplateLiveTest extends BaseAzureComputeApiLiv
         DeploymentProperties properties = DeploymentProperties.create(deploymentTemplateBody);
         Gson gson = new GsonBuilder().disableHtmlEscaping().create();
         org.jclouds.json.Json json = new GsonWrapper(gson);
-        final String deploymentTemplate = json.toJson(properties);
+
+        String deploymentTemplate = json.toJson(properties);
+        deploymentTemplate = UrlEscapers.urlFormParameterEscaper().escape(deploymentTemplate);
 
         //Validates that template is syntactically correct
         Deployment deployment = api().validateDeployment(deploymentName, deploymentTemplate);
@@ -92,7 +95,9 @@ public class TemplateToDeploymentTemplateLiveTest extends BaseAzureComputeApiLiv
         DeploymentProperties properties = DeploymentProperties.create(deploymentTemplateBody);
         Gson gson = new GsonBuilder().disableHtmlEscaping().create();
         org.jclouds.json.Json json = new GsonWrapper(gson);
-        final String deploymentTemplate = json.toJson(properties);
+
+        String deploymentTemplate = json.toJson(properties);
+        deploymentTemplate = UrlEscapers.urlFormParameterEscaper().escape(deploymentTemplate);
 
         Deployment deployment = api().validateDeployment(deploymentName, deploymentTemplate);
         assertNotNull(deployment);
@@ -103,13 +108,20 @@ public class TemplateToDeploymentTemplateLiveTest extends BaseAzureComputeApiLiv
         Long now = System.currentTimeMillis();
         deploymentName = "jc" + now;
 
-        DeploymentTemplateBuilder templateBuilder  = getDeploymentTemplateBuilderWithEmptyOptions();
+        String rsakey = new String("ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAmfk/QSF0pvnrpdz+Ah2KulGruKU+8FFBdlw938MpOysRdmp7uwpH6Z7+5VNGNdxFIAyc/W3UaZXF9hTsU8+78TlwkZpsr2mzU+ycu37XLAQ8Uv7hjsAN0DkKKPrZ9lgUUfZVKV/8E/JIAs03gIbL6zO3y7eYJQ5fNeZb+nji7tQT+YLpGq/FDegvraPKVMQbCSCZhsHyWhdPLyFlu9/30npZ0ahYOPI/KyZxFDtM/pHp88+ZAk9Icq5owaLRWcJQqrBGWqjbZnHtjdDqvHZ+C0wPhdJZPyfkHOrSYTwSQBXfX4JLRRCz3J1jf62MbQWT1o6Y4JEs1ZP1Skxu6zR96Q== mocktest");
+
+        AzureComputeArmTemplateOptions options = new AzureComputeArmTemplateOptions();
+        options.authorizePublicKey(rsakey);
+        DeploymentTemplateBuilder templateBuilder  = getDeploymentTemplateBuilderWithOptions(options);
+
         DeploymentBody deploymentTemplateBody =  templateBuilder.getDeploymentTemplate();
         DeploymentProperties properties = DeploymentProperties.create(deploymentTemplateBody);
 
         Gson gson = new GsonBuilder().disableHtmlEscaping().create();
         org.jclouds.json.Json json = new GsonWrapper(gson);
-        final String deploymentTemplate = json.toJson(properties);
+
+        String deploymentTemplate = json.toJson(properties);
+        deploymentTemplate = UrlEscapers.urlFormParameterEscaper().escape(deploymentTemplate);
 
         //creates an actual VM using deployment template
         Deployment deployment = api().createDeployment(deploymentName, deploymentTemplate);
@@ -155,7 +167,7 @@ public class TemplateToDeploymentTemplateLiveTest extends BaseAzureComputeApiLiv
                 .providerId("Canonical")
                 .name("UbuntuServer")
                 .description("14.04.3-LTS")
-                .version("latest")
+                .version("14.04.3-LTS")
                 .operatingSystem(os)
                 .status(Image.Status.AVAILABLE)
                 .location(region)
@@ -168,13 +180,13 @@ public class TemplateToDeploymentTemplateLiveTest extends BaseAzureComputeApiLiv
     private DeploymentTemplateBuilder getDeploymentTemplateBuilderWithEmptyOptions(){
         AzureComputeArmTemplateOptions options = new AzureComputeArmTemplateOptions();
         Template template = getTemplate(options);
-        DeploymentTemplateBuilder templateBuilder = new DeploymentTemplateBuilder(deploymentName, template);
+        DeploymentTemplateBuilder templateBuilder = new DeploymentTemplateBuilder(resourceGroup, deploymentName, template);
         return templateBuilder;
     }
 
     private DeploymentTemplateBuilder getDeploymentTemplateBuilderWithOptions(AzureComputeArmTemplateOptions options){
         Template template = getTemplate(options);
-        DeploymentTemplateBuilder templateBuilder = new DeploymentTemplateBuilder(deploymentName, template);
+        DeploymentTemplateBuilder templateBuilder = new DeploymentTemplateBuilder(resourceGroup, deploymentName, template);
         return templateBuilder;
     }
 
