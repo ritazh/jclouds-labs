@@ -20,8 +20,8 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.jclouds.util.Predicates2.retry;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.Resource;
@@ -29,6 +29,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.net.UrlEscapers;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.jclouds.azurecompute.arm.AzureComputeApi;
@@ -40,11 +42,12 @@ import org.jclouds.azurecompute.arm.domain.ImageReference;
 import org.jclouds.azurecompute.arm.domain.Location;
 import org.jclouds.azurecompute.arm.domain.Offer;
 import org.jclouds.azurecompute.arm.domain.PublicIPAddress;
+import org.jclouds.azurecompute.arm.domain.ResourceGroup;
 import org.jclouds.azurecompute.arm.domain.SKU;
 import org.jclouds.azurecompute.arm.domain.VMDeployment;
 import org.jclouds.azurecompute.arm.domain.VMSize;
-import org.jclouds.azurecompute.arm.domain.VirtualMachine;
 import org.jclouds.azurecompute.arm.features.OSImageApi;
+import org.jclouds.azurecompute.arm.features.ResourceGroupApi;
 import org.jclouds.azurecompute.arm.util.DeploymentTemplateBuilder;
 import org.jclouds.compute.ComputeServiceAdapter;
 import org.jclouds.compute.domain.Template;
@@ -87,7 +90,7 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
            final String group, final String name, final Template template) {
 
       final String location = template.getLocation().getId();
-      DeploymentTemplateBuilder deploymentTemplateBuilder = new DeploymentTemplateBuilder(name, template);
+      DeploymentTemplateBuilder deploymentTemplateBuilder = new DeploymentTemplateBuilder(group, name, template);
 
       final String loginUser = deploymentTemplateBuilder.getLoginUserUsername();
       final String loginPassword = deploymentTemplateBuilder.getLoginPassword();
@@ -97,9 +100,10 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
       DeploymentProperties properties = DeploymentProperties.create(deploymentTemplateBody);
       Gson gson = new GsonBuilder().disableHtmlEscaping().create();
       org.jclouds.json.Json json = new GsonWrapper(gson);
-      final String deploymentTemplate = json.toJson(properties);
 
-      logger.info("Deployment created with name: %s", name);
+      final String deploymentTemplate = UrlEscapers.urlFormParameterEscaper().escape(json.toJson(properties));
+
+      logger.debug("Deployment created with name: %s", name);
 
       final Set<VMDeployment> deployments = Sets.newHashSet();
       if (!retry(new Predicate<String>() {
@@ -107,16 +111,26 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
          public boolean apply(final String name) {
             runningNumber++;
 
-            HashMap<String, String> tags = new HashMap<String, String>();
-            tags.put("tagname1", "tagvalue1");
 
-            String resourceGroup = api.getResourceGroupApi().create(getGroupId(), location, tags).name();
-            Deployment deployment = api.getDeploymentApi(getGroupId()).createDeployment(name, deploymentTemplate);
+            ResourceGroupApi resourceGroupApi = api.getResourceGroupApi();
+            ResourceGroup resourceGroup = resourceGroupApi.get(getGroupId());
+            String resourceGroupName;
+
+            if (resourceGroup == null){
+               final Map<String, String> tags = ImmutableMap.of("description", "jClouds managed VMs");
+               resourceGroupName = resourceGroupApi.create(getGroupId(), location, tags).name();
+            } else {
+               resourceGroupName = resourceGroup.name();
+            }
+
+            Deployment deployment = api.getDeploymentApi(resourceGroupName).createDeployment(name, deploymentTemplate);
 
             if (deployment != null) {
                VMDeployment vmDeployment = new VMDeployment();
                vmDeployment.deployment = deployment;
                deployments.add(vmDeployment);
+            } else {
+               logger.debug("Failed to create deployment!");
             }
             return !deployments.isEmpty();
          }
@@ -255,17 +269,19 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
    public Iterable<VMDeployment> listNodes() {
       System.out.println("listNodes");
 
-      List<VMDeployment> deployments = new ArrayList<VMDeployment>();
-      List<VirtualMachine> machines = api.getVirtualMachineApi(getGroupId()).list();
-      for (int c = 0; c <  machines.size(); c++) {
+      List<Deployment> deployments = api.getDeploymentApi(getGroupId()).listDeployments();
+
+      System.out.println("Found " + deployments.size() + " nodes");
+      List<VMDeployment> vmDeployments = new ArrayList<VMDeployment>();
+
+      for (Deployment d : deployments){
          VMDeployment vmDeployment = new VMDeployment();
-         Deployment deployment = api.getDeploymentApi(getGroupId()).getDeployment(machines.get(c).name());
-         vmDeployment.deployment = deployment;
-         List<PublicIPAddress> list = getIPAddresses(deployment);
+         vmDeployment.deployment = d;
+         List<PublicIPAddress> list = getIPAddresses(d);
          vmDeployment.ipAddressList = list;
-         deployments.add(vmDeployment);
+         vmDeployments.add(vmDeployment);
       }
-      return deployments;
+      return vmDeployments;
    }
 
    @Override

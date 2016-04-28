@@ -40,7 +40,6 @@ import org.jclouds.compute.domain.internal.TemplateImpl;
 import org.jclouds.domain.Location;
 import org.jclouds.domain.LocationBuilder;
 import org.jclouds.domain.LocationScope;
-import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 import java.util.Map;
@@ -54,9 +53,7 @@ import static org.testng.Assert.fail;
 @Test(groups = "unit", testName = "DeploymentTemplateBuilderTest", singleThreaded = true)
 public class DeploymentTemplateBuilderTest  {
 
-    @BeforeTest
-    public void setup(){
-    }
+    final String group = "jcgroup";
 
     @Test
     public void testResourceGroup(){
@@ -137,8 +134,8 @@ public class DeploymentTemplateBuilderTest  {
         ImageReference image = properties.storageProfile().imageReference();
         assertEquals(image.publisher(), template.getImage().getProviderId());
         assertEquals(image.offer(), template.getImage().getName());
-        assertEquals(image.sku(), template.getImage().getDescription());
-        assertEquals(image.version(), template.getImage().getVersion());
+        assertEquals(image.sku(), template.getImage().getVersion());
+        assertEquals(image.version(), "latest");
 
         assertTrue(variables.containsKey(parseVariableName(resource.name())));
     }
@@ -166,8 +163,8 @@ public class DeploymentTemplateBuilderTest  {
         ImageReference image = properties.storageProfile().imageReference();
         assertEquals(image.publisher(), template.getImage().getProviderId());
         assertEquals(image.offer(), template.getImage().getName());
-        assertEquals(image.sku(), template.getImage().getDescription());
-        assertEquals(image.version(), template.getImage().getVersion());
+        assertEquals(image.sku(), template.getImage().getVersion());
+        assertEquals(image.version(), "latest");
 
         // Check that ssh key is in place
         OSProfile.LinuxConfiguration osConfig = properties.osProfile().linuxConfiguration();
@@ -183,7 +180,7 @@ public class DeploymentTemplateBuilderTest  {
         Location region = (new LocationBuilder()).scope(LocationScope.REGION).id("northeurope").description("North Europe").parent(provider).build();
         OperatingSystem os = OperatingSystem.builder().name("osName").version("osVersion").description("osDescription").arch("X86_32").build();
         //Note that version is set to "latest"
-        Image image = (new ImageBuilder()).id("imageId").providerId("imageId").name("imageName").description("imageDescription").version("latest").operatingSystem(os).status(Image.Status.AVAILABLE).location(region).build();
+        Image image = (new ImageBuilder()).id("imageId").providerId("imageId").name("imageName").description("imageDescription").version("sku").operatingSystem(os).status(Image.Status.AVAILABLE).location(region).build();
         Hardware hardware = (new HardwareBuilder()).id("Standard_A0").build();
         return new TemplateImpl(image, hardware, region, options);
     }
@@ -191,13 +188,13 @@ public class DeploymentTemplateBuilderTest  {
     private DeploymentTemplateBuilder getMockDeploymentTemplateBuilderWithEmptyOptions(){
         AzureComputeArmTemplateOptions options = new AzureComputeArmTemplateOptions();
         Template template = getMockTemplate(options);
-        DeploymentTemplateBuilder templateBuilder = new DeploymentTemplateBuilder("mydeployment", template);
+        DeploymentTemplateBuilder templateBuilder = new DeploymentTemplateBuilder(group, "mydeployment", template);
         return templateBuilder;
     }
 
     private DeploymentTemplateBuilder getMockDeploymentTemplateBuilderWithOptions(AzureComputeArmTemplateOptions options){
         Template template = getMockTemplate(options);
-        DeploymentTemplateBuilder templateBuilder = new DeploymentTemplateBuilder("mydeployment", template);
+        DeploymentTemplateBuilder templateBuilder = new DeploymentTemplateBuilder(group, "mydeployment", template);
         return templateBuilder;
     }
 
