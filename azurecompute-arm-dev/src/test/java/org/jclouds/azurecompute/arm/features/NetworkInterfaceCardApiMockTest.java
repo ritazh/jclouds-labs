@@ -99,7 +99,7 @@ public class NetworkInterfaceCardApiMockTest extends BaseAzureComputeApiMockTest
 
     public void deleteNetworkInterfaceCard() throws InterruptedException {
 
-        server.enqueue(response202());
+        server.enqueue(response202WithHeader());
 
         final NetworkInterfaceCardApi nicApi = api.getNetworkInterfaceCardApi(resourcegroup);
 
@@ -112,7 +112,7 @@ public class NetworkInterfaceCardApiMockTest extends BaseAzureComputeApiMockTest
 
     public void deleteNetworkInterfaceCardResourceDoesNotExist() throws InterruptedException {
 
-       server.enqueue(response204());
+       server.enqueue(response404());
 
         final NetworkInterfaceCardApi nicApi = api.getNetworkInterfaceCardApi(resourcegroup);
 

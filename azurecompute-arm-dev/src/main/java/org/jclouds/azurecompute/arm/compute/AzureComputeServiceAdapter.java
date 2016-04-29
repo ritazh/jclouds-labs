@@ -19,6 +19,7 @@ import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.jclouds.util.Predicates2.retry;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +49,7 @@ import org.jclouds.azurecompute.arm.domain.VMDeployment;
 import org.jclouds.azurecompute.arm.domain.VMSize;
 import org.jclouds.azurecompute.arm.features.OSImageApi;
 import org.jclouds.azurecompute.arm.features.ResourceGroupApi;
+import org.jclouds.azurecompute.arm.functions.ParseJobStatus;
 import org.jclouds.azurecompute.arm.util.DeploymentTemplateBuilder;
 import org.jclouds.compute.ComputeServiceAdapter;
 import org.jclouds.compute.domain.Template;
@@ -60,6 +62,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import org.jclouds.util.Predicates2;
 
 /**
  * Defines the connection between the {@link AzureComputeApi} implementation and the jclouds
@@ -207,6 +210,8 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
    @Override
    public VMDeployment getNode(final String id) {
       Deployment deployment = api.getDeploymentApi(getGroupId()).getDeployment(id);
+      if (deployment == null)
+         return null;
       String resourceGroup = getResourceGroupFromId(deployment.id());
       VMDeployment vmDeployment = new VMDeployment();
       vmDeployment.deployment = deployment;
@@ -215,32 +220,63 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
       return vmDeployment;
    }
 
-   public VMDeployment internalDestroyNode(final String nodeId) {
-      return null;
-   }
-
    @Override
    public void destroyNode(final String id) {
       logger.debug("Destroying %s ...", id);
-      if (internalDestroyNode(id) != null) {
-         logger.debug("Destroyed %s!", id);
-      } else {
-         logger.warn("Can't destroy %s!", id);
+      String storageAccountName = id.replaceAll("[^A-Za-z0-9 ]", "") + "storage";
+      int index = id.lastIndexOf("-");
+      String group = id.substring(0, index);
+
+      // Delete VM
+      URI uri = api.getVirtualMachineApi(getGroupId()).delete(id);
+      if (uri != null){
+         boolean jobDone = Predicates2.retry(new Predicate<URI>() {
+            @Override public boolean apply(URI uri) {
+               return ParseJobStatus.JobStatus.DONE == api.getJobApi().jobStatus(uri);
+            }
+         }, 60 * 10 * 1000 /* 5 minute timeout */).apply(uri);
+
+         if (jobDone) {
+            // Delete storage account
+            api.getStorageAccountApi(getGroupId()).delete(storageAccountName);
+
+            // Delete NIC
+            uri = api.getNetworkInterfaceCardApi(getGroupId()).deleteNetworkInterfaceCard(id + "nic");
+            if (uri != null){
+               jobDone = Predicates2.retry(new Predicate<URI>() {
+                  @Override public boolean apply(URI uri) {
+                     return ParseJobStatus.JobStatus.DONE == api.getJobApi().jobStatus(uri)
+                             || ParseJobStatus.JobStatus.NO_CONTENT == api.getJobApi().jobStatus(uri);
+                  }
+               }, 60 * 10 * 1000 /* 5 minute timeout */).apply(uri);
+               if (jobDone) {
+                  // Delete public ip
+                  api.getPublicIPAddressApi(getGroupId()).deletePublicIPAddress(id + "publicip");
+
+                  // Delete deployment
+                  api.getDeploymentApi(getGroupId()).deleteDeployment(id);
+
+                  // Delete Virtual network
+                  api.getVirtualNetworkApi(getGroupId()).deleteVirtualNetwork(group + "virtualnetwork");
+               }
+            }
+         }
       }
    }
 
    @Override
    public void rebootNode(final String id) {
-
+      api.getVirtualMachineApi(getGroupId()).restart(id);
    }
 
    @Override
    public void resumeNode(final String id) {
-      getNode(id);
+      api.getVirtualMachineApi(getGroupId()).start(id);
    }
 
    @Override
    public void suspendNode(final String id) {
+      api.getVirtualMachineApi(getGroupId()).stop(id);
    }
 
    private List<PublicIPAddress> getIPAddresses(Deployment deployment) {
@@ -277,6 +313,7 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
       for (Deployment d : deployments){
          VMDeployment vmDeployment = new VMDeployment();
          vmDeployment.deployment = d;
+         vmDeployment.vm = api.getVirtualMachineApi(getGroupId()).getInstanceDetails(d.name());
          List<PublicIPAddress> list = getIPAddresses(d);
          vmDeployment.ipAddressList = list;
          vmDeployments.add(vmDeployment);

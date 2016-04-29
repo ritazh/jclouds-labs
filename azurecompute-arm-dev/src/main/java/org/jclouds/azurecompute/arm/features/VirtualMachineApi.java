@@ -30,6 +30,7 @@ import org.jclouds.Fallbacks;
 import org.jclouds.azurecompute.arm.domain.VirtualMachine;
 import org.jclouds.azurecompute.arm.domain.VirtualMachineInstance;
 import org.jclouds.azurecompute.arm.domain.VirtualMachineProperties;
+import org.jclouds.azurecompute.arm.functions.URIParser;
 import org.jclouds.oauth.v2.filters.OAuthFilter;
 import org.jclouds.rest.annotations.Fallback;
 import org.jclouds.rest.annotations.Payload;
@@ -37,9 +38,11 @@ import org.jclouds.rest.annotations.MapBinder;
 import org.jclouds.rest.annotations.PayloadParam;
 import org.jclouds.rest.annotations.RequestFilters;
 import org.jclouds.rest.annotations.QueryParams;
+import org.jclouds.rest.annotations.ResponseParser;
 import org.jclouds.rest.annotations.SelectJson;
 import org.jclouds.rest.binders.BindToJsonPayload;
 
+import java.net.URI;
 import java.util.List;
 
 /**
@@ -100,11 +103,12 @@ public interface VirtualMachineApi {
    /**
     * The Delete Virtual Machine operation
     */
-   @Named("DeleteVirtualMachine")
+   @Named("virtualmachine:delete")
    @DELETE
+   @ResponseParser(URIParser.class)
    @Path("/{name}")
    @Fallback(Fallbacks.VoidOnNotFoundOr404.class)
-   void delete(@PathParam("name") String name);
+   URI delete(@PathParam("name") String name);
 
    /**
     * The Restart Virtual Machine operation

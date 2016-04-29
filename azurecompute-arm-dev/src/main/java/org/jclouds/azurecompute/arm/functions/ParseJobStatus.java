@@ -29,6 +29,7 @@ public class ParseJobStatus implements Function<HttpResponse, ParseJobStatus.Job
       DONE,
       IN_PROGRESS,
       FAILED,
+      NO_CONTENT,
       UNRECOGNIZED;
 
       public static JobStatus fromString(final String text) {
@@ -46,6 +47,8 @@ public class ParseJobStatus implements Function<HttpResponse, ParseJobStatus.Job
       final String statusCode = Integer.toString(from.getStatusCode());
       if (statusCode != null && statusCode.equals("202")){
          return JobStatus.IN_PROGRESS;
+      } else if (statusCode != null && statusCode.equals("204")){
+         return JobStatus.NO_CONTENT;
       } else if (statusCode != null && statusCode.equals("200")){
          return JobStatus.DONE;
       } else {
