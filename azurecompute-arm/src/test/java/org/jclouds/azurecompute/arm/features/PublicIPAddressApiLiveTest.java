@@ -20,6 +20,8 @@ import com.google.common.collect.ImmutableMap;
 import org.jclouds.azurecompute.arm.domain.PublicIPAddress;
 import org.jclouds.azurecompute.arm.domain.PublicIPAddressProperties;
 import org.jclouds.azurecompute.arm.internal.BaseAzureComputeApiLiveTest;
+import org.jclouds.util.Predicates2;
+import com.google.common.base.Predicate;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -62,7 +64,10 @@ public class PublicIPAddressApiLiveTest extends BaseAzureComputeApiLiveTest {
       final Map<String, String> tags = ImmutableMap.of("testkey", "testvalue");
 
       PublicIPAddressProperties properties =
-              PublicIPAddressProperties.create(null, null, "Static", 4, null, null);
+              PublicIPAddressProperties.builder()
+                  .publicIPAllocationMethod("Static")
+                  .idleTimeoutInMinutes(4)
+                  .build();
 
       PublicIPAddress ip = ipApi.createOrUpdate(publicIpAddressName, LOCATION, tags, properties);
 
@@ -83,18 +88,15 @@ public class PublicIPAddressApiLiveTest extends BaseAzureComputeApiLiveTest {
 
       final PublicIPAddressApi ipApi = api.getPublicIPAddressApi(resourcegroup);
 
-      PublicIPAddress ip = ipApi.get(publicIpAddressName);
-
       //Poll until resource is ready to be used
-      while (ip.properties().provisioningState().equals("Updating")) {
-         try {
-            Thread.sleep(10 * 1000);
-         } catch (InterruptedException e) {
-            e.printStackTrace();
+      boolean jobDone = Predicates2.retry(new Predicate<String>() {
+         @Override public boolean apply(String name) {
+            return ipApi.get(name).properties().provisioningState().equals("Succeeded");
          }
-         ip = ipApi.get(publicIpAddressName);
-      }
+      }, 10 * 1000).apply(publicIpAddressName);
+      assertTrue(jobDone, "get operation did not complete in the configured timeout");
 
+      PublicIPAddress ip = ipApi.get(publicIpAddressName);
       assertNotNull(ip);
       assertEquals(ip.name(), publicIpAddressName);
       assertEquals(ip.location(), LOCATION);
@@ -117,7 +119,7 @@ public class PublicIPAddressApiLiveTest extends BaseAzureComputeApiLiveTest {
       assertTrue(ipList.size() > 0);
    }
 
-   @Test(groups = "live", dependsOnMethods = "listPublicIPAddresses", alwaysRun = true)
+   @Test(groups = "live", dependsOnMethods = {"listPublicIPAddresses", "getPublicIPAddress"}, alwaysRun = true)
    public void deletePublicIPAddress() {
       final PublicIPAddressApi ipApi = api.getPublicIPAddressApi(resourcegroup);
       boolean status = ipApi.delete(publicIpAddressName);

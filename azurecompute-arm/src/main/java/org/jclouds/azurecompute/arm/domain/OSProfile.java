@@ -17,6 +17,7 @@
 package org.jclouds.azurecompute.arm.domain;
 
 import com.google.auto.value.AutoValue;
+import com.google.common.collect.ImmutableList;
 import org.jclouds.javax.annotation.Nullable;
 import org.jclouds.json.SerializedNames;
 
@@ -148,16 +149,16 @@ public abstract class OSProfile {
        * list of certificates
        */
       @Nullable
-      public abstract List<String> secrets();
+      public abstract ImmutableList<String> secrets();
 
       @SerializedNames({"provisionVMAgent", "winRM", "additionalUnattendContent", "enableAutomaticUpdates",
               "secrets"})
       public static WindowsConfiguration create(final boolean provisionVMAgent, final WinRM winRM,
                                                 final AdditionalUnattendContent additionalUnattendContent,
-                                                final boolean enableAutomaticUpdates, final List<String> secrets) {
+                                                final boolean enableAutomaticUpdates, final ImmutableList<String> secrets) {
 
          return new AutoValue_OSProfile_WindowsConfiguration(provisionVMAgent, winRM,
-                 additionalUnattendContent, enableAutomaticUpdates, secrets);
+                 additionalUnattendContent, enableAutomaticUpdates, secrets == null ? null : ImmutableList.copyOf(secrets));
       }
    }
 

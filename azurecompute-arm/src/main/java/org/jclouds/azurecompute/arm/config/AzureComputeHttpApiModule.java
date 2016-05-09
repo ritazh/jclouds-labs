@@ -27,8 +27,11 @@ import org.jclouds.location.suppliers.implicit.OnlyLocationOrFirstRegionOptional
 import org.jclouds.rest.ConfiguresHttpApi;
 import org.jclouds.rest.config.HttpApiModule;
 import org.jclouds.oauth.v2.config.OAuthScopes;
+import org.jclouds.providers.ProviderMetadata;
 
 import com.google.inject.Scopes;
+import com.google.inject.Provides;
+import javax.inject.Named;
 
 @ConfiguresHttpApi
 public class AzureComputeHttpApiModule extends HttpApiModule<AzureComputeApi> {
@@ -53,5 +56,16 @@ public class AzureComputeHttpApiModule extends HttpApiModule<AzureComputeApi> {
       install(new AzureComputeParserModule());
       super.configure();
       bind(OAuthScopes.class).toInstance(OAuthScopes.NoScopes.create());
+   }
+   @Provides
+   @Named("subscriptionId")
+   protected String provideSubscriptionId(ProviderMetadata providerMetadata) {
+      String subscriptionid = null;
+      String endpoint = null;
+      endpoint = providerMetadata.getEndpoint();
+      if (endpoint != null) {
+         subscriptionid = endpoint.substring(endpoint.lastIndexOf("/") + 1);
+      }
+      return subscriptionid;
    }
 }

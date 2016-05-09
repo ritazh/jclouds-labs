@@ -17,6 +17,7 @@
 package org.jclouds.azurecompute.arm.features;
 
 import com.google.common.collect.ImmutableMap;
+import com.squareup.okhttp.mockwebserver.MockResponse;
 import org.jclouds.azurecompute.arm.domain.IdReference;
 import org.jclouds.azurecompute.arm.domain.IpConfiguration;
 import org.jclouds.azurecompute.arm.domain.IpConfigurationProperties;
@@ -30,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
@@ -57,6 +59,16 @@ public class NetworkInterfaceCardApiMockTest extends BaseAzureComputeApiMockTest
       assertEquals(nic.tags().get("mycustomtag"), "foobar");
    }
 
+   public void getNetworkInterfaceCardEmpty() throws Exception {
+      server.enqueue(new MockResponse().setResponseCode(404));
+
+      final NetworkInterfaceCardApi nicApi = api.getNetworkInterfaceCardApi(resourcegroup);
+
+      assertNull(nicApi.get(nicName));
+
+      assertSent(server, "GET", "/subscriptions/SUBSCRIPTIONID/resourcegroups/myresourcegroup/providers/Microsoft.Network/networkInterfaces/myNic?api-version=2015-06-15");
+   }
+
    public void listNetworkInterfaceCards() throws InterruptedException {
       server.enqueue(jsonResponse("/listnetworkinterfaces.json"));
 
@@ -70,6 +82,17 @@ public class NetworkInterfaceCardApiMockTest extends BaseAzureComputeApiMockTest
       assertEquals(nicList.get(0).properties().ipConfigurations().get(0).properties().privateIPAllocationMethod(), "Dynamic");
       assertTrue(nicList.get(1).properties().ipConfigurations().size() > 0);
       assertEquals(nicList.get(1).properties().ipConfigurations().get(0).properties().privateIPAllocationMethod(), "Static");
+   }
+
+   public void listNetworkInterfaceCardsEmpty() throws Exception {
+      server.enqueue(new MockResponse().setResponseCode(404));
+
+      final NetworkInterfaceCardApi nicApi = api.getNetworkInterfaceCardApi(resourcegroup);
+
+      assertTrue(nicApi.list().isEmpty());
+      String path = String.format("/subscriptions/%s/resourcegroups/%s/providers/Microsoft.Network/networkInterfaces?%s", subscriptionid, resourcegroup, apiVersion);
+
+      assertSent(server, "GET", path);
    }
 
    public void createNetworkInterfaceCard() throws InterruptedException {

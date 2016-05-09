@@ -38,7 +38,6 @@ import org.jclouds.util.Predicates2;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
 import java.net.URI;
@@ -70,31 +69,24 @@ public class VirtualMachineApiLiveTest extends BaseAzureComputeApiLiveTest {
    }
 
    @Test
-   public void testCreate() {
+   public void testCreate(){
+
       StorageAccountApi storageApi = api.getStorageAccountApi(getResourceGroupName());
       StorageService storageAccount = storageApi.get(getStorageServiceName());
       String blob = storageAccount.storageServiceProperties().primaryEndpoints().get("blob");
 
-      String id = "/subscriptions/" + subscriptionid + "/resourceGroups/" + getResourceGroupName() +
-              "/providers/" + "Microsoft.Compute/virtualMachines/" + getName();
-      VirtualMachine vm = api().create(getName(), id, getName(), LOCATION, getProperties(blob, nicName));
+      VirtualMachine vm = api().create(getName(), LOCATION, getProperties(blob, nicName));
       assertTrue(!vm.name().isEmpty());
-      String status = "Creating";
-      int stopCounter = 0;
-      while (status.equals("Creating")) {
-         try {
-            Thread.sleep(120 * 1000); // Creation takes long time. Recheck later
-         } catch (InterruptedException e) {
-            e.printStackTrace();
-         }
-         vm = api().get(getName());
-         status = vm.properties().provisioningState();
-         stopCounter++;
-         if (stopCounter == 15)
-            break;
-      }
-      status = vm.properties().provisioningState();
 
+      //Poll until resource is ready to be used
+      boolean jobDone = Predicates2.retry(new Predicate<String>() {
+         @Override public boolean apply(String name) {
+            return !api().get(name).properties().provisioningState().equals("Creating");
+         }
+      }, 60 * 20 * 1000).apply(getName());
+      assertTrue(jobDone, "create operation did not complete in the configured timeout");
+
+      String status = api().get(vmName).properties().provisioningState();
       // Cannot be creating anymore. Should be succeeded or running but not failed.
       assertTrue(!status.equals("Creating"));
       assertTrue(!status.equals("Failed"));
@@ -114,111 +106,90 @@ public class VirtualMachineApiLiveTest extends BaseAzureComputeApiLiveTest {
 
    @Test(dependsOnMethods = "testStart")
    public void testStop() {
-      String status = "";
       api().stop(getName());
-      int stopCounter = 0;
-      while (!status.equals("VM stopped")) {
-         List<VirtualMachineInstance.VirtualMachineStatus> statuses = api().getInstanceDetails(getName()).statuses();
-         for (int c = 0; c < statuses.size(); c++) {
-            if (statuses.get(c).code().substring(0, 10).equals("PowerState")) {
-               status = statuses.get(c).displayStatus();
+      //Poll until resource is ready to be used
+      boolean jobDone = Predicates2.retry(new Predicate<String>() {
+         @Override public boolean apply(String name) {
+            String status = "";
+            List<VirtualMachineInstance.VirtualMachineStatus> statuses = api().getInstanceDetails(name).statuses();
+            for (int c = 0; c < statuses.size(); c++) {
+               if (statuses.get(c).code().substring(0, 10).equals("PowerState")) {
+                  status = statuses.get(c).displayStatus();
+               }
             }
-            try {
-               Thread.sleep(5 * 1000); // Stopping takes long time. Recheck later
-            } catch (InterruptedException e) {
-               e.printStackTrace();
-            }
-            stopCounter++;
-            if (stopCounter == 40)
-               break;
+            return status.equals("VM stopped");
          }
-      }
-      assertEquals(status, "VM stopped");
+      }, 60 * 4 * 1000).apply(getName());
+      assertTrue(jobDone, "stop operation did not complete in the configured timeout");
 
    }
 
    @Test(dependsOnMethods = "testGet")
    public void testStart() {
       api().start(getName());
-      String status = "";
-      int stopCounter = 0;
-      while (!status.equals("VM running")) {
-         List<VirtualMachineInstance.VirtualMachineStatus> statuses = api().getInstanceDetails(getName()).statuses();
-         for (int c = 0; c < statuses.size(); c++) {
-            if (statuses.get(c).code().substring(0, 10).equals("PowerState")) {
-               status = statuses.get(c).displayStatus();
+
+      //Poll until resource is ready to be used
+      boolean jobDone = Predicates2.retry(new Predicate<String>() {
+         @Override public boolean apply(String name) {
+            String status = "";
+            List<VirtualMachineInstance.VirtualMachineStatus> statuses = api().getInstanceDetails(name).statuses();
+            for (int c = 0; c < statuses.size(); c++) {
+               if (statuses.get(c).code().substring(0, 10).equals("PowerState")) {
+                  status = statuses.get(c).displayStatus();
+               }
             }
-            try {
-               Thread.sleep(5 * 1000); // Starting takes long time. Recheck later
-            } catch (InterruptedException e) {
-               e.printStackTrace();
-            }
-            stopCounter++;
-            if (stopCounter == 40)
-               break;
+            return status.equals("VM running");
          }
-      }
-      assertEquals(status, "VM running");
+      }, 60 * 4 * 1000).apply(getName());
+      assertTrue(jobDone, "start operation did not complete in the configured timeout");
 
    }
 
    @Test(dependsOnMethods = "testStop")
    public void testRestart() {
       api().start(getName());
-      String status = "";
-      int stopCounter = 0;
-      while (!status.equals("VM running")) {
-         List<VirtualMachineInstance.VirtualMachineStatus> statuses = api().getInstanceDetails(getName()).statuses();
-         for (int c = 0; c < statuses.size(); c++) {
-            if (statuses.get(c).code().substring(0, 10).equals("PowerState")) {
-               status = statuses.get(c).displayStatus();
+
+      //Poll until resource is ready to be used
+      boolean jobDone = Predicates2.retry(new Predicate<String>() {
+         @Override public boolean apply(String name) {
+            String status = "";
+            List<VirtualMachineInstance.VirtualMachineStatus> statuses = api().getInstanceDetails(name).statuses();
+            for (int c = 0; c < statuses.size(); c++) {
+               if (statuses.get(c).code().substring(0, 10).equals("PowerState")) {
+                  status = statuses.get(c).displayStatus();
+               }
             }
-            try {
-               Thread.sleep(5 * 1000); // Starting takes long time. Recheck later
-            } catch (InterruptedException e) {
-               e.printStackTrace();
-            }
-            stopCounter++;
-            if (stopCounter == 40)
-               break;
+            return status.equals("VM running");
          }
-      }
+      }, 60 * 4 * 1000).apply(getName());
+      assertTrue(jobDone, "start operation did not complete in the configured timeout");
+
       api().restart(getName());
-      try {
-         Thread.sleep(30 * 1000); // Wait while to get it powered off and then wait until machine is running
-      } catch (InterruptedException e) {
-         e.printStackTrace();
-      }
-      status = "";
-      stopCounter = 0;
-      while (!status.equals("VM running")) {
-         List<VirtualMachineInstance.VirtualMachineStatus> statuses = api().getInstanceDetails(getName()).statuses();
-         for (int c = 0; c < statuses.size(); c++) {
-            if (statuses.get(c).code().substring(0, 10).equals("PowerState")) {
-               status = statuses.get(c).displayStatus();
+
+      //Poll until resource is ready to be used
+      jobDone = Predicates2.retry(new Predicate<String>() {
+         @Override public boolean apply(String name) {
+            String status = "";
+            List<VirtualMachineInstance.VirtualMachineStatus> statuses = api().getInstanceDetails(name).statuses();
+            for (int c = 0; c < statuses.size(); c++) {
+               if (statuses.get(c).code().substring(0, 10).equals("PowerState")) {
+                  status = statuses.get(c).displayStatus();
+               }
             }
-            try {
-               Thread.sleep(5 * 1000); // Starting takes long time. Recheck later
-            } catch (InterruptedException e) {
-               e.printStackTrace();
-            }
-            stopCounter++;
-            if (stopCounter == 40)
-               break;
+            return status.equals("VM running");
          }
-      }
-      assertEquals(status, "VM running");
+      }, 60 * 4 * 1000).apply(getName());
+      assertTrue(jobDone, "restart operation did not complete in the configured timeout");
    }
 
    @Test(dependsOnMethods = "testCreate")
    public void testList() {
       List<VirtualMachine> list = api().list();
-      for (VirtualMachine machine : list) {
-         assertTrue(!machine.name().isEmpty());
-      }
+      VirtualMachine vm = api().get(getName());
+      assertTrue(list.contains(vm));
    }
 
-   @Test(dependsOnMethods = "testRestart")
+   @Test(dependsOnMethods = {"testRestart", "testList", "testGet"},  alwaysRun = true)
    public void testDelete() throws Exception {
       URI uri = api().delete(getName());
 
@@ -230,7 +201,7 @@ public class VirtualMachineApiLiveTest extends BaseAzureComputeApiLiveTest {
             public boolean apply(URI uri) {
                return ParseJobStatus.JobStatus.DONE == api.getJobApi().jobStatus(uri);
             }
-         }, 60 * 2 * 1000 /* 2 minutes timeout */).apply(uri);
+         }, 60 * 8 * 1000 /* 2 minutes timeout */).apply(uri);
          assertTrue(jobDone, "delete operation did not complete in the configured timeout");
       }
    }
@@ -240,6 +211,7 @@ public class VirtualMachineApiLiveTest extends BaseAzureComputeApiLiveTest {
    }
 
    private VirtualMachineProperties getProperties(String blob, String nic) {
+
       HardwareProfile hwProf = HardwareProfile.create("Standard_D1");
       ImageReference imgRef = ImageReference.create("MicrosoftWindowsServerEssentials",
               "WindowsServerEssentials", "WindowsServerEssentials", "latest");

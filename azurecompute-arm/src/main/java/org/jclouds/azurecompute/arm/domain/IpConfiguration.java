@@ -41,6 +41,26 @@ public abstract class IpConfiguration {
 
    @SerializedNames({"name", "id", "etag", "primary", "properties"})
    public static IpConfiguration create(final String name, final String id, final String etag, final Boolean primary, final IpConfigurationProperties properties) {
-      return new AutoValue_IpConfiguration(name, id, etag, primary, properties);
+      return builder()
+              .name(name)
+              .id(id)
+              .etag(etag)
+              .primary(primary)
+              .properties(properties)
+              .build();
+   }
+
+   public static Builder builder() {
+      return new AutoValue_IpConfiguration.Builder();
+   }
+
+   @AutoValue.Builder
+   public abstract static class Builder {
+      public abstract Builder name(String name);
+      public abstract Builder id(String id);
+      public abstract Builder etag(String etag);
+      public abstract Builder primary(Boolean primary);
+      public abstract Builder properties(IpConfigurationProperties properties);
+      public abstract IpConfiguration build();
    }
 }

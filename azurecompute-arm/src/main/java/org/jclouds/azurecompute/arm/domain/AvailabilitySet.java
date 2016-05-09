@@ -18,12 +18,12 @@
 package org.jclouds.azurecompute.arm.domain;
 
 import com.google.auto.value.AutoValue;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.jclouds.javax.annotation.Nullable;
 import org.jclouds.json.SerializedNames;
-
-import java.util.List;
 import java.util.Map;
+import java.util.List;
 
 /**
  * AvailabilitySet for subscription
@@ -56,7 +56,7 @@ public abstract class AvailabilitySet {
                                                      List<AvailabilitySetVirtualMachine> virtualMachines) {
          return new AutoValue_AvailabilitySet_AvailabilitySetProperties(platformUpdateDomainCount,
                  platformFaultDomainCount,
-                 virtualMachines);
+                 virtualMachines == null ? null : ImmutableList.copyOf(virtualMachines));
       }
    }
 

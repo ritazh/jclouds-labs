@@ -53,7 +53,6 @@ import java.util.List;
 @Path("/resourceGroups/{resourceGroup}/providers/Microsoft.Compute/virtualMachines")
 @RequestFilters(OAuthFilter.class)
 @QueryParams(keys = "api-version", values = "2015-06-15")
-@Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public interface VirtualMachineApi {
 
@@ -80,13 +79,12 @@ public interface VirtualMachineApi {
     */
    @Named("CreateVirtualMachine")
    @PUT
-   @Payload("%7B\"id\":\"{id}\",\"name\":\"{name}\",\"type\":\"Microsoft.Compute/virtualMachines\"," +
-           "\"location\":\"{location}\",\"tags\":%7B%7D,\"properties\":{properties}%7D")
+   @Payload("%7B\"location\":\"{location}\",\"tags\":%7B%7D,\"properties\":{properties}%7D")
    @MapBinder(BindToJsonPayload.class)
    @Path("/{vmname}")
    @QueryParams(keys = "validating", values = "false")
-   VirtualMachine create(@PathParam("vmname") String vmname, @PayloadParam("id") String id,
-                         @PayloadParam("name") String name,
+   @Produces(MediaType.APPLICATION_JSON)
+   VirtualMachine create(@PathParam("vmname") String vmname,
                          @PayloadParam("location") String location,
                          @PayloadParam("properties") VirtualMachineProperties properties);
 
@@ -115,7 +113,6 @@ public interface VirtualMachineApi {
    @Named("RestartVirtualMachine")
    @POST
    @Path("/{name}/restart")
-   @Fallback(Fallbacks.VoidOnNotFoundOr404.class)
    void restart(@PathParam("name") String name);
 
    /**
@@ -124,7 +121,6 @@ public interface VirtualMachineApi {
    @Named("StartVirtualMachine")
    @POST
    @Path("/{name}/start")
-   @Fallback(Fallbacks.VoidOnNotFoundOr404.class)
    void start(@PathParam("name") String name);
 
    /**
@@ -133,7 +129,6 @@ public interface VirtualMachineApi {
    @Named("StopVirtualMachine")
    @POST
    @Path("/{name}/powerOff")
-   @Fallback(Fallbacks.VoidOnNotFoundOr404.class)
    void stop(@PathParam("name") String name);
 
 }

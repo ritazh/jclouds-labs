@@ -24,7 +24,7 @@ import org.jclouds.json.SerializedNames;
 public abstract class DiagnosticsProfile {
 
    @AutoValue
-   public abstract static class BootDiagnostics {
+   public abstract static class BootDiagnostics{
 
       public abstract Boolean enabled();
 
@@ -42,13 +42,10 @@ public abstract class DiagnosticsProfile {
       public static Builder builder() {
          return new AutoValue_DiagnosticsProfile_BootDiagnostics.Builder();
       }
-
       @AutoValue.Builder
       public abstract static class Builder {
          public abstract Builder enabled(Boolean enabled);
-
          public abstract Builder storageUri(String storageUri);
-
          public abstract BootDiagnostics build();
       }
    }
@@ -56,10 +53,9 @@ public abstract class DiagnosticsProfile {
    public abstract BootDiagnostics bootDiagnostics();
 
    @SerializedNames({"bootDiagnostics"})
-   public static DiagnosticsProfile create(final BootDiagnostics bootDiagnostics) {
+   public static DiagnosticsProfile create(final BootDiagnostics  bootDiagnostics) {
       return builder().bootDiagnostics(bootDiagnostics).build();
    }
-
    public static Builder builder() {
       return new AutoValue_DiagnosticsProfile.Builder();
    }
@@ -67,7 +63,6 @@ public abstract class DiagnosticsProfile {
    @AutoValue.Builder
    public abstract static class Builder {
       public abstract Builder bootDiagnostics(BootDiagnostics bootDiagnostics);
-
       public abstract DiagnosticsProfile build();
    }
 }

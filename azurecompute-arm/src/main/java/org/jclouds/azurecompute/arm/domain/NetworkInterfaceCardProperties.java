@@ -36,17 +36,15 @@ public abstract class NetworkInterfaceCardProperties {
    public abstract Boolean enableIPForwarding();
 
    @Nullable
-   public abstract ImmutableList<IpConfiguration> ipConfigurations();
+   public abstract List<IpConfiguration> ipConfigurations();
 
    @SerializedNames({"provisioningState", "resourceGuid", "enableIPForwarding", "ipConfigurations"})
    public static NetworkInterfaceCardProperties create(final String provisioningState, final String resourceGuid, final Boolean enableIPForwarding, final List<IpConfiguration> ipConfigurations) {
       NetworkInterfaceCardProperties.Builder builder = NetworkInterfaceCardProperties.builder()
               .provisioningState(provisioningState)
               .resourceGuid(resourceGuid)
-              .enableIPForwarding(enableIPForwarding);
-
-      if (ipConfigurations != null)
-         builder.ipConfigurations(ipConfigurations);
+              .enableIPForwarding(enableIPForwarding)
+              .ipConfigurations(ipConfigurations == null ? null : ImmutableList.copyOf(ipConfigurations));
 
       return builder.build();
    }

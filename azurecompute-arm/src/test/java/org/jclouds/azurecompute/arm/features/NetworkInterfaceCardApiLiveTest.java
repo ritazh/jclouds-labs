@@ -77,12 +77,16 @@ public class NetworkInterfaceCardApiLiveTest extends BaseAzureComputeApiLiveTest
 
 
       //Create properties object
+      //Create properties object
       final NetworkInterfaceCardProperties networkInterfaceCardProperties =
-              NetworkInterfaceCardProperties.create(null, null, null,
-                      Arrays.asList(IpConfiguration.create("myipconfig", null, null, null,
-                              IpConfigurationProperties.create(null, null, "Dynamic", IdReference.create(subnetID), null))
-                      )
-              );
+              NetworkInterfaceCardProperties.builder().ipConfigurations(
+                      Arrays.asList(IpConfiguration.builder()
+                              .name("myipconfig")
+                              .properties(IpConfigurationProperties.builder()
+                                      .privateIPAllocationMethod("Dynamic")
+                                      .subnet(IdReference.create(subnetID)).build()
+                      ).build()
+              )).build();
 
       final Map<String, String> tags = ImmutableMap.of("jclouds", "livetest");
       NetworkInterfaceCard nic = nicApi.createOrUpdate(NETWORKINTERFACECARD_NAME, LOCATION, networkInterfaceCardProperties, tags);
@@ -119,11 +123,11 @@ public class NetworkInterfaceCardApiLiveTest extends BaseAzureComputeApiLiveTest
 
       List<NetworkInterfaceCard> nicList = nicApi.list();
 
-      assertTrue(nicList.size() > 0);
+      assertTrue(nicList.contains(nicApi.get(NETWORKINTERFACECARD_NAME)));
    }
 
 
-   @Test(groups = "live", dependsOnMethods = "listNetworkInterfaceCards", alwaysRun = true)
+   @Test(groups = "live", dependsOnMethods = {"listNetworkInterfaceCards", "getNetworkInterfaceCard"}, alwaysRun = true)
    public void deleteNetworkInterfaceCard() {
 
       final NetworkInterfaceCardApi nicApi = api.getNetworkInterfaceCardApi(resourcegroup);

@@ -17,7 +17,6 @@
 package org.jclouds.azurecompute.arm.domain;
 
 import com.google.auto.value.AutoValue;
-import com.google.common.collect.ImmutableList;
 import org.jclouds.json.SerializedNames;
 
 import java.util.List;
@@ -28,7 +27,7 @@ public abstract class NetworkProfile {
    /**
     * List of network interfaces
     */
-   public abstract ImmutableList<IdReference> networkInterfaces();
+   public abstract List<IdReference> networkInterfaces();
 
    @SerializedNames({"networkInterfaces"})
    public static NetworkProfile create(final List<IdReference> networkInterfaces) {

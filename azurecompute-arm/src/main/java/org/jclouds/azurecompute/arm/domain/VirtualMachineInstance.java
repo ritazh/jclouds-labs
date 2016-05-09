@@ -17,11 +17,11 @@
 package org.jclouds.azurecompute.arm.domain;
 
 import com.google.auto.value.AutoValue;
+import com.google.common.collect.ImmutableList;
 import org.jclouds.javax.annotation.Nullable;
 import org.jclouds.json.SerializedNames;
 
 import java.util.Date;
-import java.util.List;
 
 /**
  * A virtual machine instance view that is valid for your subscription.
@@ -59,13 +59,13 @@ public abstract class VirtualMachineInstance {
    public abstract String platformFaultDomain();
 
    @Nullable
-   public abstract List<VirtualMachineStatus> statuses();
+   public abstract ImmutableList<VirtualMachineStatus> statuses();
 
 
    @SerializedNames({"platformUpdateDomain", "platformFaultDomain", "statuses"})
    public static VirtualMachineInstance create(final String platformUpdateDomain, final String platformFaultDomain,
-                                               final List<VirtualMachineStatus> statuses) {
+                                               final ImmutableList<VirtualMachineStatus> statuses) {
 
-      return new AutoValue_VirtualMachineInstance(platformUpdateDomain, platformFaultDomain, statuses);
+      return new AutoValue_VirtualMachineInstance(platformUpdateDomain, platformFaultDomain, statuses == null ? null : ImmutableList.copyOf(statuses));
    }
 }

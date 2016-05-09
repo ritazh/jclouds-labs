@@ -63,8 +63,8 @@ public class BaseAzureComputeApiLiveTest extends AbstractAzureComputeApiLiveTest
 
    protected StorageService storageService;
 
-
    private String storageServiceName = null;
+
 
    protected String getStorageServiceName() {
       if (storageServiceName == null) {
@@ -119,7 +119,6 @@ public class BaseAzureComputeApiLiveTest extends AbstractAzureComputeApiLiveTest
    @Override
    public void setup() {
       super.setup();
-
       storageService = getOrCreateStorageService(getStorageServiceName());
    }
 

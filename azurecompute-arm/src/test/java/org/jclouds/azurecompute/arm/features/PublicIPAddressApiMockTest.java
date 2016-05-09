@@ -17,6 +17,7 @@
 package org.jclouds.azurecompute.arm.features;
 
 import com.google.common.collect.ImmutableMap;
+import com.squareup.okhttp.mockwebserver.MockResponse;
 import org.jclouds.azurecompute.arm.domain.DnsSettings;
 import org.jclouds.azurecompute.arm.domain.PublicIPAddress;
 import org.jclouds.azurecompute.arm.domain.PublicIPAddressProperties;
@@ -68,6 +69,18 @@ public class PublicIPAddressApiMockTest extends BaseAzureComputeApiMockTest {
       assertEquals(ip.properties().ipConfiguration().id(), "/subscriptions/fakeb2f5-4710-4e93-bdf4-419edbde2178/resourceGroups/myresourcegroup/providers/Microsoft.Network/networkInterfaces/myNic/ipConfigurations/myip1");
    }
 
+   public void getPublicIPAddressInfoEmpty() throws Exception {
+      server.enqueue(new MockResponse().setResponseCode(404));
+
+      final PublicIPAddressApi ipApi = api.getPublicIPAddressApi(resourcegroup);
+      PublicIPAddress ip = ipApi.get(publicIpName);
+
+      String path = String.format("/subscriptions/%s/resourcegroups/%s/providers/Microsoft.Network/publicIPAddresses/%s?%s", subscriptionid, resourcegroup, publicIpName, apiVersion);
+      assertSent(server, "GET", path);
+
+      assertNull(ip);
+   }
+
    public void listPublicIPAddresses() throws InterruptedException {
       server.enqueue(jsonResponse("/PublicIPAddressList.json"));
 
@@ -77,6 +90,17 @@ public class PublicIPAddressApiMockTest extends BaseAzureComputeApiMockTest {
       String path = String.format("/subscriptions/%s/resourcegroups/%s/providers/Microsoft.Network/publicIPAddresses?%s", subscriptionid, resourcegroup, apiVersion);
       assertSent(server, "GET", path);
       assertEquals(ipList.size(), 4);
+   }
+
+   public void listPublicIPAddressesEmpty() throws InterruptedException {
+      server.enqueue(new MockResponse().setResponseCode(404));
+
+      final PublicIPAddressApi ipApi = api.getPublicIPAddressApi(resourcegroup);
+      List<PublicIPAddress> ipList = ipApi.list();
+
+      String path = String.format("/subscriptions/%s/resourcegroups/%s/providers/Microsoft.Network/publicIPAddresses?%s", subscriptionid, resourcegroup, apiVersion);
+      assertSent(server, "GET", path);
+      assertEquals(ipList.size(), 0);
    }
 
    public void createPublicIPAddress() throws InterruptedException {
