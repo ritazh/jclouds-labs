@@ -16,6 +16,7 @@
  */
 package org.jclouds.azurecompute.arm.features;
 
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
 import org.jclouds.azurecompute.arm.domain.IdReference;
 import org.jclouds.azurecompute.arm.domain.IpConfiguration;
@@ -24,10 +25,13 @@ import org.jclouds.azurecompute.arm.domain.NetworkInterfaceCard;
 import org.jclouds.azurecompute.arm.domain.NetworkInterfaceCardProperties;
 import org.jclouds.azurecompute.arm.domain.Subnet;
 import org.jclouds.azurecompute.arm.domain.VirtualNetwork;
+import org.jclouds.azurecompute.arm.functions.ParseJobStatus;
 import org.jclouds.azurecompute.arm.internal.BaseAzureComputeApiLiveTest;
+import org.jclouds.util.Predicates2;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -65,8 +69,18 @@ public class NetworkInterfaceCardApiLiveTest extends BaseAzureComputeApiLiveTest
     public void deleteNetworkInterfaceCardResourceDoesNotExist() {
 
         final NetworkInterfaceCardApi nicApi = api.getNetworkInterfaceCardApi(resourcegroup);
-        String statusCode = nicApi.deleteNetworkInterfaceCard(NETWORKINTERFACECARD_NAME);
-        assertTrue(statusCode.equals("204"));
+        URI uri = nicApi.deleteNetworkInterfaceCard(NETWORKINTERFACECARD_NAME);
+        if (uri != null) {
+            assertTrue(uri.toString().contains("api-version"));
+            assertTrue(uri.toString().contains("operationresults"));
+
+            boolean jobDone = Predicates2.retry(new Predicate<URI>() {
+                @Override public boolean apply(URI uri) {
+                    return ParseJobStatus.JobStatus.FAILED == api.getJobApi().jobStatus(uri);
+                }
+            }, 60 * 2 * 1000 /* 2 minute timeout */).apply(uri);
+            assertTrue(jobDone, "delete operation did not complete in the configured timeout");
+        }
     }
 
     @Test(groups = "live", dependsOnMethods = "deleteNetworkInterfaceCardResourceDoesNotExist")
@@ -127,8 +141,18 @@ public class NetworkInterfaceCardApiLiveTest extends BaseAzureComputeApiLiveTest
 
         final NetworkInterfaceCardApi nicApi = api.getNetworkInterfaceCardApi(resourcegroup);
 
-        String statusCode = nicApi.deleteNetworkInterfaceCard(NETWORKINTERFACECARD_NAME);
-        assertTrue(statusCode.equals("202"));
+        URI uri =  nicApi.deleteNetworkInterfaceCard(NETWORKINTERFACECARD_NAME);
+        if (uri != null) {
+            assertTrue(uri.toString().contains("api-version"));
+            assertTrue(uri.toString().contains("operationresults"));
+
+            boolean jobDone = Predicates2.retry(new Predicate<URI>() {
+                @Override public boolean apply(URI uri) {
+                    return ParseJobStatus.JobStatus.DONE == api.getJobApi().jobStatus(uri);
+                }
+            }, 60 * 2 * 1000 /* 2 minute timeout */).apply(uri);
+            assertTrue(jobDone, "delete operation did not complete in the configured timeout");
+        }
     }
 
 }

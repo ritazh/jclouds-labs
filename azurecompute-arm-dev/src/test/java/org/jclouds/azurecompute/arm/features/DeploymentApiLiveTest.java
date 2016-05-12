@@ -19,9 +19,11 @@ package org.jclouds.azurecompute.arm.features;
 import org.jclouds.azurecompute.arm.domain.Deployment;
 import org.jclouds.azurecompute.arm.domain.Deployment.ProvisioningState;
 import org.jclouds.azurecompute.arm.internal.BaseAzureComputeApiLiveTest;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import java.net.URI;
 import java.util.List;
 
 import static org.testng.Assert.assertTrue;
@@ -106,6 +108,19 @@ public class DeploymentApiLiveTest extends BaseAzureComputeApiLiveTest {
         assertTrue(deployments.size() > 0);
     }
 
+    @AfterClass(alwaysRun = true)
+    public void testDelete() throws Exception {
+        List<Deployment> deployments = api().listDeployments();
+        for (Deployment d : deployments) {
+            if (d.name().contains("jcdep")) {
+                URI uri =  api().deleteDeployment(d.name());
+                if (uri != null){
+                    assertTrue(uri.toString().contains("api-version"));
+                    assertTrue(uri.toString().contains("operationresults"));
+                }
+            }
+        }
+    }
 
     private DeploymentApi api() {
         return api.getDeploymentApi(resourceGroup);

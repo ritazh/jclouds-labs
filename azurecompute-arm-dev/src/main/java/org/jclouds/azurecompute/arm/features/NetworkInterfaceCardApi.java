@@ -16,11 +16,12 @@
  */
 package org.jclouds.azurecompute.arm.features;
 
+import org.jclouds.Fallbacks;
 import org.jclouds.Fallbacks.EmptyListOnNotFoundOr404;
 import org.jclouds.Fallbacks.NullOnNotFoundOr404;
 import org.jclouds.azurecompute.arm.domain.NetworkInterfaceCard;
 import org.jclouds.azurecompute.arm.domain.NetworkInterfaceCardProperties;
-import org.jclouds.azurecompute.arm.functions.StatusCodeParser;
+import org.jclouds.azurecompute.arm.functions.URIParser;
 import org.jclouds.oauth.v2.filters.OAuthFilter;
 import org.jclouds.rest.annotations.Fallback;
 import org.jclouds.rest.annotations.MapBinder;
@@ -39,6 +40,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.MediaType;
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
@@ -72,8 +74,9 @@ public interface NetworkInterfaceCardApi {
    NetworkInterfaceCard getNetworkInterfaceCard(@PathParam("networkinterfacecardname") String networkinterfacecardname);
 
    @Named("networkinterfacecard:delete")
-   @Path("/{networkinterfacecardname}")
    @DELETE
-   @ResponseParser(StatusCodeParser.class)
-   String deleteNetworkInterfaceCard(@PathParam("networkinterfacecardname") String networkinterfacecardname);
+   @ResponseParser(URIParser.class)
+   @Path("/{networkinterfacecardname}")
+   @Fallback(Fallbacks.VoidOnNotFoundOr404.class)
+   URI deleteNetworkInterfaceCard(@PathParam("networkinterfacecardname") String networkinterfacecardname);
 }

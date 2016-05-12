@@ -18,6 +18,7 @@ package org.jclouds.azurecompute.arm.compute.functions;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -29,6 +30,7 @@ import org.jclouds.azurecompute.arm.domain.ComputeNode;
 import org.jclouds.azurecompute.arm.domain.Deployment;
 import org.jclouds.azurecompute.arm.domain.PublicIPAddress;
 import org.jclouds.azurecompute.arm.domain.VMDeployment;
+import org.jclouds.azurecompute.arm.domain.VirtualMachineInstance;
 import org.jclouds.azurecompute.arm.util.DeploymentTemplateBuilder;
 import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.collect.Memoized;
@@ -122,6 +124,21 @@ public class DeploymentToNodeMetadata implements Function<VMDeployment, NodeMeta
       builder.group(group.substring(0, index));
 
       NodeMetadata.Status status = STATUS_TO_NODESTATUS.get(provisioningStateFromString(deployment.properties().provisioningState()));
+      if (status == NodeMetadata.Status.RUNNING && from.vm != null && from.vm.statuses() != null) {
+         List<VirtualMachineInstance.VirtualMachineStatus> statuses = from.vm.statuses();
+         for (int c = 0; c < statuses.size(); c++) {
+            if (statuses.get(c).code().substring(0, 10).equals("PowerState")) {
+               if (statuses.get(c).displayStatus().equals("VM running")) {
+                  status = NodeMetadata.Status.RUNNING;
+               }
+               else if (statuses.get(c).displayStatus().equals("VM stopped")) {
+                  status = NodeMetadata.Status.SUSPENDED;
+               }
+               break;
+            }
+         }
+      }
+
       builder.status(status);
 
       Credentials credentials = credentialStore.get("node#" + from.deployment.name());

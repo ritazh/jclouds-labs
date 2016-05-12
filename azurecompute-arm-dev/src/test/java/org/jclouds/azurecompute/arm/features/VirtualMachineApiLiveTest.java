@@ -16,6 +16,7 @@
  */
 package org.jclouds.azurecompute.arm.features;
 
+import com.google.common.base.Predicate;
 import org.jclouds.azurecompute.arm.domain.DataDisk;
 import org.jclouds.azurecompute.arm.domain.DiagnosticsProfile;
 import org.jclouds.azurecompute.arm.domain.HardwareProfile;
@@ -31,13 +32,16 @@ import org.jclouds.azurecompute.arm.domain.VHD;
 import org.jclouds.azurecompute.arm.domain.VirtualMachine;
 import org.jclouds.azurecompute.arm.domain.VirtualMachineInstance;
 import org.jclouds.azurecompute.arm.domain.VirtualMachineProperties;
+import org.jclouds.azurecompute.arm.functions.ParseJobStatus;
 import org.jclouds.azurecompute.arm.internal.BaseAzureComputeApiLiveTest;
+import org.jclouds.util.Predicates2;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import static org.testng.Assert.assertTrue;
@@ -216,18 +220,17 @@ public class VirtualMachineApiLiveTest extends BaseAzureComputeApiLiveTest {
    @Test(dependsOnMethods = "testRestart")
    public void testDelete() {
 
-      api().delete(getName());
+      URI uri = api().delete(getName());
+      if (uri != null){
+         assertTrue(uri.toString().contains("api-version"));
+         assertTrue(uri.toString().contains("operationresults"));
 
-      // Test that there is no machines left that tearDown can delete resource group and storage. Delete takes time so
-      // we need to check it multiple time
-      List<VirtualMachine> list = api().list();
-      while (!list.isEmpty()) {
-         list = api().list();
-         try {
-            Thread.sleep(30 * 1000); // Delete takes long time. Recheck later
-         } catch (InterruptedException e) {
-            e.printStackTrace();
-         }
+         boolean jobDone = Predicates2.retry(new Predicate<URI>() {
+            @Override public boolean apply(URI uri) {
+               return ParseJobStatus.JobStatus.DONE == api.getJobApi().jobStatus(uri);
+            }
+         }, 60 * 2 * 1000 /* 2 minute timeout */).apply(uri);
+         assertTrue(jobDone, "delete operation did not complete in the configured timeout");
       }
    }
 

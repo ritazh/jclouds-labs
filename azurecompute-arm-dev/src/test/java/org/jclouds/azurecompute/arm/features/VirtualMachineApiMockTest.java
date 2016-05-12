@@ -68,7 +68,7 @@ public class VirtualMachineApiMockTest extends BaseAzureComputeApiMockTest {
    }
 
    public void testDelete() throws Exception {
-      server.enqueue(new MockResponse().setResponseCode(204));
+      server.enqueue(response202WithHeader());
 
       final VirtualMachineApi vmAPI = api.getVirtualMachineApi("groupname");
 

@@ -49,8 +49,18 @@ public class JobApiMockTest extends BaseAzureComputeApiMockTest {
       assertSent(server, "GET", requestUrl);
    }
 
-   public void testGetJobStatusFailed() throws InterruptedException {
+   public void testGetJobStatusNoContent() throws InterruptedException {
       server.enqueue(jsonResponse("/resourcegroup.json").setStatus("HTTP/1.1 204 No Content"));
+
+      JobStatus status = api.getJobApi().jobStatus(URI.create(requestUrl));
+
+      assertEquals(status, JobStatus.NO_CONTENT);
+
+      assertSent(server, "GET", requestUrl);
+   }
+
+   public void testGetJobStatusFailed() throws InterruptedException {
+      server.enqueue(jsonResponse("/resourcegroup.json").setStatus("HTTP/1.1 208 Error"));
 
       JobStatus status = api.getJobApi().jobStatus(URI.create(requestUrl));
 
@@ -58,5 +68,4 @@ public class JobApiMockTest extends BaseAzureComputeApiMockTest {
 
       assertSent(server, "GET", requestUrl);
    }
-
 }
