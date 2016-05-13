@@ -26,14 +26,14 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.jclouds.azurecompute.arm.compute.AzureComputeServiceAdapter;
-import org.jclouds.azurecompute.arm.compute.functions.ImageReferenceToImage;
+import org.jclouds.azurecompute.arm.compute.functions.VMImageToImage;
 import org.jclouds.azurecompute.arm.compute.functions.DeploymentToNodeMetadata;
-import org.jclouds.azurecompute.arm.compute.functions.VMSizeToHardware;
+import org.jclouds.azurecompute.arm.compute.functions.VMHardwareToHardware;
 import org.jclouds.azurecompute.arm.compute.functions.LocationToLocation;
 import org.jclouds.azurecompute.arm.compute.options.AzureComputeArmTemplateOptions;
 import org.jclouds.azurecompute.arm.domain.VMDeployment;
-import org.jclouds.azurecompute.arm.domain.VMSize;
-import org.jclouds.azurecompute.arm.domain.ImageReference;
+import org.jclouds.azurecompute.arm.domain.VMHardware;
+import org.jclouds.azurecompute.arm.domain.VMImage;
 import org.jclouds.azurecompute.arm.domain.Location;
 import org.jclouds.compute.ComputeServiceAdapter;
 import org.jclouds.compute.config.ComputeServiceAdapterContextModule;
@@ -46,18 +46,18 @@ import com.google.inject.TypeLiteral;
 import org.jclouds.compute.options.TemplateOptions;
 
 public class AzureComputeServiceContextModule
-        extends ComputeServiceAdapterContextModule<VMDeployment, VMSize, ImageReference, Location> {
+        extends ComputeServiceAdapterContextModule<VMDeployment, VMHardware, VMImage, Location> {
 
    @Override
    protected void configure() {
       super.configure();
 
-      bind(new TypeLiteral<ComputeServiceAdapter<VMDeployment, VMSize, ImageReference, Location>>() {
+      bind(new TypeLiteral<ComputeServiceAdapter<VMDeployment, VMHardware, VMImage, Location>>() {
       }).to(AzureComputeServiceAdapter.class);
-      bind(new TypeLiteral<Function<ImageReference, org.jclouds.compute.domain.Image>>() {
-      }).to(ImageReferenceToImage.class);
-      bind(new TypeLiteral<Function<VMSize, Hardware>>() {
-      }).to(VMSizeToHardware.class);
+      bind(new TypeLiteral<Function<VMImage, org.jclouds.compute.domain.Image>>() {
+      }).to(VMImageToImage.class);
+      bind(new TypeLiteral<Function<VMHardware, Hardware>>() {
+      }).to(VMHardwareToHardware.class);
       bind(new TypeLiteral<Function<VMDeployment, NodeMetadata>>() {
       }).to(DeploymentToNodeMetadata.class);
 
@@ -70,7 +70,7 @@ public class AzureComputeServiceContextModule
       //bind(CreateNodesInGroupThenAddToSet.class).to(GetOrCreateStorageServiceAndVirtualNetworkThenCreateNodes.class);
 
       // to have the compute service adapter override default locations
-      install(new LocationsFromComputeServiceAdapterModule<VMDeployment, VMSize, ImageReference, Location>() {
+      install(new LocationsFromComputeServiceAdapterModule<VMDeployment, VMHardware, VMImage, Location>() {
       });
    }
 

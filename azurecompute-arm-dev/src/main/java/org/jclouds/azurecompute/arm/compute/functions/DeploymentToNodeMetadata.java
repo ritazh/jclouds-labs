@@ -91,9 +91,9 @@ public class DeploymentToNodeMetadata implements Function<VMDeployment, NodeMeta
 
    private final GroupNamingConvention nodeNamingConvention;
 
-   private final ImageReferenceToImage imageReferenceToImage;
+   private final VMImageToImage vmImageToImage;
 
-   private final VMSizeToHardware vmSizeToHardware;
+   private final VMHardwareToHardware vmHardwareToHardware;
 
    private final Map<String, Credentials> credentialStore;
 
@@ -101,13 +101,13 @@ public class DeploymentToNodeMetadata implements Function<VMDeployment, NodeMeta
    DeploymentToNodeMetadata(
            AzureComputeApi api,
            @Memoized Supplier<Set<? extends Location>> locations,
-           GroupNamingConvention.Factory namingConvention, ImageReferenceToImage imageReferenceToImage,
-           VMSizeToHardware vmSizeToHardware, Map<String, Credentials> credentialStore) {
+           GroupNamingConvention.Factory namingConvention, VMImageToImage vmImageToImage,
+           VMHardwareToHardware vmHardwareToHardware, Map<String, Credentials> credentialStore) {
 
       this.nodeNamingConvention = namingConvention.createWithoutPrefix();
       this.locations = checkNotNull(locations, "locations");
-      this.imageReferenceToImage = imageReferenceToImage;
-      this.vmSizeToHardware = vmSizeToHardware;
+      this.vmImageToImage = vmImageToImage;
+      this.vmHardwareToHardware = vmHardwareToHardware;
       this.credentialStore = credentialStore;
       this.api = api;
    }
