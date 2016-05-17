@@ -1,0 +1,127 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.jclouds.azurecompute.arm.compute.config;
+
+import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.OPERATION_POLL_INITIAL_PERIOD;
+import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.OPERATION_POLL_MAX_PERIOD;
+import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.OPERATION_TIMEOUT;
+import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.TCP_RULE_FORMAT;
+import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.TCP_RULE_REGEXP;
+
+import javax.inject.Named;
+import javax.inject.Singleton;
+
+import org.jclouds.azurecompute.arm.compute.AzureComputeServiceAdapter;
+import org.jclouds.azurecompute.arm.compute.functions.VMImageToImage;
+import org.jclouds.azurecompute.arm.compute.functions.DeploymentToNodeMetadata;
+import org.jclouds.azurecompute.arm.compute.functions.VMHardwareToHardware;
+import org.jclouds.azurecompute.arm.compute.functions.LocationToLocation;
+import org.jclouds.azurecompute.arm.domain.VMDeployment;
+import org.jclouds.azurecompute.arm.domain.VMHardware;
+import org.jclouds.azurecompute.arm.domain.VMImage;
+import org.jclouds.azurecompute.arm.domain.Location;
+import org.jclouds.compute.ComputeServiceAdapter;
+import org.jclouds.compute.config.ComputeServiceAdapterContextModule;
+import org.jclouds.compute.domain.Hardware;
+import org.jclouds.compute.domain.NodeMetadata;
+
+import com.google.common.base.Function;
+import com.google.inject.Inject;
+import com.google.inject.TypeLiteral;
+import com.google.inject.Provides;
+
+public class AzureComputeServiceContextModule
+        extends ComputeServiceAdapterContextModule<VMDeployment, VMHardware, VMImage, Location> {
+
+   @Override
+   protected void configure() {
+      super.configure();
+
+      bind(new TypeLiteral<ComputeServiceAdapter<VMDeployment, VMHardware, VMImage, Location>>() {
+      }).to(AzureComputeServiceAdapter.class);
+      bind(new TypeLiteral<Function<VMImage, org.jclouds.compute.domain.Image>>() {
+      }).to(VMImageToImage.class);
+      bind(new TypeLiteral<Function<VMHardware, Hardware>>() {
+      }).to(VMHardwareToHardware.class);
+      bind(new TypeLiteral<Function<VMDeployment, NodeMetadata>>() {
+      }).to(DeploymentToNodeMetadata.class);
+
+      //bind(PrioritizeCredentialsFromTemplate.class).to(UseNodeCredentialsButOverrideFromTemplate.class);
+      bind(new TypeLiteral<Function<Location, org.jclouds.domain.Location>>() {
+      }).to(LocationToLocation.class);
+
+      //bind(CreateNodesInGroupThenAddToSet.class).to(GetOrCreateStorageServiceAndVirtualNetworkThenCreateNodes.class);
+
+      // to have the compute service adapter override default locations
+      install(new LocationsFromComputeServiceAdapterModule<VMDeployment, VMHardware, VMImage, Location>() {
+      });
+   }
+
+   @Singleton
+   public static class AzureComputeConstants {
+
+      @Named(OPERATION_TIMEOUT)
+      @Inject
+      private String operationTimeoutProperty;
+
+      @Named(OPERATION_POLL_INITIAL_PERIOD)
+      @Inject
+      private String operationPollInitialPeriodProperty;
+
+      @Named(OPERATION_POLL_MAX_PERIOD)
+      @Inject
+      private String operationPollMaxPeriodProperty;
+
+      @Named(TCP_RULE_FORMAT)
+      @Inject
+      private String tcpRuleFormatProperty;
+
+      @Named(TCP_RULE_REGEXP)
+      @Inject
+      private String tcpRuleRegexpProperty;
+
+      public Long operationTimeout() {
+         return Long.parseLong(operationTimeoutProperty);
+      }
+
+      public Integer operationPollInitialPeriod() {
+         return Integer.parseInt(operationPollInitialPeriodProperty);
+      }
+
+      public Integer operationPollMaxPeriod() {
+         return Integer.parseInt(operationPollMaxPeriodProperty);
+      }
+
+      public String tcpRuleFormat() {
+         return tcpRuleFormatProperty;
+      }
+
+      public String tcpRuleRegexp() {
+         return tcpRuleRegexpProperty;
+      }
+   }
+
+   @Provides
+   @Named("azureGroupId")
+   protected String getGroupId() {
+      String group =  System.getProperty("test.azurecompute-arm.groupname");
+      if (group == null)
+         group = "jCloudsGroup";
+      return group;
+   }
+
+}
