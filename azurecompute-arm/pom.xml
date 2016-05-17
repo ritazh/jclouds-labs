@@ -135,6 +135,12 @@
         </exclusion>
       </exclusions>
     </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>3.4</version>
+    </dependency>
+
   </dependencies>
 
   <profiles>
@@ -156,6 +162,7 @@
                   <goal>test</goal>
                 </goals>
                 <configuration>
+                  <threadCount>1</threadCount>
                   <systemPropertyVariables>
                     <test.azurecompute-arm.endpoint>${test.azurecompute-arm.endpoint}</test.azurecompute-arm.endpoint>
                     <test.azurecompute-arm.api-version>${test.azurecompute-arm.api-version}</test.azurecompute-arm.api-version>
