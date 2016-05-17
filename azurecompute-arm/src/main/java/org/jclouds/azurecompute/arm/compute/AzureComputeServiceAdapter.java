@@ -118,7 +118,6 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
       logger.debug("Deployment created with name: %s group: %s", name, group);
 
 
-
       final Set<VMDeployment> deployments = Sets.newHashSet();
 
       final DeploymentApi deploymentApi = api.getDeploymentApi(group);
@@ -126,7 +125,6 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
       if (!retry(new Predicate<String>() {
          @Override
          public boolean apply(final String name) {
-
             Deployment deployment = deploymentApi.create(name, deploymentTemplate);
 
             if (deployment != null) {

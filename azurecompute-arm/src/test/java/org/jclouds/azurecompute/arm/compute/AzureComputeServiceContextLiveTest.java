@@ -82,7 +82,6 @@ public class AzureComputeServiceContextLiveTest extends BaseComputeServiceContex
 
    @Test
    public void testDefault() throws RunNodesException {
-
       final String groupName = this.azureGroup;
       final TemplateBuilder templateBuilder = view.getComputeService().templateBuilder();
       templateBuilder.osFamily(OsFamily.UBUNTU);
