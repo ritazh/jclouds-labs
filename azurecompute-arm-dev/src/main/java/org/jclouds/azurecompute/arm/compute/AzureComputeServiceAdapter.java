@@ -21,6 +21,7 @@ import static org.jclouds.util.Predicates2.retry;
 
 import java.net.URI;
 import java.util.ArrayList;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -36,14 +37,17 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.jclouds.azurecompute.arm.AzureComputeApi;
 import org.jclouds.azurecompute.arm.compute.config.AzureComputeServiceContextModule.AzureComputeConstants;
+import org.jclouds.azurecompute.arm.compute.functions.VMImageToImage;
 import org.jclouds.azurecompute.arm.domain.Deployment;
 import org.jclouds.azurecompute.arm.domain.DeploymentBody;
 import org.jclouds.azurecompute.arm.domain.DeploymentProperties;
-import org.jclouds.azurecompute.arm.domain.ImageReference;
+import org.jclouds.azurecompute.arm.domain.VMImage;
+import org.jclouds.azurecompute.arm.domain.VMHardware;
 import org.jclouds.azurecompute.arm.domain.Location;
 import org.jclouds.azurecompute.arm.domain.Offer;
 import org.jclouds.azurecompute.arm.domain.PublicIPAddress;
 import org.jclouds.azurecompute.arm.domain.ResourceGroup;
+import org.jclouds.azurecompute.arm.domain.ResourceProviderMetaData;
 import org.jclouds.azurecompute.arm.domain.SKU;
 import org.jclouds.azurecompute.arm.domain.VMDeployment;
 import org.jclouds.azurecompute.arm.domain.VMSize;
@@ -69,7 +73,7 @@ import org.jclouds.util.Predicates2;
  * {@link org.jclouds.compute.ComputeService}.
  */
 @Singleton
-public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeployment, VMSize, ImageReference, Location> {
+public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeployment, VMHardware, VMImage, Location> {
 
    private static int runningNumber = 1;
 
@@ -153,48 +157,109 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
    }
 
    @Override
-   public Iterable<VMSize> listHardwareProfiles() {
-      return api.getVMSizeApi(getLocation()).list();
+   public Iterable<VMHardware> listHardwareProfiles() {
+
+      final List<VMHardware> hwProfiles = Lists.newArrayList();
+
+      for (Location location : listLocations()){
+
+         Iterable<VMSize> vmSizes = api.getVMSizeApi(location.name()).list();
+
+         for (VMSize vmSize : vmSizes){
+            VMHardware hwProfile = new VMHardware();
+            hwProfile.name = vmSize.name();
+            hwProfile.numberOfCores = vmSize.numberOfCores();
+            hwProfile.osDiskSizeInMB = vmSize.osDiskSizeInMB();
+            hwProfile.resourceDiskSizeInMB = vmSize.resourceDiskSizeInMB();
+            hwProfile.memoryInMB = vmSize.memoryInMB();
+            hwProfile.maxDataDiskCount = vmSize.maxDataDiskCount();
+            hwProfile.location = location.name();
+            hwProfiles.add(hwProfile);
+         }
+
+      }
+      return hwProfiles;
    }
 
-   private void getImagesFromPublisher(String publisherName, List<ImageReference> osImagesRef) {
-      OSImageApi osImageApi = api.getOSImageApi(getLocation());
+   private void getImagesFromPublisher(String publisherName, List<VMImage> osImagesRef, String location) {
+
+      OSImageApi osImageApi = api.getOSImageApi(location);
+
       Iterable<Offer> offerList = osImageApi.listOffers(publisherName);
+
       for (Offer offer : offerList) {
          Iterable<SKU> skuList = osImageApi.listSKUs(publisherName, offer.name());
+
          for (SKU sku : skuList) {
-            osImagesRef.add(ImageReference.create(publisherName, offer.name(), sku.name(), null));
+            VMImage vmImage = new VMImage();
+            vmImage.publisher = publisherName;
+            vmImage.offer = offer.name();
+            vmImage.sku = sku.name();
+            vmImage.location = location;
+            osImagesRef.add(vmImage);
          }
       }
    }
 
-   @Override
-   public Iterable<ImageReference> listImages() {
-      final List<ImageReference> osImages = Lists.newArrayList();
-      getImagesFromPublisher("Microsoft.WindowsAzure.Compute", osImages);
-      getImagesFromPublisher("MicrosoftWindowsServer", osImages);
-      getImagesFromPublisher("Canonical", osImages);
+   private List<VMImage> listImagesByLocation(String location) {
+      final List<VMImage> osImages = Lists.newArrayList();
+
+      getImagesFromPublisher("Microsoft.WindowsAzure.Compute", osImages, location);
+      getImagesFromPublisher("MicrosoftWindowsServer", osImages, location);
+      getImagesFromPublisher("Canonical", osImages, location);
+
       return osImages;
    }
 
    @Override
-   public ImageReference getImage(final String id) {
-      Iterable<ImageReference> images = listImages();
-      for (ImageReference image : images) {
-         if (id.contains(image.offer()) && id.contains(image.sku())) {
+   public Iterable<VMImage> listImages() {
+
+      final List<VMImage> osImages = Lists.newArrayList();
+
+      for (Location location : listLocations()){
+         osImages.addAll(listImagesByLocation(location.name()));
+      }
+      return osImages;
+   }
+
+   @Override
+   public VMImage getImage(final String id) {
+      String[] fields = VMImageToImage.decodeFieldsFromUniqueId(id);
+
+      Iterable<VMImage> images = listImagesByLocation(fields[0]);
+
+      for (VMImage image : images) {
+         String imageId = VMImageToImage.encodeFieldsToUniqueId(image);
+         if (id.equals(imageId)){
             return image;
          }
       }
       return null;
    }
 
-   private String getLocation() {
-      return "eastasia"; // TODO: get location
-   }
-
    @Override
    public Iterable<Location> listLocations() {
-      return api.getLocationApi().list();
+      List<Location> locations = api.getLocationApi().list();
+
+      List<ResourceProviderMetaData> resources = api.getResourceProviderApi().getResourceProviderMetaData("Microsoft.Compute");
+
+      final List<String> vmLocations = new ArrayList<String>();
+
+      for (ResourceProviderMetaData m : resources){
+         if (m.resourceType().equals("virtualMachines")){
+            vmLocations.addAll(m.locations());
+            break;
+         }
+      }
+
+      Iterable<Location> result = Iterables.filter(locations, new Predicate<Location>() {
+         @Override
+         public boolean apply(Location input) {
+            return vmLocations.contains(input.displayName());
+         }
+      });
+
+      return  result;
    }
 
    private String getResourceGroupFromId(String id) {

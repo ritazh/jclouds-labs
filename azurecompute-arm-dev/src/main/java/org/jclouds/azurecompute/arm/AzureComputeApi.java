@@ -25,6 +25,7 @@ import org.jclouds.azurecompute.arm.features.LocationApi;
 import org.jclouds.azurecompute.arm.features.NetworkInterfaceCardApi;
 import org.jclouds.azurecompute.arm.features.OSImageApi;
 import org.jclouds.azurecompute.arm.features.ResourceGroupApi;
+import org.jclouds.azurecompute.arm.features.ResourceProviderApi;
 import org.jclouds.azurecompute.arm.features.StorageAccountApi;
 import org.jclouds.azurecompute.arm.features.VirtualMachineApi;
 import org.jclouds.azurecompute.arm.features.VirtualNetworkApi;
@@ -135,4 +136,13 @@ public interface AzureComputeApi extends Closeable {
     */
    @Delegate
    DeploymentApi getDeploymentApi(@PathParam("resourcegroup") String resourceGroup);
+
+   /**
+    * The Azure Resource Provider API provides information about a resource provider and its supported resource types.
+    *
+    * @see <a href="https://msdn.microsoft.com/en-us/library/azure/dn790534.aspx">docs</a>
+    */
+   @Delegate
+   ResourceProviderApi getResourceProviderApi();
+
 }
