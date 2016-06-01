@@ -58,4 +58,9 @@ public class VMHardware {
     * Specifies the location of the HW resource
     */
    public String location;
+
+   /**
+    * Specifies if this HW is globally available
+    */
+   public boolean globallyAvailable;
 }

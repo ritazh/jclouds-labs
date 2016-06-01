@@ -51,7 +51,7 @@ public class VMHardwareToHardware implements Function<VMHardware, Hardware> {
               .id(from.name)
               .processors(ImmutableList.of(new Processor(from.numberOfCores, 2)))
               .ram(from.memoryInMB)
-              .location(FluentIterable.from(locations.get())
+              .location(from.globallyAvailable ? null : FluentIterable.from(locations.get())
                       .firstMatch(LocationPredicates.idEquals(from.location))
                       .orNull());
 

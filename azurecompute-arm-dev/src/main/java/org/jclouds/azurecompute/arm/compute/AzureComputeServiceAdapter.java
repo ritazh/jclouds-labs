@@ -22,6 +22,7 @@ import static org.jclouds.util.Predicates2.retry;
 import java.net.URI;
 import java.util.ArrayList;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,7 +32,9 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Multimap;
 import com.google.common.net.UrlEscapers;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -160,8 +163,11 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
    public Iterable<VMHardware> listHardwareProfiles() {
 
       final List<VMHardware> hwProfiles = Lists.newArrayList();
+      final List<String> locationIds = Lists.newArrayList();
 
-      for (Location location : listLocations()){
+      Iterable<Location> locations = listLocations();
+      for (Location location : locations){
+         locationIds.add(location.name());
 
          Iterable<VMSize> vmSizes = api.getVMSizeApi(location.name()).list();
 
@@ -178,7 +184,21 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
          }
 
       }
+
+      checkAndSetHwAvailability(hwProfiles, Sets.newHashSet(locationIds));
+
       return hwProfiles;
+   }
+
+   private void checkAndSetHwAvailability(List<VMHardware> hwProfiles, Collection<String> locations) {
+      Multimap<String, String> hwMap = ArrayListMultimap.create();
+      for (VMHardware hw : hwProfiles) {
+         hwMap.put(hw.name, hw.location);
+      }
+
+      for (VMHardware hw : hwProfiles) {
+         hw.globallyAvailable = hwMap.get(hw.name).containsAll(locations);
+      }
    }
 
    private void getImagesFromPublisher(String publisherName, List<VMImage> osImagesRef, String location) {
@@ -215,18 +235,32 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
    public Iterable<VMImage> listImages() {
 
       final List<VMImage> osImages = Lists.newArrayList();
+      final List<String> locationIds = Lists.newArrayList();
 
       for (Location location : listLocations()){
+         locationIds.add(location.name());
          osImages.addAll(listImagesByLocation(location.name()));
       }
+      checkAndSetImageAvailability(osImages, Sets.newHashSet(locationIds));
       return osImages;
+   }
+
+   private void checkAndSetImageAvailability(List<VMImage> images, Collection<String> locations) {
+      Multimap<String, String> map = ArrayListMultimap.create();
+
+      for (VMImage image : images) {
+         map.put( image.offer + "/" + image.sku, image.location);
+      }
+
+      for (VMImage image : images) {
+         image.globallyAvailable = map.get(image.offer + "/" + image.sku).containsAll(locations);
+      }
    }
 
    @Override
    public VMImage getImage(final String id) {
-      String[] fields = VMImageToImage.decodeFieldsFromUniqueId(id);
 
-      Iterable<VMImage> images = listImagesByLocation(fields[0]);
+      Iterable<VMImage> images = listImages();
 
       for (VMImage image : images) {
          String imageId = VMImageToImage.encodeFieldsToUniqueId(image);

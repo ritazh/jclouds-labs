@@ -42,4 +42,9 @@ public class VMImage {
     * The location from where Image was fetched
     */
    public String location;
+
+   /**
+    * Specifies if this image is globally available
+    */
+   public boolean globallyAvailable;
 }
