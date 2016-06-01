@@ -59,7 +59,7 @@ public class VMImageToImage implements Function<VMImage, Image> {
    private final Supplier<Set<? extends org.jclouds.domain.Location>> locations;
 
    public static String encodeFieldsToUniqueId(VMImage imageReference){
-      return imageReference.location + "/" + imageReference.offer + "/" + imageReference.sku;
+      return (imageReference.globallyAvailable ? "global" : imageReference.location) + "/" + imageReference.publisher + "/" + imageReference.offer + "/" + imageReference.sku;
    }
 
    public static String[] decodeFieldsFromUniqueId(final String id) {
@@ -83,7 +83,7 @@ public class VMImageToImage implements Function<VMImage, Image> {
               .version(image.sku)
               .id(encodeFieldsToUniqueId(image))
               .providerId(image.publisher)
-              .location(FluentIterable.from(locations.get())
+              .location(image.globallyAvailable ? null : FluentIterable.from(locations.get())
                       .firstMatch(LocationPredicates.idEquals(image.location))
                       .orNull());
 
