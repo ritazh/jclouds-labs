@@ -257,7 +257,7 @@ public class AzureComputeServiceContextLiveTest extends BaseComputeServiceContex
    public void testWindowsNode() throws RunNodesException {
       final String groupName = String.format("win%s", System.getProperty("user.name").substring(0, 3));
       final TemplateBuilder templateBuilder = view.getComputeService().templateBuilder();
-      templateBuilder.imageId("westus/WindowsServer/2016-Technical-Preview-with-Containers");
+      templateBuilder.imageId("westus/MicrosoftWindowsServer/WindowsServer/2016-Technical-Preview-with-Containers");
       templateBuilder.hardwareId("Standard_A0");
       templateBuilder.locationId("westus");
       final Template template = templateBuilder.build();
