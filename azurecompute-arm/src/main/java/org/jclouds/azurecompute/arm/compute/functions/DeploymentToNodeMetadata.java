@@ -48,6 +48,7 @@ import org.jclouds.compute.domain.Hardware;
 
 public class DeploymentToNodeMetadata implements Function<VMDeployment, NodeMetadata> {
 
+   public static final String JCLOUDS_DEFAULT_USERNAME = "root";
    public static final String AZURE_LOGIN_USERNAME = DeploymentTemplateBuilder.getLoginUserUsername();
    public static final String AZURE_LOGIN_PASSWORD = DeploymentTemplateBuilder.getLoginPassword();
 
@@ -116,6 +117,10 @@ public class DeploymentToNodeMetadata implements Function<VMDeployment, NodeMeta
       builder.name(deployment.name());
       String group =  this.nodeNamingConvention.extractGroup(deployment.name());
       builder.group(group);
+      if (from.tags != null)
+         builder.tags(from.tags);
+      if (from.userMetaData != null)
+         builder.userMetadata(from.userMetaData);
 
       NodeMetadata.Status status = STATUS_TO_NODESTATUS.get(provisioningStateFromString(deployment.properties().provisioningState()));
       if (status == NodeMetadata.Status.RUNNING && from.vm != null && from.vm.statuses() != null) {
@@ -134,8 +139,15 @@ public class DeploymentToNodeMetadata implements Function<VMDeployment, NodeMeta
 
       builder.status(status);
 
+      if (from.vm != null) {
+         builder.hostname(deployment.name() + "pc");
+      }
+
       Credentials credentials = credentialStore.get("node#" + from.deployment.name());
-      if (credentials == null) {
+      if (credentials != null && credentials.identity.equals(JCLOUDS_DEFAULT_USERNAME)) {
+          credentials = new Credentials(AZURE_LOGIN_USERNAME, credentials.credential);
+      }
+      else if (credentials == null) {
          credentials = new Credentials(AZURE_LOGIN_USERNAME, AZURE_LOGIN_PASSWORD);
       }
       builder.credentials(LoginCredentials.fromCredentials(credentials));

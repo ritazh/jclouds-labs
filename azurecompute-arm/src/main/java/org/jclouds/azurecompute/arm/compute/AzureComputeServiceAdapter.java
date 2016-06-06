@@ -21,6 +21,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.jclouds.util.Predicates2.retry;
 import java.util.ArrayList;
 
+import java.util.Arrays;
 import java.util.Collection;
 
 import java.util.List;
@@ -45,10 +46,8 @@ import org.jclouds.azurecompute.arm.domain.VMHardware;
 import org.jclouds.azurecompute.arm.domain.Location;
 import org.jclouds.azurecompute.arm.domain.Offer;
 import org.jclouds.azurecompute.arm.domain.PublicIPAddress;
-import org.jclouds.azurecompute.arm.domain.ResourceProviderMetaData;
 import org.jclouds.azurecompute.arm.domain.SKU;
 import org.jclouds.azurecompute.arm.domain.VMDeployment;
-import org.jclouds.azurecompute.arm.domain.VMSize;
 import org.jclouds.azurecompute.arm.domain.VirtualMachine;
 import org.jclouds.azurecompute.arm.features.DeploymentApi;
 import org.jclouds.azurecompute.arm.features.OSImageApi;
@@ -160,7 +159,7 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
       Iterable<Location> locations = listLocations();
       for (Location location : locations){
          locationIds.add(location.name());
-
+/*
          Iterable<VMSize> vmSizes = api.getVMSizeApi(location.name()).list();
 
          for (VMSize vmSize : vmSizes){
@@ -174,6 +173,16 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
             hwProfile.location = location.name();
             hwProfiles.add(hwProfile);
          }
+*/
+         VMHardware hwProfile = new VMHardware();
+         hwProfile.name = "Standard_A0";
+         hwProfile.numberOfCores = 1;
+         hwProfile.osDiskSizeInMB = 20480;
+         hwProfile.resourceDiskSizeInMB = 1047552;
+         hwProfile.memoryInMB = 768;
+         hwProfile.maxDataDiskCount = 1;
+         hwProfile.location = "westus";
+         hwProfiles.add(hwProfile);
 
       }
 
@@ -194,8 +203,8 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
 
    private void getImagesFromPublisher(String publisherName, List<VMImage> osImagesRef, String location) {
 
-      OSImageApi osImageApi = api.getOSImageApi(location);
 
+      OSImageApi osImageApi = api.getOSImageApi(location);
       Iterable<Offer> offerList = osImageApi.listOffers(publisherName);
 
       for (Offer offer : offerList) {
@@ -210,6 +219,7 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
             osImagesRef.add(vmImage);
          }
       }
+
    }
 
    private List<VMImage> listImagesByLocation(String location) {
@@ -250,6 +260,12 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
    @Override
    public VMImage getImage(final String id) {
       String[] fields = VMImageToImage.decodeFieldsFromUniqueId(id);
+      if (fields[2].substring(0, 6).equals("custom")) {
+         String storage = fields[2].substring(6, 19);
+         String vhd = fields[3];
+         VMImage ref = new VMImage("custom" + azureGroup, "custom" + storage, vhd, null, fields[0]);
+         return ref;
+      }
 
       Iterable<VMImage> images = listImages();
 
@@ -264,7 +280,11 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
 
    @Override
    public Iterable<Location> listLocations() {
-      List<Location> locations = api.getLocationApi().list();
+
+      List<Location> locations = new ArrayList<Location>();
+      Location loc = Location.create("westus", "westus", "westus", 20, 20);
+      locations.add(loc);
+      /*api.getLocationApi().list();
 
       List<ResourceProviderMetaData> resources = api.getResourceProviderApi().get("Microsoft.Compute");
 
@@ -283,8 +303,8 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
             return vmLocations.contains(input.displayName());
          }
       });
-
-      return  result;
+*/
+      return locations;
    }
 
    private String getResourceGroupFromId(String id) {
@@ -307,9 +327,15 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
       vmDeployment.deployment = deployment;
       List<PublicIPAddress> list = getIPAddresses(deployment);
       vmDeployment.ipAddressList = list;
-
       VirtualMachine vm = api.getVirtualMachineApi(azureGroup).get(id);
       vmDeployment.virtualMachine = vm;
+      vmDeployment.vm = api.getVirtualMachineApi(azureGroup).getInstanceDetails(id);
+      if (vm != null && vm.tags() != null) {
+         vmDeployment.userMetaData = vm.tags();
+         String tagString = vmDeployment.userMetaData.get("tags");
+         List<String> tags = Arrays.asList(tagString.split(","));
+         vmDeployment.tags = tags;
+      }
       return vmDeployment;
    }
 
@@ -370,9 +396,15 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
          List<PublicIPAddress> list = getIPAddresses(d);
          vmDeployment.ipAddressList = list;
 
-         VirtualMachine virtualMachine = vmApi.get(d.name());
-         vmDeployment.virtualMachine = virtualMachine;
+         VirtualMachine vm = vmApi.get(d.name());
+         vmDeployment.virtualMachine = vm;
 
+         if (vm != null && vm.tags() != null) {
+            vmDeployment.userMetaData = vm.tags();
+            String tagString = vmDeployment.userMetaData.get("tags");
+            List<String> tags = Arrays.asList(tagString.split(","));
+            vmDeployment.tags = tags;
+         }
          vmDeployments.add(vmDeployment);
       }
       return vmDeployments;

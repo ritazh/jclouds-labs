@@ -18,13 +18,16 @@ package org.jclouds.azurecompute.arm.compute.config;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
+
 import com.google.inject.Provides;
 
 import org.jclouds.azurecompute.arm.compute.AzureComputeServiceAdapter;
+import org.jclouds.azurecompute.arm.compute.extensions.AzureComputeImageExtension;
 import org.jclouds.azurecompute.arm.compute.functions.VMImageToImage;
 import org.jclouds.azurecompute.arm.compute.functions.DeploymentToNodeMetadata;
 import org.jclouds.azurecompute.arm.compute.functions.VMHardwareToHardware;
 import org.jclouds.azurecompute.arm.compute.functions.LocationToLocation;
+import org.jclouds.azurecompute.arm.compute.strategy.AzurePopulateDefaultLoginCredentialsForImageStrategy;
 import org.jclouds.azurecompute.arm.domain.VMDeployment;
 import org.jclouds.azurecompute.arm.domain.VMHardware;
 import org.jclouds.azurecompute.arm.domain.VMImage;
@@ -61,6 +64,8 @@ import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.TCP_RUL
 import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.TCP_RULE_REGEXP;
 import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.DEFAULT_IMAGE_LOGIN;
 import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.TIMEOUT_RESOURCE_DELETED;
+import org.jclouds.compute.extensions.ImageExtension;
+import org.jclouds.compute.strategy.PopulateDefaultLoginCredentialsForImageStrategy;
 
 public class AzureComputeServiceContextModule
         extends ComputeServiceAdapterContextModule<VMDeployment, VMHardware, VMImage, Location> {
@@ -81,8 +86,10 @@ public class AzureComputeServiceContextModule
       install(new LocationsFromComputeServiceAdapterModule<VMDeployment, VMHardware, VMImage, Location>() {
       });
 
-
+      bind(PopulateDefaultLoginCredentialsForImageStrategy.class).to(AzurePopulateDefaultLoginCredentialsForImageStrategy.class);
       bind(CreateNodesInGroupThenAddToSet.class).to(CreateResourceGroupThenCreateNodes.class);
+      bind(new TypeLiteral<ImageExtension>() {
+      }).to(AzureComputeImageExtension.class);
    }
 
    @Singleton

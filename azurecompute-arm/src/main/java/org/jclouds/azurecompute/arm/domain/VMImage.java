@@ -21,6 +21,18 @@ import com.google.auto.value.AutoValue;
 @AutoValue
 public class VMImage {
 
+   public VMImage(String publisher, String offer, String sku, String version, String location) {
+      this.globallyAvailable = false;
+      this.publisher = publisher;
+      this.offer = offer;
+      this.sku = sku;
+      this.version = version;
+      this.location = location;
+   }
+
+   public VMImage() {
+   }
+
    /**
     * The publisher of the image reference.
     */

@@ -227,7 +227,7 @@ public class VirtualMachineApiLiveTest extends BaseAzureComputeApiLiveTest {
       VHD vhd = VHD.create(blob + "vhds/" + getName() + ".vhd");
       VHD vhd2 = VHD.create(blob + "vhds/" + getName() + "data.vhd");
       DataDisk dataDisk = DataDisk.create(getName() + "data", "100", 0, vhd2, "Empty");
-      OSDisk osDisk = OSDisk.create(null, getName(), vhd, "ReadWrite", "FromImage");
+      OSDisk osDisk = OSDisk.create(null, getName(), vhd, "ReadWrite", "FromImage", null);
       StorageProfile storageProfile = StorageProfile.create(imgRef, osDisk, null);
       OSProfile.WindowsConfiguration windowsConfig = OSProfile.WindowsConfiguration.create(false, null, null, true,
               null);

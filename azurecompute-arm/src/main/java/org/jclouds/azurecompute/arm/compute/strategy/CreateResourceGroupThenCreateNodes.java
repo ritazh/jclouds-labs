@@ -28,6 +28,7 @@ import javax.inject.Singleton;
 
 import com.google.common.collect.ImmutableMap;
 import org.jclouds.Constants;
+import org.jclouds.azurecompute.arm.compute.config.AzureComputeServiceContextModule;
 import org.jclouds.azurecompute.arm.domain.ResourceGroup;
 import org.jclouds.azurecompute.arm.features.ResourceGroupApi;
 import org.jclouds.compute.config.CustomizationResponse;
@@ -54,6 +55,8 @@ public class CreateResourceGroupThenCreateNodes extends CreateNodesWithGroupEnco
    protected Logger logger = Logger.NULL;
 
    private final AzureComputeApi api;
+   private final AzureComputeServiceContextModule.AzureComputeConstants azureComputeConstants;
+   private final String azureGroup;
 
    @Inject
    protected CreateResourceGroupThenCreateNodes(
@@ -62,11 +65,13 @@ public class CreateResourceGroupThenCreateNodes extends CreateNodesWithGroupEnco
            GroupNamingConvention.Factory namingConvention,
            @Named(Constants.PROPERTY_USER_THREADS) ListeningExecutorService userExecutor,
            CustomizeNodeAndAddToGoodMapOrPutExceptionIntoBadMap.Factory customizeNodeAndAddToGoodMapOrPutExceptionIntoBadMapFactory,
-           AzureComputeApi api) {
+           AzureComputeApi api, AzureComputeServiceContextModule.AzureComputeConstants azureComputeConstants) {
       super(addNodeWithGroupStrategy, listNodesStrategy, namingConvention, userExecutor,
               customizeNodeAndAddToGoodMapOrPutExceptionIntoBadMapFactory);
       this.api = checkNotNull(api, "api cannot be null");
       checkNotNull(userExecutor, "userExecutor cannot be null");
+      this.azureComputeConstants = azureComputeConstants;
+      this.azureGroup = this.azureComputeConstants.azureResourceGroup();
    }
 
    @Override
@@ -75,19 +80,19 @@ public class CreateResourceGroupThenCreateNodes extends CreateNodesWithGroupEnco
                                                  Multimap<NodeMetadata, CustomizationResponse> customizationResponses) {
 
       ResourceGroupApi resourceGroupApi = api.getResourceGroupApi();
-      ResourceGroup resourceGroup = resourceGroupApi.get(group);
+      ResourceGroup resourceGroup = resourceGroupApi.get(azureGroup);
       final String location = template.getLocation().getId();
       final String resourceGroupName;
 
       if (resourceGroup == null){
 
          final Map<String, String> tags = ImmutableMap.of("description", "jClouds managed VMs");
-         resourceGroupName = resourceGroupApi.create(group, location, tags).name();
+         resourceGroupName = resourceGroupApi.create(azureGroup, location, tags).name();
       } else {
          resourceGroupName = resourceGroup.name();
       }
 
-      Map<?, ListenableFuture<Void>> responses = super.execute(resourceGroupName, count, template, goodNodes, badNodes,
+      Map<?, ListenableFuture<Void>> responses = super.execute(group, count, template, goodNodes, badNodes,
               customizationResponses);
 
       return responses;
