@@ -16,12 +16,14 @@
  */
 package org.jclouds.azurecompute.arm.domain;
 
+import com.google.auto.value.AutoValue;
+
 /**
  * A VM Size that is available in a region for a given subscription.
  *
  * @see <a href="https://msdn.microsoft.com/en-us/library/azure/mt269440.aspx" >api</a>
  */
-
+@AutoValue
 public class VMHardware {
 
    /**

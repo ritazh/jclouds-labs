@@ -53,6 +53,7 @@ import org.jclouds.azurecompute.arm.domain.ResourceProviderMetaData;
 import org.jclouds.azurecompute.arm.domain.SKU;
 import org.jclouds.azurecompute.arm.domain.VMDeployment;
 import org.jclouds.azurecompute.arm.domain.VMSize;
+import org.jclouds.azurecompute.arm.features.DeploymentApi;
 import org.jclouds.azurecompute.arm.features.OSImageApi;
 import org.jclouds.azurecompute.arm.features.ResourceGroupApi;
 import org.jclouds.azurecompute.arm.functions.ParseJobStatus;
@@ -76,7 +77,6 @@ import org.jclouds.util.Predicates2;
 @Singleton
 public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeployment, VMHardware, VMImage, Location> {
 
-   private static int runningNumber = 1;
    private final String azureGroup;
 
    @Resource
@@ -88,12 +88,11 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
    private final AzureComputeConstants azureComputeConstants;
 
    @Inject
-   AzureComputeServiceAdapter(final AzureComputeApi api, final AzureComputeConstants azureComputeConstants,
-                              @Named("azureGroupId") String group) {
+   AzureComputeServiceAdapter(final AzureComputeApi api, final AzureComputeConstants azureComputeConstants) {
 
       this.api = api;
       this.azureComputeConstants = azureComputeConstants;
-      this.azureGroup = group;
+      this.azureGroup = this.azureComputeConstants.azureResourceGroup();
    }
 
    @Override
@@ -127,12 +126,13 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
          resourceGroupName = resourceGroup.name();
       }
 
+      final DeploymentApi deploymentApi = api.getDeploymentApi(resourceGroupName);
+
       if (!retry(new Predicate<String>() {
          @Override
          public boolean apply(final String name) {
-            runningNumber++;
 
-            Deployment deployment = api.getDeploymentApi(resourceGroupName).create(name, deploymentTemplate);
+            Deployment deployment = deploymentApi.create(name, deploymentTemplate);
 
             if (deployment != null) {
                VMDeployment vmDeployment = new VMDeployment();
@@ -147,7 +147,7 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
          final String illegalStateExceptionMessage = format("Deployment %s was not created within %sms so it will be destroyed.",
                  name, azureComputeConstants.operationTimeout());
          logger.warn(illegalStateExceptionMessage);
-
+         destroyNode(name);
          throw new IllegalStateException(illegalStateExceptionMessage);
       }
 
@@ -391,6 +391,7 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
                      String resourceName = dependsOn.get(e).resourceName();
                      PublicIPAddress ip = api.getPublicIPAddressApi(resourceGroup).get(resourceName);
                      list.add(ip);
+                     break;
                   }
                }
             }

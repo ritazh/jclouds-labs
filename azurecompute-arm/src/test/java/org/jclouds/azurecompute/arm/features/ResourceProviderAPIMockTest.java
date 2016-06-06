@@ -23,6 +23,7 @@ import org.testng.annotations.Test;
 import java.util.List;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 @Test(groups = "unit", testName = "NetworkInterfaceCardApiMockTest", singleThreaded = true)
@@ -48,6 +49,19 @@ public class ResourceProviderAPIMockTest extends BaseAzureComputeApiMockTest {
       assertEquals(md.resourceType(), "availabilitySets");
       assertEquals(md.locations().get(0), "East US");
       assertEquals(md.apiVersions().get(0), "2016-03-30");
+   }
+
+   public void getPublicIPAddressInfoEmpty() throws InterruptedException {
+      server.enqueue(response404());
+
+      final ResourceProviderApi resourceProviderApi = api.getResourceProviderApi();
+
+      List<ResourceProviderMetaData> metaDatas = resourceProviderApi.get(resource);
+
+      String path = String.format("/subscriptions/SUBSCRIPTIONID/providers/%s?api-version=%s", resource, apiVersion);
+
+      assertSent(server, "GET", path);
+      assertNull(metaDatas);
    }
 }
 

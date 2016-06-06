@@ -33,4 +33,6 @@ public class AzureComputeProperties {
 
    public static final String STORAGE_API_VERSION = "2015-06-15";
 
+   public static final String RESOURCE_GROUP_NAME = "jclouds.azurecompute.arm.operation.resourcegroup";
+
 }

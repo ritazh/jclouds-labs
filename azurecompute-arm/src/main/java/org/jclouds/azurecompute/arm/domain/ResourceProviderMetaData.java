@@ -35,8 +35,8 @@ public abstract class ResourceProviderMetaData {
    public static ResourceProviderMetaData create(final String resourceType, final List<String> locations, final List<String> apiVersions) {
       ResourceProviderMetaData.Builder builder = ResourceProviderMetaData.builder()
               .resourceType(resourceType)
-              .locations(locations == null ? null : ImmutableList.copyOf(locations))
-              .apiVersions(apiVersions == null ? null : ImmutableList.copyOf(apiVersions));
+              .locations(locations == null ? ImmutableList.<String>of() : ImmutableList.copyOf(locations))
+              .apiVersions(apiVersions == null ? ImmutableList.<String>of() : ImmutableList.copyOf(apiVersions));
 
       return builder.build();
    }
@@ -60,8 +60,8 @@ public abstract class ResourceProviderMetaData {
       abstract ResourceProviderMetaData autoBuild();
 
       public ResourceProviderMetaData build() {
-         locations(locations() != null ? ImmutableList.copyOf(locations()) : null);
-         apiVersions(apiVersions() != null ? ImmutableList.copyOf(apiVersions()) : null);
+         locations(locations() != null ? ImmutableList.copyOf(locations()) : ImmutableList.<String>of());
+         apiVersions(apiVersions() != null ? ImmutableList.copyOf(apiVersions()) : ImmutableList.<String>of());
          return autoBuild();
       }
    }

@@ -20,11 +20,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.inject.Module;
 import org.jclouds.azurecompute.arm.AzureComputeProviderMetadata;
-import org.jclouds.azurecompute.arm.config.AzureComputeProperties;
 import org.jclouds.azurecompute.arm.internal.AzureLiveTestUtils;
 import org.jclouds.compute.RunNodesException;
 import org.jclouds.compute.RunScriptOnNodesException;
-import org.jclouds.compute.config.ComputeServiceProperties;
 import org.jclouds.compute.domain.ComputeMetadata;
 import org.jclouds.compute.domain.ExecResponse;
 import org.jclouds.compute.domain.NodeMetadata;
@@ -65,14 +63,6 @@ public class AzureComputeServiceContextLiveTest extends BaseComputeServiceContex
 
    @Override protected Properties setupProperties() {
       Properties properties = super.setupProperties();
-
-      properties.put(ComputeServiceProperties.POLL_INITIAL_PERIOD, 1000);
-      properties.put(ComputeServiceProperties.POLL_MAX_PERIOD, 10000);
-      properties.setProperty(AzureComputeProperties.OPERATION_TIMEOUT, "46000000");
-      properties.setProperty(AzureComputeProperties.OPERATION_POLL_INITIAL_PERIOD, "5");
-      properties.setProperty(AzureComputeProperties.OPERATION_POLL_MAX_PERIOD, "15");
-      properties.setProperty(AzureComputeProperties.TCP_RULE_FORMAT, "tcp_%s-%s");
-      properties.setProperty(AzureComputeProperties.TCP_RULE_REGEXP, "tcp_\\d{1,5}-\\d{1,5}");
       long scriptTimeout = TimeUnit.MILLISECONDS.convert(20, TimeUnit.MINUTES);
       properties.setProperty(TIMEOUT_SCRIPT_COMPLETE, scriptTimeout + "");
       properties.setProperty(TIMEOUT_NODE_RUNNING, scriptTimeout + "");

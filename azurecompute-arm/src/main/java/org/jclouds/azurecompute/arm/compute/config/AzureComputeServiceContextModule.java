@@ -16,12 +16,6 @@
  */
 package org.jclouds.azurecompute.arm.compute.config;
 
-import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.OPERATION_POLL_INITIAL_PERIOD;
-import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.OPERATION_POLL_MAX_PERIOD;
-import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.OPERATION_TIMEOUT;
-import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.TCP_RULE_FORMAT;
-import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.TCP_RULE_REGEXP;
-
 import javax.inject.Named;
 import javax.inject.Singleton;
 
@@ -42,7 +36,13 @@ import org.jclouds.compute.domain.NodeMetadata;
 import com.google.common.base.Function;
 import com.google.inject.Inject;
 import com.google.inject.TypeLiteral;
-import com.google.inject.Provides;
+
+import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.RESOURCE_GROUP_NAME;
+import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.OPERATION_TIMEOUT;
+import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.OPERATION_POLL_INITIAL_PERIOD;
+import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.OPERATION_POLL_MAX_PERIOD;
+import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.TCP_RULE_FORMAT;
+import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.TCP_RULE_REGEXP;
 
 public class AzureComputeServiceContextModule
         extends ComputeServiceAdapterContextModule<VMDeployment, VMHardware, VMImage, Location> {
@@ -59,14 +59,8 @@ public class AzureComputeServiceContextModule
       }).to(VMHardwareToHardware.class);
       bind(new TypeLiteral<Function<VMDeployment, NodeMetadata>>() {
       }).to(DeploymentToNodeMetadata.class);
-
-      //bind(PrioritizeCredentialsFromTemplate.class).to(UseNodeCredentialsButOverrideFromTemplate.class);
       bind(new TypeLiteral<Function<Location, org.jclouds.domain.Location>>() {
       }).to(LocationToLocation.class);
-
-      //bind(CreateNodesInGroupThenAddToSet.class).to(GetOrCreateStorageServiceAndVirtualNetworkThenCreateNodes.class);
-
-      // to have the compute service adapter override default locations
       install(new LocationsFromComputeServiceAdapterModule<VMDeployment, VMHardware, VMImage, Location>() {
       });
    }
@@ -94,8 +88,16 @@ public class AzureComputeServiceContextModule
       @Inject
       private String tcpRuleRegexpProperty;
 
+      @Named(RESOURCE_GROUP_NAME)
+      @Inject
+      private String azureResourceGroupProperty;
+
       public Long operationTimeout() {
          return Long.parseLong(operationTimeoutProperty);
+      }
+
+      public String azureResourceGroup() {
+         return azureResourceGroupProperty;
       }
 
       public Integer operationPollInitialPeriod() {
@@ -113,15 +115,6 @@ public class AzureComputeServiceContextModule
       public String tcpRuleRegexp() {
          return tcpRuleRegexpProperty;
       }
-   }
-
-   @Provides
-   @Named("azureGroupId")
-   protected String getGroupId() {
-      String group =  System.getProperty("test.azurecompute-arm.groupname");
-      if (group == null)
-         group = "jCloudsGroup";
-      return group;
    }
 
 }

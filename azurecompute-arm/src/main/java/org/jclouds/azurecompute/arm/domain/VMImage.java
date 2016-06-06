@@ -16,6 +16,9 @@
  */
 package org.jclouds.azurecompute.arm.domain;
 
+import com.google.auto.value.AutoValue;
+
+@AutoValue
 public class VMImage {
 
    /**

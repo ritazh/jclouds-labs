@@ -30,6 +30,7 @@ import org.jclouds.azurecompute.arm.domain.PublicIPAddress;
 import org.jclouds.azurecompute.arm.domain.VMDeployment;
 import org.jclouds.azurecompute.arm.domain.VirtualMachineInstance;
 import org.jclouds.azurecompute.arm.util.DeploymentTemplateBuilder;
+import org.jclouds.azurecompute.arm.util.GetEnumValue;
 import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.collect.Memoized;
 import org.jclouds.compute.domain.NodeMetadataBuilder;
@@ -73,14 +74,7 @@ public class DeploymentToNodeMetadata implements Function<VMDeployment, NodeMeta
                    build();
 
    public static Deployment.ProvisioningState provisioningStateFromString(final String text) {
-      if (text != null) {
-         for (Deployment.ProvisioningState status : Deployment.ProvisioningState.values()) {
-            if (text.equalsIgnoreCase(status.name())) {
-               return status;
-            }
-         }
-      }
-      return Deployment.ProvisioningState.UNRECOGNIZED;
+      return (Deployment.ProvisioningState) GetEnumValue.fromValueOrDefault(text, Deployment.ProvisioningState.UNRECOGNIZED);
    }
 
    private final AzureComputeApi api;
@@ -151,7 +145,11 @@ public class DeploymentToNodeMetadata implements Function<VMDeployment, NodeMeta
          for (int c = 0; c < from.ipAddressList.size(); c++) {
             PublicIPAddress ip = from.ipAddressList.get(c);
             if (ip != null && ip.properties() != null && ip.properties().ipAddress() != null)
+            {
                publicIpAddresses.add(ip.properties().ipAddress());
+               break;
+            }
+
          }
          if (publicIpAddresses.size() > 0)
             builder.publicAddresses(publicIpAddresses);

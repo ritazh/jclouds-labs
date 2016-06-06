@@ -16,6 +16,8 @@
  */
 package org.jclouds.azurecompute.arm.features;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 import org.jclouds.azurecompute.arm.domain.ResourceProviderMetaData;
 import org.jclouds.azurecompute.arm.internal.BaseAzureComputeApiLiveTest;
 import org.testng.annotations.Test;
@@ -39,18 +41,15 @@ public class ResourceProviderApiLiveTest extends BaseAzureComputeApiLiveTest {
    @Test
    public void testGetComputeProviderMetadata() {
 
-      List<ResourceProviderMetaData> computeMetaData = api().get(PROVIDER);
+      List<ResourceProviderMetaData> resourceProviderMetaDatas = api().get(PROVIDER);
 
-      assertNotNull(computeMetaData);
+      assertNotNull(resourceProviderMetaDatas);
 
-      boolean foundVMResource = false;
-
-      for (ResourceProviderMetaData m : computeMetaData) {
-         if (m.resourceType().equals(VM_RESOURCE_TYPE)) {
-            foundVMResource = true;
-            break;
+      assertTrue(Iterables.any(resourceProviderMetaDatas, new Predicate<ResourceProviderMetaData>() {
+         @Override
+         public boolean apply(final ResourceProviderMetaData providerMetaData) {
+            return providerMetaData.resourceType().equals(VM_RESOURCE_TYPE);
          }
-      }
-      assertTrue(foundVMResource);
+      }));
    }
 }

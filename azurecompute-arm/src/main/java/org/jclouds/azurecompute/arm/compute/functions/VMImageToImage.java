@@ -63,8 +63,7 @@ public class VMImageToImage implements Function<VMImage, Image> {
    }
 
    public static String[] decodeFieldsFromUniqueId(final String id) {
-      final String[] parts = checkNotNull(id, "id").split("/");
-      return parts;
+      return checkNotNull(id, "id").split("/");
    }
 
    @Inject
@@ -74,7 +73,6 @@ public class VMImageToImage implements Function<VMImage, Image> {
 
    @Override
    public Image apply(final VMImage image) {
-      FluentIterable.from(locations.get()).firstMatch(LocationPredicates.idEquals(image.location)).orNull();
 
       final ImageBuilder builder = new ImageBuilder()
               .name(image.offer)
