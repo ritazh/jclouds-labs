@@ -38,7 +38,6 @@ public abstract class AbstractAzureComputeApiLiveTest extends BaseApiLiveTest<Az
 
       // for oauth
       AzureLiveTestUtils.defaultProperties(properties);
-      checkNotNull(setIfTestSystemPropertyPresent(properties, "jclouds.oauth.resource"), "test.jclouds.oauth.resource");
       checkNotNull(setIfTestSystemPropertyPresent(properties, "oauth.endpoint"), "test.oauth.endpoint");
       return properties;
    }

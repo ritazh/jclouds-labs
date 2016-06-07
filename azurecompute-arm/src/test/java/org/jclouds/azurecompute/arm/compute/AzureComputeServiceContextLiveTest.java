@@ -71,7 +71,6 @@ public class AzureComputeServiceContextLiveTest extends BaseComputeServiceContex
       properties.setProperty(TIMEOUT_NODE_RUNNING, scriptTimeout + "");
 
       AzureLiveTestUtils.defaultProperties(properties);
-      checkNotNull(setIfTestSystemPropertyPresent(properties, "jclouds.oauth.resource"), "test.jclouds.oauth.resource");
       checkNotNull(setIfTestSystemPropertyPresent(properties, "oauth.endpoint"), "test.oauth.endpoint");
 
       properties.put(RESOURCE_GROUP_NAME, azureGroup);

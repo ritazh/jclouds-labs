@@ -53,7 +53,7 @@ public class VMHardwareToHardware implements Function<VMHardware, Hardware> {
               .ram(from.memoryInMB)
               .location(from.globallyAvailable ? null : FluentIterable.from(locations.get())
                       .firstMatch(LocationPredicates.idEquals(from.location))
-                      .orNull());
+                      .get());
 
       // No id or providerId from Azure
       if (from.resourceDiskSizeInMB != null) {

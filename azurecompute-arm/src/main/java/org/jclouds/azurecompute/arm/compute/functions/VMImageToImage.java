@@ -83,7 +83,7 @@ public class VMImageToImage implements Function<VMImage, Image> {
               .providerId(image.publisher)
               .location(image.globallyAvailable ? null : FluentIterable.from(locations.get())
                       .firstMatch(LocationPredicates.idEquals(image.location))
-                      .orNull());
+                      .get());
 
 
       final OperatingSystem.Builder osBuilder = osFamily().apply(image);
