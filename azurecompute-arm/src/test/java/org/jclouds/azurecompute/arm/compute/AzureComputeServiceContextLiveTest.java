@@ -63,7 +63,7 @@ public class AzureComputeServiceContextLiveTest extends BaseComputeServiceContex
    }
 
    @Override protected Properties setupProperties() {
-      azureGroup = "jt" + System.getProperty("user.name").substring(0, 3);
+      azureGroup = "jc" + System.getProperty("user.name").substring(0, 3);
 
       Properties properties = super.setupProperties();
       long scriptTimeout = TimeUnit.MILLISECONDS.convert(20, TimeUnit.MINUTES);
@@ -89,8 +89,9 @@ public class AzureComputeServiceContextLiveTest extends BaseComputeServiceContex
 
       final String groupName = this.azureGroup;
       final TemplateBuilder templateBuilder = view.getComputeService().templateBuilder();
-
+      templateBuilder.locationId("westus");
       final Template template = templateBuilder.build();
+      System.out.println("live test location: " + template.getLocation().getId());
 
       try {
          Set<? extends NodeMetadata> nodes = view.getComputeService().createNodesInGroup(groupName, 1, template);

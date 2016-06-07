@@ -111,9 +111,8 @@ public class DeploymentToNodeMetadata implements Function<VMDeployment, NodeMeta
       builder.id(deployment.name());
       builder.providerId(deployment.name());
       builder.name(deployment.name());
-      String group = deployment.name();
-      int index = group.lastIndexOf("-");
-      builder.group(group.substring(0, index));
+      String group =  this.nodeNamingConvention.extractGroup(deployment.name());
+      builder.group(group);
 
       NodeMetadata.Status status = STATUS_TO_NODESTATUS.get(provisioningStateFromString(deployment.properties().provisioningState()));
       if (status == NodeMetadata.Status.RUNNING && from.vm != null && from.vm.statuses() != null) {

@@ -83,7 +83,6 @@ public class CreateResourceGroupThenCreateNodes extends CreateNodesWithGroupEnco
       ResourceGroupApi resourceGroupApi = api.getResourceGroupApi();
       ResourceGroup resourceGroup = resourceGroupApi.get(azureGroup);
       final String location = template.getLocation().getId();
-
       final String resourceGroupName;
 
       if (resourceGroup == null){
