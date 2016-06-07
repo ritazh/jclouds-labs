@@ -207,11 +207,11 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
 
    private List<VMImage> listImagesByLocation(String location) {
       final List<VMImage> osImages = Lists.newArrayList();
-
-      getImagesFromPublisher("Microsoft.WindowsAzure.Compute", osImages, location);
-      getImagesFromPublisher("MicrosoftWindowsServer", osImages, location);
-      getImagesFromPublisher("Canonical", osImages, location);
-
+      String[] publishers = this.azureComputeConstants.azureImagePublishers().split(",");
+      for (String publisher : publishers) {
+         publisher = publisher.trim();
+         getImagesFromPublisher(publisher, osImages, location);
+      }
       return osImages;
    }
 

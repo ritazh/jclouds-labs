@@ -35,4 +35,6 @@ public class AzureComputeProperties {
 
    public static final String RESOURCE_GROUP_NAME = "jclouds.azurecompute.arm.operation.resourcegroup";
 
+   public static final String IMAGE_PUBLISHERS = "jclouds.azurecompute.arm.publishers";
+
 }

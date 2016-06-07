@@ -39,6 +39,7 @@ import com.google.common.base.Function;
 import com.google.inject.Inject;
 import com.google.inject.TypeLiteral;
 
+import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.IMAGE_PUBLISHERS;
 import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.RESOURCE_GROUP_NAME;
 import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.OPERATION_TIMEOUT;
 import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.OPERATION_POLL_INITIAL_PERIOD;
@@ -96,12 +97,20 @@ public class AzureComputeServiceContextModule
       @Inject
       private String azureResourceGroupProperty;
 
+      @Named(IMAGE_PUBLISHERS)
+      @Inject
+      private String azureImagePublishersProperty;
+
       public Long operationTimeout() {
          return Long.parseLong(operationTimeoutProperty);
       }
 
       public String azureResourceGroup() {
          return azureResourceGroupProperty;
+      }
+
+      public String azureImagePublishers() {
+         return azureImagePublishersProperty;
       }
 
       public Integer operationPollInitialPeriod() {
