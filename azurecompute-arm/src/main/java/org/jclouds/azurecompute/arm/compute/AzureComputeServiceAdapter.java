@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.Resource;
@@ -34,7 +33,6 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
 import com.google.common.net.UrlEscapers;
 import org.jclouds.azurecompute.arm.AzureComputeApi;
@@ -48,14 +46,12 @@ import org.jclouds.azurecompute.arm.domain.VMHardware;
 import org.jclouds.azurecompute.arm.domain.Location;
 import org.jclouds.azurecompute.arm.domain.Offer;
 import org.jclouds.azurecompute.arm.domain.PublicIPAddress;
-import org.jclouds.azurecompute.arm.domain.ResourceGroup;
 import org.jclouds.azurecompute.arm.domain.ResourceProviderMetaData;
 import org.jclouds.azurecompute.arm.domain.SKU;
 import org.jclouds.azurecompute.arm.domain.VMDeployment;
 import org.jclouds.azurecompute.arm.domain.VMSize;
 import org.jclouds.azurecompute.arm.features.DeploymentApi;
 import org.jclouds.azurecompute.arm.features.OSImageApi;
-import org.jclouds.azurecompute.arm.features.ResourceGroupApi;
 import org.jclouds.azurecompute.arm.functions.ParseJobStatus;
 import org.jclouds.azurecompute.arm.util.DeploymentTemplateBuilder;
 import org.jclouds.compute.ComputeServiceAdapter;
@@ -99,7 +95,6 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
    public NodeAndInitialCredentials<VMDeployment> createNodeWithGroupEncodedIntoName(
            final String group, final String name, final Template template) {
 
-      final String location = template.getLocation().getId();
       DeploymentTemplateBuilder deploymentTemplateBuilder = api.deploymentTemplateFactory().create(group, name, template);
 
       final String loginUser = deploymentTemplateBuilder.getLoginUserUsername();
@@ -113,20 +108,11 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
 
       logger.debug("Deployment created with name: %s", name);
 
+
+
       final Set<VMDeployment> deployments = Sets.newHashSet();
 
-      ResourceGroupApi resourceGroupApi = api.getResourceGroupApi();
-      ResourceGroup resourceGroup = resourceGroupApi.get(azureGroup);
-      final String resourceGroupName;
-
-      if (resourceGroup == null){
-         final Map<String, String> tags = ImmutableMap.of("description", "jClouds managed VMs");
-         resourceGroupName = resourceGroupApi.create(azureGroup, location, tags).name();
-      } else {
-         resourceGroupName = resourceGroup.name();
-      }
-
-      final DeploymentApi deploymentApi = api.getDeploymentApi(resourceGroupName);
+      final DeploymentApi deploymentApi = api.getDeploymentApi(azureGroup);
 
       if (!retry(new Predicate<String>() {
          @Override

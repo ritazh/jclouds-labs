@@ -30,7 +30,6 @@ import org.jclouds.compute.domain.OsFamily;
 import org.jclouds.compute.domain.Template;
 import org.jclouds.compute.domain.TemplateBuilder;
 import org.jclouds.compute.internal.BaseComputeServiceContextLiveTest;
-import org.jclouds.compute.options.TemplateOptions;
 import org.jclouds.domain.Credentials;
 import org.jclouds.domain.LoginCredentials;
 import org.jclouds.providers.ProviderMetadata;
@@ -44,8 +43,10 @@ import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.RESOURCE_GROUP_NAME;
 import static org.jclouds.compute.config.ComputeServiceProperties.TIMEOUT_NODE_RUNNING;
 import static org.jclouds.compute.config.ComputeServiceProperties.TIMEOUT_SCRIPT_COMPLETE;
+
 import static org.jclouds.compute.predicates.NodePredicates.inGroup;
 import static org.jclouds.compute.options.TemplateOptions.Builder.overrideLoginCredentials;
 import static org.jclouds.scriptbuilder.domain.Statements.exec;
@@ -54,7 +55,7 @@ import static org.testng.Assert.assertTrue;
 @Test(groups = "live", testName = "AzureComputeServiceContextLiveTest")
 public class AzureComputeServiceContextLiveTest extends BaseComputeServiceContextLiveTest {
 
-   public static String NAME_PREFIX = "azu%s";
+   public String azureGroup;
 
    @Override
    protected Module getSshModule() {
@@ -62,6 +63,8 @@ public class AzureComputeServiceContextLiveTest extends BaseComputeServiceContex
    }
 
    @Override protected Properties setupProperties() {
+      azureGroup = "jc" + System.getProperty("user.name").substring(0, 3);
+
       Properties properties = super.setupProperties();
       long scriptTimeout = TimeUnit.MILLISECONDS.convert(20, TimeUnit.MINUTES);
       properties.setProperty(TIMEOUT_SCRIPT_COMPLETE, scriptTimeout + "");
@@ -70,6 +73,8 @@ public class AzureComputeServiceContextLiveTest extends BaseComputeServiceContex
       AzureLiveTestUtils.defaultProperties(properties);
       checkNotNull(setIfTestSystemPropertyPresent(properties, "jclouds.oauth.resource"), "test.jclouds.oauth.resource");
       checkNotNull(setIfTestSystemPropertyPresent(properties, "oauth.endpoint"), "test.oauth.endpoint");
+
+      properties.put(RESOURCE_GROUP_NAME, azureGroup);
 
       return properties;
 
@@ -82,7 +87,8 @@ public class AzureComputeServiceContextLiveTest extends BaseComputeServiceContex
 
    @Test
    public void testDefault() throws RunNodesException {
-      final String groupName = String.format(NAME_PREFIX, System.getProperty("user.name").substring(0, 3));
+
+      final String groupName = this.azureGroup;
       final TemplateBuilder templateBuilder = view.getComputeService().templateBuilder();
 
       final Template template = templateBuilder.build();
@@ -103,7 +109,7 @@ public class AzureComputeServiceContextLiveTest extends BaseComputeServiceContex
 
    @Test(dependsOnMethods = "testDefault")
    public void testExec() throws RunScriptOnNodesException {
-      final String groupName = String.format(NAME_PREFIX, System.getProperty("user.name").substring(0, 3));
+      final String groupName = this.azureGroup;
       String command = "echo hello";
 
       Map<? extends NodeMetadata, ExecResponse> responses = view.getComputeService().runScriptOnNodesMatching(//
@@ -135,7 +141,7 @@ public class AzureComputeServiceContextLiveTest extends BaseComputeServiceContex
 
    @Test(dependsOnMethods = "testExec")
    public void testStop() throws RunScriptOnNodesException {
-      final String groupName = String.format(NAME_PREFIX, System.getProperty("user.name").substring(0, 3));
+      final String groupName = this.azureGroup;
       Set<? extends NodeMetadata> nodes = view.getComputeService().suspendNodesMatching(inGroup(groupName));
       assertTrue(nodes.size() > 0);
 
@@ -164,7 +170,7 @@ public class AzureComputeServiceContextLiveTest extends BaseComputeServiceContex
 
    @Test(dependsOnMethods = "testStop")
    public void testStart() throws RunScriptOnNodesException {
-      final String groupName = String.format(NAME_PREFIX, System.getProperty("user.name").substring(0, 3));
+      final String groupName = this.azureGroup;
       Set<? extends NodeMetadata> nodes = view.getComputeService().resumeNodesMatching(inGroup(groupName));
       assertTrue(nodes.size() > 0);
 
@@ -193,7 +199,7 @@ public class AzureComputeServiceContextLiveTest extends BaseComputeServiceContex
 
    @Test(dependsOnMethods = "testStart")
    public void testRestart() throws RunScriptOnNodesException {
-      final String groupName = String.format(NAME_PREFIX, System.getProperty("user.name").substring(0, 3));
+      final String groupName = this.azureGroup;
       Set<? extends NodeMetadata> nodes = view.getComputeService().rebootNodesMatching(inGroup(groupName));
       assertTrue(nodes.size() > 0);
 
@@ -224,16 +230,13 @@ public class AzureComputeServiceContextLiveTest extends BaseComputeServiceContex
 
    @Test(dependsOnMethods = "testRestart")
    public void testLinuxNode() throws RunNodesException {
-      final String groupName = String.format("ubu%s", System.getProperty("user.name").substring(0, 3));
+      final String groupName = this.azureGroup;
       final TemplateBuilder templateBuilder = view.getComputeService().templateBuilder();
       templateBuilder.osFamily(OsFamily.UBUNTU);
       templateBuilder.osVersionMatches("14.04");
       templateBuilder.hardwareId("Standard_A0");
       templateBuilder.locationId("westus");
       final Template template = templateBuilder.build();
-
-      final TemplateOptions options = template.getOptions();
-      options.inboundPorts(5985);
 
       try {
          Set<? extends NodeMetadata> nodes = view.getComputeService().createNodesInGroup(groupName, 1, template);
@@ -245,15 +248,12 @@ public class AzureComputeServiceContextLiveTest extends BaseComputeServiceContex
 
    @Test(dependsOnMethods = "testLinuxNode")
    public void testWindowsNode() throws RunNodesException {
-      final String groupName = String.format("win%s", System.getProperty("user.name").substring(0, 3));
+      final String groupName = this.azureGroup;
       final TemplateBuilder templateBuilder = view.getComputeService().templateBuilder();
       templateBuilder.imageId("westus/MicrosoftWindowsServer/WindowsServer/2016-Technical-Preview-with-Containers");
       templateBuilder.hardwareId("Standard_A0");
       templateBuilder.locationId("westus");
       final Template template = templateBuilder.build();
-
-      final TemplateOptions options = template.getOptions().as(TemplateOptions.class);
-      options.inboundPorts(5985);
 
       try {
          Set<? extends NodeMetadata> nodes = view.getComputeService().createNodesInGroup(groupName, 1, template);

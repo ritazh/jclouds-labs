@@ -63,7 +63,7 @@ public class AzureComputeProviderMetadata extends BaseProviderMetadata {
       properties.setProperty(TCP_RULE_REGEXP, "tcp_\\d{1,5}-\\d{1,5}");
       properties.put(RESOURCE, "https://management.azure.com/");
       properties.put(CREDENTIAL_TYPE, CLIENT_CREDENTIALS_SECRET.toString());
-      properties.put(RESOURCE_GROUP_NAME, "jcloudsgrp");
+      properties.put(RESOURCE_GROUP_NAME, "jcloudsgroup2");
       return properties;
    }
 

@@ -32,6 +32,8 @@ import org.jclouds.compute.ComputeServiceAdapter;
 import org.jclouds.compute.config.ComputeServiceAdapterContextModule;
 import org.jclouds.compute.domain.Hardware;
 import org.jclouds.compute.domain.NodeMetadata;
+import org.jclouds.compute.strategy.CreateNodesInGroupThenAddToSet;
+import org.jclouds.azurecompute.arm.compute.strategy.CreateResourceGroupThenCreateNodes;
 
 import com.google.common.base.Function;
 import com.google.inject.Inject;
@@ -50,7 +52,6 @@ public class AzureComputeServiceContextModule
    @Override
    protected void configure() {
       super.configure();
-
       bind(new TypeLiteral<ComputeServiceAdapter<VMDeployment, VMHardware, VMImage, Location>>() {
       }).to(AzureComputeServiceAdapter.class);
       bind(new TypeLiteral<Function<VMImage, org.jclouds.compute.domain.Image>>() {
@@ -63,6 +64,9 @@ public class AzureComputeServiceContextModule
       }).to(LocationToLocation.class);
       install(new LocationsFromComputeServiceAdapterModule<VMDeployment, VMHardware, VMImage, Location>() {
       });
+
+
+      bind(CreateNodesInGroupThenAddToSet.class).to(CreateResourceGroupThenCreateNodes.class);
    }
 
    @Singleton
