@@ -39,4 +39,6 @@ public class AzureComputeProperties {
 
    public static final String DEFAULT_IMAGE_LOGIN = "jclouds.azurecompute.arm.defaultimagelogin";
 
+   public static final String TIMEOUT_RESOURCE_DELETED = "jclouds.azurecompute.arm.timeout.resourcedeleted";
+
 }

@@ -18,6 +18,7 @@ package org.jclouds.azurecompute.arm.compute.config;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
+import com.google.inject.Provides;
 
 import org.jclouds.azurecompute.arm.compute.AzureComputeServiceAdapter;
 import org.jclouds.azurecompute.arm.compute.functions.VMImageToImage;
@@ -28,16 +29,28 @@ import org.jclouds.azurecompute.arm.domain.VMDeployment;
 import org.jclouds.azurecompute.arm.domain.VMHardware;
 import org.jclouds.azurecompute.arm.domain.VMImage;
 import org.jclouds.azurecompute.arm.domain.Location;
+import org.jclouds.azurecompute.arm.compute.strategy.CreateResourceGroupThenCreateNodes;
+import org.jclouds.azurecompute.arm.AzureComputeApi;
+import org.jclouds.azurecompute.arm.functions.ParseJobStatus;
+
 import org.jclouds.compute.ComputeServiceAdapter;
 import org.jclouds.compute.config.ComputeServiceAdapterContextModule;
 import org.jclouds.compute.domain.Hardware;
 import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.compute.strategy.CreateNodesInGroupThenAddToSet;
-import org.jclouds.azurecompute.arm.compute.strategy.CreateResourceGroupThenCreateNodes;
+import org.jclouds.compute.reference.ComputeServiceConstants.Timeouts;
+import org.jclouds.compute.reference.ComputeServiceConstants.PollPeriod;
+import static org.jclouds.util.Predicates2.retry;
+import static org.jclouds.compute.config.ComputeServiceProperties.TIMEOUT_NODE_TERMINATED;
 
 import com.google.common.base.Function;
 import com.google.inject.Inject;
 import com.google.inject.TypeLiteral;
+import com.google.common.base.Predicate;
+import static com.google.common.base.Preconditions.checkNotNull;
+import com.google.common.annotations.VisibleForTesting;
+import java.net.URI;
+
 
 import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.IMAGE_PUBLISHERS;
 import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.RESOURCE_GROUP_NAME;
@@ -47,6 +60,7 @@ import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.OPERATI
 import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.TCP_RULE_FORMAT;
 import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.TCP_RULE_REGEXP;
 import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.DEFAULT_IMAGE_LOGIN;
+import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.TIMEOUT_RESOURCE_DELETED;
 
 public class AzureComputeServiceContextModule
         extends ComputeServiceAdapterContextModule<VMDeployment, VMHardware, VMImage, Location> {
@@ -137,6 +151,39 @@ public class AzureComputeServiceContextModule
       public String tcpRuleRegexp() {
          return tcpRuleRegexpProperty;
       }
+   }
+
+   @Provides
+   @Named(TIMEOUT_NODE_TERMINATED)
+   protected Predicate<URI> provideNodeTerminatedPredicate(final AzureComputeApi api, Timeouts timeouts,
+                                                                  PollPeriod pollPeriod) {
+      return retry(new ActionDonePredicate(api), timeouts.nodeTerminated, pollPeriod.pollInitialPeriod,
+              pollPeriod.pollMaxPeriod);
+   }
+
+   @Provides
+   @Named(TIMEOUT_RESOURCE_DELETED)
+   protected Predicate<URI> provideResourceDeletedPredicate(final AzureComputeApi api, Timeouts timeouts,
+                                                           PollPeriod pollPeriod) {
+      return retry(new ActionDonePredicate(api), timeouts.nodeTerminated, pollPeriod.pollInitialPeriod,
+              pollPeriod.pollMaxPeriod);
+   }
+
+   @VisibleForTesting
+   static class ActionDonePredicate implements Predicate<URI> {
+
+      private final AzureComputeApi api;
+
+      public ActionDonePredicate(AzureComputeApi api) {
+         this.api = checkNotNull(api, "api must not be null");
+      }
+
+      @Override
+      public boolean apply(URI uri) {
+         checkNotNull(uri, "uri cannot be null");
+         return ParseJobStatus.JobStatus.DONE == api.getJobApi().jobStatus(uri);
+      }
+
    }
 
 }

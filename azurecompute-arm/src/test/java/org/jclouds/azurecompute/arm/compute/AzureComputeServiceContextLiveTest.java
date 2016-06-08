@@ -62,10 +62,10 @@ public class AzureComputeServiceContextLiveTest extends BaseComputeServiceContex
    }
 
    @Override protected Properties setupProperties() {
-      azureGroup = "jc" + System.getProperty("user.name").substring(0, 3);
+      azureGroup = "jr" + System.getProperty("user.name").substring(0, 3);
 
       Properties properties = super.setupProperties();
-      long scriptTimeout = TimeUnit.MILLISECONDS.convert(20, TimeUnit.MINUTES);
+      long scriptTimeout = TimeUnit.MILLISECONDS.convert(60, TimeUnit.MINUTES);
       properties.setProperty(TIMEOUT_SCRIPT_COMPLETE, scriptTimeout + "");
       properties.setProperty(TIMEOUT_NODE_RUNNING, scriptTimeout + "");
 
@@ -247,22 +247,22 @@ public class AzureComputeServiceContextLiveTest extends BaseComputeServiceContex
       }
    }
 
-//   @Test(dependsOnMethods = "testLinuxNode")
-//   public void testWindowsNode() throws RunNodesException {
-//      final String groupName = this.azureGroup;
-//      final TemplateBuilder templateBuilder = view.getComputeService().templateBuilder();
-//      templateBuilder.imageId("westus/MicrosoftWindowsServer/WindowsServer/2016-Technical-Preview-with-Containers");
-//      templateBuilder.hardwareId("Standard_A0");
-//      templateBuilder.locationId("westus");
-//      final Template template = templateBuilder.build();
-//
-//      try {
-//         Set<? extends NodeMetadata> nodes = view.getComputeService().createNodesInGroup(groupName, 1, template);
-//         assertThat(nodes).hasSize(1);
-//      } finally {
-//         view.getComputeService().destroyNodesMatching(inGroup(groupName));
-//      }
-//   }
+   @Test(dependsOnMethods = "testLinuxNode")
+   public void testWindowsNode() throws RunNodesException {
+      final String groupName = this.azureGroup;
+      final TemplateBuilder templateBuilder = view.getComputeService().templateBuilder();
+      templateBuilder.imageId("westus/MicrosoftWindowsServer/WindowsServer/2016-Technical-Preview-with-Containers");
+      templateBuilder.hardwareId("Standard_A0");
+      templateBuilder.locationId("westus");
+      final Template template = templateBuilder.build();
+
+      try {
+         Set<? extends NodeMetadata> nodes = view.getComputeService().createNodesInGroup(groupName, 1, template);
+         assertThat(nodes).hasSize(1);
+      } finally {
+         view.getComputeService().destroyNodesMatching(inGroup(groupName));
+      }
+   }
 
    @Override
    protected ProviderMetadata createProviderMetadata() {

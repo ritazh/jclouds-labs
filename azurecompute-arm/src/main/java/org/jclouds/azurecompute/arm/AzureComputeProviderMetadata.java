@@ -38,6 +38,8 @@ import org.jclouds.providers.ProviderMetadata;
 import org.jclouds.providers.internal.BaseProviderMetadata;
 import org.jclouds.compute.config.ComputeServiceProperties;
 
+import static org.jclouds.compute.config.ComputeServiceProperties.TIMEOUT_NODE_TERMINATED;
+
 import com.google.auto.service.AutoService;
 
 @AutoService(ProviderMetadata.class)
@@ -70,6 +72,7 @@ public class AzureComputeProviderMetadata extends BaseProviderMetadata {
       properties.put(RESOURCE_GROUP_NAME, "jcloudsgroup");
       properties.put(IMAGE_PUBLISHERS, "Microsoft.WindowsAzure.Compute, MicrosoftWindowsServer, Canonical");
       properties.put(DEFAULT_IMAGE_LOGIN, "jclouds:Password1!");
+      properties.put(TIMEOUT_NODE_TERMINATED, 60 * 10 * 1000);
       return properties;
    }
 

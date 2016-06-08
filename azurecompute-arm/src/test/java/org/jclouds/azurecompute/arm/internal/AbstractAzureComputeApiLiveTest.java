@@ -20,10 +20,15 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Properties;
 import java.util.Random;
+import com.google.inject.Module;
+import com.google.inject.Injector;
+
+
 import org.jclouds.apis.BaseApiLiveTest;
 import org.jclouds.azurecompute.arm.AzureComputeApi;
 import org.jclouds.azurecompute.arm.AzureComputeProviderMetadata;
 import org.jclouds.providers.ProviderMetadata;
+
 
 public abstract class AbstractAzureComputeApiLiveTest extends BaseApiLiveTest<AzureComputeApi> {
 
@@ -31,6 +36,11 @@ public abstract class AbstractAzureComputeApiLiveTest extends BaseApiLiveTest<Az
 
    public AbstractAzureComputeApiLiveTest() {
       provider = "azurecompute-arm";
+   }
+
+   @Override protected AzureComputeApi create(Properties props, Iterable<Module> modules) {
+      Injector injector = newBuilder().modules(modules).overrides(props).buildInjector();
+      return injector.getInstance(AzureComputeApi.class);
    }
 
    @Override protected Properties setupProperties() {

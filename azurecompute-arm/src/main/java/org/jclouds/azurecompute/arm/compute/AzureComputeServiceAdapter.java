@@ -17,6 +17,7 @@
 package org.jclouds.azurecompute.arm.compute;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.TIMEOUT_RESOURCE_DELETED;
 import static org.jclouds.util.Predicates2.retry;
 
 import java.net.URI;
@@ -52,19 +53,18 @@ import org.jclouds.azurecompute.arm.domain.VMDeployment;
 import org.jclouds.azurecompute.arm.domain.VMSize;
 import org.jclouds.azurecompute.arm.features.DeploymentApi;
 import org.jclouds.azurecompute.arm.features.OSImageApi;
-import org.jclouds.azurecompute.arm.functions.ParseJobStatus;
 import org.jclouds.azurecompute.arm.util.DeploymentTemplateBuilder;
 import org.jclouds.compute.ComputeServiceAdapter;
 import org.jclouds.compute.domain.Template;
 import org.jclouds.compute.reference.ComputeServiceConstants;
 import org.jclouds.domain.LoginCredentials;
 import org.jclouds.logging.Logger;
+import static org.jclouds.compute.config.ComputeServiceProperties.TIMEOUT_NODE_TERMINATED;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import org.jclouds.util.Predicates2;
 import com.google.common.base.Splitter;
 
 /**
@@ -83,13 +83,19 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
    private final AzureComputeApi api;
 
    private final AzureComputeConstants azureComputeConstants;
+   private Predicate<URI> nodeTerminated;
+   private Predicate<URI> resourceDeleted;
 
    @Inject
-   AzureComputeServiceAdapter(final AzureComputeApi api, final AzureComputeConstants azureComputeConstants) {
+   AzureComputeServiceAdapter(final AzureComputeApi api, final AzureComputeConstants azureComputeConstants,
+                              @Named(TIMEOUT_NODE_TERMINATED) Predicate<URI> nodeTerminated,
+                              @Named(TIMEOUT_RESOURCE_DELETED) Predicate<URI> resourceDeleted) {
 
       this.api = api;
       this.azureComputeConstants = azureComputeConstants;
       this.azureGroup = this.azureComputeConstants.azureResourceGroup();
+      this.nodeTerminated = nodeTerminated;
+      this.resourceDeleted = resourceDeleted;
    }
 
    @Override
@@ -315,11 +321,7 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
       // Delete VM
       URI uri = api.getVirtualMachineApi(azureGroup).delete(id);
       if (uri != null){
-         boolean jobDone = Predicates2.retry(new Predicate<URI>() {
-            @Override public boolean apply(URI uri) {
-               return ParseJobStatus.JobStatus.DONE == api.getJobApi().jobStatus(uri);
-            }
-         }, 60 * 10 * 1000 /* 5 minute timeout */).apply(uri);
+         boolean jobDone = nodeTerminated.apply(uri);
 
          if (jobDone) {
             // Delete storage account
@@ -328,12 +330,7 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
             // Delete NIC
             uri = api.getNetworkInterfaceCardApi(azureGroup).delete(id + "nic");
             if (uri != null){
-               jobDone = Predicates2.retry(new Predicate<URI>() {
-                  @Override public boolean apply(URI uri) {
-                     return ParseJobStatus.JobStatus.DONE == api.getJobApi().jobStatus(uri)
-                             || ParseJobStatus.JobStatus.NO_CONTENT == api.getJobApi().jobStatus(uri);
-                  }
-               }, 60 * 10 * 1000 /* 5 minute timeout */).apply(uri);
+               jobDone = resourceDeleted.apply(uri);
                if (jobDone) {
                   // Delete public ip
                   api.getPublicIPAddressApi(azureGroup).delete(id + "publicip");
