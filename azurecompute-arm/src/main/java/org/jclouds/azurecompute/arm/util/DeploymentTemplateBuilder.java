@@ -102,7 +102,7 @@ public class DeploymentTemplateBuilder {
       String defaultUser = null;
       String defaultPassword = null;
 
-      if(defaultLogin.length == 2){
+      if (defaultLogin.length == 2) {
          defaultUser = defaultLogin[0].trim();
          defaultPassword = defaultLogin[1].trim();
       }
