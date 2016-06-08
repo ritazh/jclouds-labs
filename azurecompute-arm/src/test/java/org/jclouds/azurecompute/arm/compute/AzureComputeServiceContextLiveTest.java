@@ -56,7 +56,6 @@ import static org.testng.Assert.assertTrue;
 public class AzureComputeServiceContextLiveTest extends BaseComputeServiceContextLiveTest {
 
    public String azureGroup;
-
    @Override
    protected Module getSshModule() {
       return new SshjSshClientModule();
@@ -74,7 +73,6 @@ public class AzureComputeServiceContextLiveTest extends BaseComputeServiceContex
       checkNotNull(setIfTestSystemPropertyPresent(properties, "oauth.endpoint"), "test.oauth.endpoint");
 
       properties.put(RESOURCE_GROUP_NAME, azureGroup);
-
       return properties;
 
    }
@@ -89,9 +87,12 @@ public class AzureComputeServiceContextLiveTest extends BaseComputeServiceContex
 
       final String groupName = this.azureGroup;
       final TemplateBuilder templateBuilder = view.getComputeService().templateBuilder();
+      templateBuilder.osFamily(OsFamily.UBUNTU);
+      templateBuilder.osVersionMatches("14.04");
+      templateBuilder.hardwareId("Standard_A0");
       templateBuilder.locationId("westus");
+
       final Template template = templateBuilder.build();
-      System.out.println("live test location: " + template.getLocation().getId());
 
       try {
          Set<? extends NodeMetadata> nodes = view.getComputeService().createNodesInGroup(groupName, 1, template);
@@ -246,22 +247,22 @@ public class AzureComputeServiceContextLiveTest extends BaseComputeServiceContex
       }
    }
 
-   @Test(dependsOnMethods = "testLinuxNode")
-   public void testWindowsNode() throws RunNodesException {
-      final String groupName = this.azureGroup;
-      final TemplateBuilder templateBuilder = view.getComputeService().templateBuilder();
-      templateBuilder.imageId("westus/MicrosoftWindowsServer/WindowsServer/2016-Technical-Preview-with-Containers");
-      templateBuilder.hardwareId("Standard_A0");
-      templateBuilder.locationId("westus");
-      final Template template = templateBuilder.build();
-
-      try {
-         Set<? extends NodeMetadata> nodes = view.getComputeService().createNodesInGroup(groupName, 1, template);
-         assertThat(nodes).hasSize(1);
-      } finally {
-         view.getComputeService().destroyNodesMatching(inGroup(groupName));
-      }
-   }
+//   @Test(dependsOnMethods = "testLinuxNode")
+//   public void testWindowsNode() throws RunNodesException {
+//      final String groupName = this.azureGroup;
+//      final TemplateBuilder templateBuilder = view.getComputeService().templateBuilder();
+//      templateBuilder.imageId("westus/MicrosoftWindowsServer/WindowsServer/2016-Technical-Preview-with-Containers");
+//      templateBuilder.hardwareId("Standard_A0");
+//      templateBuilder.locationId("westus");
+//      final Template template = templateBuilder.build();
+//
+//      try {
+//         Set<? extends NodeMetadata> nodes = view.getComputeService().createNodesInGroup(groupName, 1, template);
+//         assertThat(nodes).hasSize(1);
+//      } finally {
+//         view.getComputeService().destroyNodesMatching(inGroup(groupName));
+//      }
+//   }
 
    @Override
    protected ProviderMetadata createProviderMetadata() {

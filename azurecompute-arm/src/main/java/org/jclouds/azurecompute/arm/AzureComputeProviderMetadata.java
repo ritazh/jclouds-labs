@@ -25,6 +25,8 @@ import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.OPERATI
 import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.TCP_RULE_FORMAT;
 import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.TCP_RULE_REGEXP;
 
+import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.DEFAULT_IMAGE_LOGIN;
+
 import static org.jclouds.oauth.v2.config.CredentialType.CLIENT_CREDENTIALS_SECRET;
 import static org.jclouds.oauth.v2.config.OAuthProperties.RESOURCE;
 import static org.jclouds.oauth.v2.config.OAuthProperties.CREDENTIAL_TYPE;
@@ -67,6 +69,7 @@ public class AzureComputeProviderMetadata extends BaseProviderMetadata {
       properties.put(CREDENTIAL_TYPE, CLIENT_CREDENTIALS_SECRET.toString());
       properties.put(RESOURCE_GROUP_NAME, "jcloudsgroup");
       properties.put(IMAGE_PUBLISHERS, "Microsoft.WindowsAzure.Compute, MicrosoftWindowsServer, Canonical");
+      properties.put(DEFAULT_IMAGE_LOGIN, "jclouds:Password1!");
       return properties;
    }
 

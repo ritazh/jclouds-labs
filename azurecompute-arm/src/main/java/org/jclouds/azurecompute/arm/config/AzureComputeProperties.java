@@ -37,4 +37,6 @@ public class AzureComputeProperties {
 
    public static final String IMAGE_PUBLISHERS = "jclouds.azurecompute.arm.publishers";
 
+   public static final String DEFAULT_IMAGE_LOGIN = "jclouds.azurecompute.arm.defaultimagelogin";
+
 }

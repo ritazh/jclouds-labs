@@ -46,6 +46,7 @@ import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.OPERATI
 import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.OPERATION_POLL_MAX_PERIOD;
 import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.TCP_RULE_FORMAT;
 import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.TCP_RULE_REGEXP;
+import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.DEFAULT_IMAGE_LOGIN;
 
 public class AzureComputeServiceContextModule
         extends ComputeServiceAdapterContextModule<VMDeployment, VMHardware, VMImage, Location> {
@@ -101,6 +102,10 @@ public class AzureComputeServiceContextModule
       @Inject
       private String azureImagePublishersProperty;
 
+      @Named(DEFAULT_IMAGE_LOGIN)
+      @Inject
+      private String azureDefaultImageLoginProperty;
+
       public Long operationTimeout() {
          return Long.parseLong(operationTimeoutProperty);
       }
@@ -111,6 +116,10 @@ public class AzureComputeServiceContextModule
 
       public String azureImagePublishers() {
          return azureImagePublishersProperty;
+      }
+
+      public String azureDefaultImageLogin() {
+         return azureDefaultImageLoginProperty;
       }
 
       public Integer operationPollInitialPeriod() {

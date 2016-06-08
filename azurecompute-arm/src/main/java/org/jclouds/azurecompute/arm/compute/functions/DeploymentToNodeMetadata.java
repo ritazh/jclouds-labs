@@ -44,9 +44,8 @@ import org.jclouds.domain.LoginCredentials;
 
 public class DeploymentToNodeMetadata implements Function<VMDeployment, NodeMetadata> {
 
-   public static final String JCLOUDS_DEFAULT_USERNAME = "root";
-   public static final String AZURE_DEFAULT_USERNAME = DeploymentTemplateBuilder.DEFAULT_LOGIN_USER;
-   public static final String DEFAULT_LOGIN_PASSWORD = DeploymentTemplateBuilder.DEFAULT_LOGIN_PASSWORD;
+   public static final String AZURE_LOGIN_USERNAME = DeploymentTemplateBuilder.getLoginUserUsername();
+   public static final String AZURE_LOGIN_PASSWORD = DeploymentTemplateBuilder.getLoginPassword();
 
    private static final Map<ComputeNode.Status, NodeMetadata.Status> INSTANCESTATUS_TO_NODESTATUS =
            ImmutableMap.<ComputeNode.Status, NodeMetadata.Status>builder().
@@ -132,10 +131,8 @@ public class DeploymentToNodeMetadata implements Function<VMDeployment, NodeMeta
       builder.status(status);
 
       Credentials credentials = credentialStore.get("node#" + from.deployment.name());
-      if (credentials != null && credentials.identity.equals(JCLOUDS_DEFAULT_USERNAME)) {
-         credentials = new Credentials(AZURE_DEFAULT_USERNAME, credentials.credential);
-      } else if (credentials == null) {
-         credentials = new Credentials(AZURE_DEFAULT_USERNAME, DEFAULT_LOGIN_PASSWORD);
+      if (credentials == null) {
+         credentials = new Credentials(AZURE_LOGIN_USERNAME, AZURE_LOGIN_PASSWORD);
       }
       builder.credentials(LoginCredentials.fromCredentials(credentials));
 

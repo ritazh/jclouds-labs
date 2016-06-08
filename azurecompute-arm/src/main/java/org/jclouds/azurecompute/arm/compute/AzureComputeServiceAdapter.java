@@ -65,6 +65,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.jclouds.util.Predicates2;
+import com.google.common.base.Splitter;
 
 /**
  * Defines the connection between the {@link AzureComputeApi} implementation and the jclouds
@@ -207,7 +208,7 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
 
    private List<VMImage> listImagesByLocation(String location) {
       final List<VMImage> osImages = Lists.newArrayList();
-      String[] publishers = this.azureComputeConstants.azureImagePublishers().split(",");
+      Iterable<String> publishers = Splitter.on(',').trimResults().omitEmptyStrings().split(this.azureComputeConstants.azureImagePublishers());
       for (String publisher : publishers) {
          publisher = publisher.trim();
          getImagesFromPublisher(publisher, osImages, location);
