@@ -216,7 +216,6 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
       final List<VMImage> osImages = Lists.newArrayList();
       Iterable<String> publishers = Splitter.on(',').trimResults().omitEmptyStrings().split(this.azureComputeConstants.azureImagePublishers());
       for (String publisher : publishers) {
-         publisher = publisher.trim();
          getImagesFromPublisher(publisher, osImages, location);
       }
       return osImages;
