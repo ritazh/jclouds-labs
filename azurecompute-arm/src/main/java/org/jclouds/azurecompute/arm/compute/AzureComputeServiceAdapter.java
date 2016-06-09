@@ -15,12 +15,10 @@
  * limitations under the License.
  */
 package org.jclouds.azurecompute.arm.compute;
+
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.TIMEOUT_RESOURCE_DELETED;
 import static org.jclouds.util.Predicates2.retry;
-
-import java.net.URI;
 import java.util.ArrayList;
 
 import java.util.Collection;
@@ -59,13 +57,14 @@ import org.jclouds.compute.domain.Template;
 import org.jclouds.compute.reference.ComputeServiceConstants;
 import org.jclouds.domain.LoginCredentials;
 import org.jclouds.logging.Logger;
-import static org.jclouds.compute.config.ComputeServiceProperties.TIMEOUT_NODE_TERMINATED;
+import org.jclouds.azurecompute.arm.functions.CleanupResources;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.base.Splitter;
+import static com.google.common.base.Preconditions.checkState;
 
 /**
  * Defines the connection between the {@link AzureComputeApi} implementation and the jclouds
@@ -75,6 +74,7 @@ import com.google.common.base.Splitter;
 public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeployment, VMHardware, VMImage, Location> {
 
    private final String azureGroup;
+   protected final CleanupResources cleanupResources;
 
    @Resource
    @Named(ComputeServiceConstants.COMPUTE_LOGGER)
@@ -83,19 +83,15 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
    private final AzureComputeApi api;
 
    private final AzureComputeConstants azureComputeConstants;
-   private Predicate<URI> nodeTerminated;
-   private Predicate<URI> resourceDeleted;
 
    @Inject
    AzureComputeServiceAdapter(final AzureComputeApi api, final AzureComputeConstants azureComputeConstants,
-                              @Named(TIMEOUT_NODE_TERMINATED) Predicate<URI> nodeTerminated,
-                              @Named(TIMEOUT_RESOURCE_DELETED) Predicate<URI> resourceDeleted) {
+                              CleanupResources cleanupResources) {
 
       this.api = api;
       this.azureComputeConstants = azureComputeConstants;
       this.azureGroup = this.azureComputeConstants.azureResourceGroup();
-      this.nodeTerminated = nodeTerminated;
-      this.resourceDeleted = resourceDeleted;
+      this.cleanupResources = cleanupResources;
    }
 
    @Override
@@ -104,8 +100,8 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
 
       DeploymentTemplateBuilder deploymentTemplateBuilder = api.deploymentTemplateFactory().create(group, name, template);
 
-      final String loginUser = deploymentTemplateBuilder.getLoginUserUsername();
-      final String loginPassword = deploymentTemplateBuilder.getLoginPassword();
+      final String loginUser = DeploymentTemplateBuilder.getLoginUserUsername();
+      final String loginPassword = DeploymentTemplateBuilder.getLoginPassword();
 
       DeploymentBody deploymentTemplateBody =  deploymentTemplateBuilder.getDeploymentTemplate();
 
@@ -312,37 +308,7 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
 
    @Override
    public void destroyNode(final String id) {
-      logger.debug("Destroying %s ...", id);
-      String storageAccountName = id.replaceAll("[^A-Za-z0-9 ]", "") + "storage";
-      int index = id.lastIndexOf("-");
-      String group = id.substring(0, index);
-
-      // Delete VM
-      URI uri = api.getVirtualMachineApi(azureGroup).delete(id);
-      if (uri != null){
-         boolean jobDone = nodeTerminated.apply(uri);
-
-         if (jobDone) {
-            // Delete storage account
-            api.getStorageAccountApi(azureGroup).delete(storageAccountName);
-
-            // Delete NIC
-            uri = api.getNetworkInterfaceCardApi(azureGroup).delete(id + "nic");
-            if (uri != null){
-               jobDone = resourceDeleted.apply(uri);
-               if (jobDone) {
-                  // Delete public ip
-                  api.getPublicIPAddressApi(azureGroup).delete(id + "publicip");
-
-                  // Delete deployment
-                  api.getDeploymentApi(azureGroup).delete(id);
-
-                  // Delete Virtual network
-                  api.getVirtualNetworkApi(azureGroup).delete(group + "virtualnetwork");
-               }
-            }
-         }
-      }
+      checkState(cleanupResources.apply(id), "server(%s) and its resources still there after deleting!?", id);
    }
 
    @Override
