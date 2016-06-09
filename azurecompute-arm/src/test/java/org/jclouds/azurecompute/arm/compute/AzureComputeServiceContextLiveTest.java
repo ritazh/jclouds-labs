@@ -62,7 +62,7 @@ public class AzureComputeServiceContextLiveTest extends BaseComputeServiceContex
    }
 
    @Override protected Properties setupProperties() {
-      azureGroup = "jr" + System.getProperty("user.name").substring(0, 3);
+      azureGroup = "jc" + System.getProperty("user.name").substring(0, 3);
 
       Properties properties = super.setupProperties();
       long scriptTimeout = TimeUnit.MILLISECONDS.convert(60, TimeUnit.MINUTES);

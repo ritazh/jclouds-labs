@@ -26,21 +26,25 @@ import com.google.common.collect.Sets;
 import org.jclouds.azurecompute.arm.AzureComputeApi;
 import org.jclouds.azurecompute.arm.domain.ComputeNode;
 import org.jclouds.azurecompute.arm.domain.Deployment;
+import org.jclouds.azurecompute.arm.domain.ImageReference;
 import org.jclouds.azurecompute.arm.domain.PublicIPAddress;
 import org.jclouds.azurecompute.arm.domain.VMDeployment;
+import org.jclouds.azurecompute.arm.domain.VMHardware;
+import org.jclouds.azurecompute.arm.domain.VMImage;
+import org.jclouds.azurecompute.arm.domain.VMSize;
 import org.jclouds.azurecompute.arm.domain.VirtualMachineInstance;
 import org.jclouds.azurecompute.arm.util.DeploymentTemplateBuilder;
 import org.jclouds.azurecompute.arm.util.GetEnumValue;
 import org.jclouds.compute.domain.NodeMetadata;
-import org.jclouds.collect.Memoized;
 import org.jclouds.compute.domain.NodeMetadataBuilder;
 import org.jclouds.compute.functions.GroupNamingConvention;
 import org.jclouds.domain.Credentials;
 import org.jclouds.domain.Location;
 import com.google.common.base.Function;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
 import org.jclouds.domain.LoginCredentials;
+import org.jclouds.compute.domain.Image;
+import org.jclouds.compute.domain.Hardware;
 
 public class DeploymentToNodeMetadata implements Function<VMDeployment, NodeMetadata> {
 
@@ -78,7 +82,7 @@ public class DeploymentToNodeMetadata implements Function<VMDeployment, NodeMeta
 
    private final AzureComputeApi api;
 
-   private final Supplier<Set<? extends Location>> locations;
+   private final LocationToLocation locationToLocation;
 
    private final GroupNamingConvention nodeNamingConvention;
 
@@ -91,12 +95,12 @@ public class DeploymentToNodeMetadata implements Function<VMDeployment, NodeMeta
    @Inject
    DeploymentToNodeMetadata(
            AzureComputeApi api,
-           @Memoized Supplier<Set<? extends Location>> locations,
+           LocationToLocation locationToLocation,
            GroupNamingConvention.Factory namingConvention, VMImageToImage vmImageToImage,
            VMHardwareToHardware vmHardwareToHardware, Map<String, Credentials> credentialStore) {
 
       this.nodeNamingConvention = namingConvention.createWithoutPrefix();
-      this.locations = locations;
+      this.locationToLocation = locationToLocation;
       this.vmImageToImage = vmImageToImage;
       this.vmHardwareToHardware = vmHardwareToHardware;
       this.credentialStore = credentialStore;
@@ -149,6 +153,53 @@ public class DeploymentToNodeMetadata implements Function<VMDeployment, NodeMeta
          }
          if (publicIpAddresses.size() > 0)
             builder.publicAddresses(publicIpAddresses);
+      }
+
+      org.jclouds.azurecompute.arm.domain.Location myLocation = null;
+      if (from.virtualMachine != null) {
+         String locationName = from.virtualMachine.location();
+         List<org.jclouds.azurecompute.arm.domain.Location> locations = api.getLocationApi().list();
+
+         for (org.jclouds.azurecompute.arm.domain.Location location : locations) {
+            if (location.name().equals(locationName)) {
+               myLocation = location;
+               break;
+            }
+         }
+         Location jLocation = this.locationToLocation.apply(myLocation);
+         builder.location(jLocation);
+
+         ImageReference imageReference = from.virtualMachine.properties().storageProfile().imageReference();
+
+         VMImage vmImage = new VMImage();
+         vmImage.publisher = imageReference.publisher();
+         vmImage.offer = imageReference.offer();
+         vmImage.sku = imageReference.sku();
+         vmImage.location = locationName;
+         Image image = vmImageToImage.apply(vmImage);
+         builder.imageId(image.getId());
+
+         VMSize myVMSize = null;
+         String vmSizeName = from.virtualMachine.properties().hardwareProfile().vmSize();
+         List<VMSize> vmSizes = api.getVMSizeApi(locationName).list();
+         for (VMSize vmSize : vmSizes) {
+            if (vmSize.name().equals(vmSizeName)) {
+               myVMSize = vmSize;
+               break;
+            }
+         }
+
+         VMHardware hwProfile = new VMHardware();
+         hwProfile.name = myVMSize.name();
+         hwProfile.numberOfCores = myVMSize.numberOfCores();
+         hwProfile.osDiskSizeInMB = myVMSize.osDiskSizeInMB();
+         hwProfile.resourceDiskSizeInMB = myVMSize.resourceDiskSizeInMB();
+         hwProfile.memoryInMB = myVMSize.memoryInMB();
+         hwProfile.maxDataDiskCount = myVMSize.maxDataDiskCount();
+         hwProfile.location = locationName;
+
+         Hardware hardware = vmHardwareToHardware.apply(hwProfile);
+         builder.hardware(hardware);
       }
 
       return builder.build();

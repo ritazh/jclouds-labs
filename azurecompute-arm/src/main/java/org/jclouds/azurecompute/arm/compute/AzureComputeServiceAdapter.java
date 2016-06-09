@@ -49,8 +49,10 @@ import org.jclouds.azurecompute.arm.domain.ResourceProviderMetaData;
 import org.jclouds.azurecompute.arm.domain.SKU;
 import org.jclouds.azurecompute.arm.domain.VMDeployment;
 import org.jclouds.azurecompute.arm.domain.VMSize;
+import org.jclouds.azurecompute.arm.domain.VirtualMachine;
 import org.jclouds.azurecompute.arm.features.DeploymentApi;
 import org.jclouds.azurecompute.arm.features.OSImageApi;
+import org.jclouds.azurecompute.arm.features.VirtualMachineApi;
 import org.jclouds.azurecompute.arm.util.DeploymentTemplateBuilder;
 import org.jclouds.compute.ComputeServiceAdapter;
 import org.jclouds.compute.domain.Template;
@@ -303,6 +305,9 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
       vmDeployment.deployment = deployment;
       List<PublicIPAddress> list = getIPAddresses(deployment);
       vmDeployment.ipAddressList = list;
+
+      VirtualMachine vm = api.getVirtualMachineApi(azureGroup).get(id);
+      vmDeployment.virtualMachine = vm;
       return vmDeployment;
    }
 
@@ -358,9 +363,14 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
       for (Deployment d : deployments){
          VMDeployment vmDeployment = new VMDeployment();
          vmDeployment.deployment = d;
-         vmDeployment.vm = api.getVirtualMachineApi(azureGroup).getInstanceDetails(d.name());
+         VirtualMachineApi vmApi = api.getVirtualMachineApi(azureGroup);
+         vmDeployment.vm = vmApi.getInstanceDetails(d.name());
          List<PublicIPAddress> list = getIPAddresses(d);
          vmDeployment.ipAddressList = list;
+
+         VirtualMachine virtualMachine = vmApi.get(d.name());
+         vmDeployment.virtualMachine = virtualMachine;
+
          vmDeployments.add(vmDeployment);
       }
       return vmDeployments;

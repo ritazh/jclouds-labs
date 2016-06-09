@@ -26,4 +26,6 @@ public class VMDeployment {
    public List<PublicIPAddress> ipAddressList;
 
    public VirtualMachineInstance vm;
+
+   public VirtualMachine virtualMachine;
 }
