@@ -28,6 +28,8 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.collect.ImmutableSet;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.RESOURCE_GROUP_NAME;
 import static org.jclouds.compute.config.ComputeServiceProperties.TIMEOUT_NODE_RUNNING;
@@ -39,7 +41,7 @@ public class AzureTemplateBuilderLiveTest extends BaseTemplateBuilderLiveTest {
 
    @Override
    protected Set<String> getIso3166Codes() {
-      return null;
+      return ImmutableSet.of("US-IA", "US-VA", "US-IL", "US-TX", "US-CA", "IE", "NL", "HK", "SG", "JP-11", "JP-27", "BR", "AU-NSW", "AU-VIC");
    }
 
    public AzureTemplateBuilderLiveTest() {
