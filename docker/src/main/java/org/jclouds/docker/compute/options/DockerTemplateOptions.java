@@ -83,18 +83,19 @@ public class DockerTemplateOptions extends TemplateOptions implements Cloneable 
    private static final String NO_IMAGE = "jclouds-placeholder-for-image";
 
    protected List<String> dns = ImmutableList.of();
-   protected String hostname;
-   protected Integer memory;
-   protected Integer cpuShares;
-   protected List<String> entrypoint = ImmutableList.of();
-   protected List<String> commands = ImmutableList.of();
+   @Nullable protected String hostname;
+   @Nullable protected Integer memory;
+   @Nullable protected Integer cpuShares;
+   @Nullable List<String> entrypoint;
+   @Nullable List<String> commands;
    protected Map<String, String> volumes = ImmutableMap.of();
-   protected List<String> env = ImmutableList.of();
+   @Nullable protected List<String> env;
    protected Map<Integer, Integer> portBindings = ImmutableMap.of();
-   protected String networkMode;
+   @Nullable protected String networkMode;
    protected Map<String, String> extraHosts = ImmutableMap.of();
    protected List<String> volumesFrom = ImmutableList.of();
    protected boolean privileged;
+   protected boolean openStdin;
    protected Config.Builder configBuilder;
 
    @Override
@@ -122,6 +123,7 @@ public class DockerTemplateOptions extends TemplateOptions implements Cloneable 
          eTo.extraHosts(extraHosts);
          eTo.volumesFrom(volumesFrom);
          eTo.privileged(privileged);
+         eTo.openStdin(openStdin);
          eTo.configBuilder(configBuilder);
       }
    }
@@ -147,6 +149,7 @@ public class DockerTemplateOptions extends TemplateOptions implements Cloneable 
               equal(this.extraHosts, that.extraHosts) &&
               equal(this.volumesFrom, that.volumesFrom) &&
               equal(this.privileged, that.privileged) &&
+              equal(this.openStdin, that.openStdin) &&
               buildersEqual(this.configBuilder, that.configBuilder);
    }
 
@@ -161,7 +164,7 @@ public class DockerTemplateOptions extends TemplateOptions implements Cloneable 
    @Override
    public int hashCode() {
       return Objects.hashCode(super.hashCode(), volumes, hostname, dns, memory, entrypoint, commands, cpuShares, env,
-            portBindings, extraHosts, configBuilder);
+            portBindings, extraHosts, volumesFrom, privileged, openStdin, configBuilder);
    }
 
    @Override
@@ -179,6 +182,8 @@ public class DockerTemplateOptions extends TemplateOptions implements Cloneable 
               .add("networkMode", networkMode)
               .add("extraHosts", extraHosts)
               .add("volumesFrom", volumesFrom)
+              .add("privileged", privileged)
+              .add("openStdin", openStdin)
               .add("configBuilder", configBuilder)
               .toString();
    }
@@ -189,12 +194,12 @@ public class DockerTemplateOptions extends TemplateOptions implements Cloneable 
    }
 
    public DockerTemplateOptions dns(Iterable<String> dns) {
-      this.dns = NullSafeCopies.copyWithNullOf(dns);
+      this.dns = NullSafeCopies.copyOf(dns);
       return this;
    }
 
    public DockerTemplateOptions dns(String...dns) {
-      this.dns = NullSafeCopies.copyWithNullOf(dns);
+      this.dns = NullSafeCopies.copyOf(dns);
       return this;
    }
 
@@ -278,7 +283,7 @@ public class DockerTemplateOptions extends TemplateOptions implements Cloneable 
     * @param extraHosts the map of host names to IP addresses
     */
    public DockerTemplateOptions extraHosts(Map<String, String> extraHosts) {
-      this.extraHosts = NullSafeCopies.copyWithNullOf(extraHosts);
+      this.extraHosts = NullSafeCopies.copyOf(extraHosts);
       return this;
    }
 
@@ -288,7 +293,7 @@ public class DockerTemplateOptions extends TemplateOptions implements Cloneable 
     * @param volumesFrom the list of container names
     */
    public DockerTemplateOptions volumesFrom(Iterable<String> volumesFrom) {
-      this.volumesFrom = NullSafeCopies.copyWithNullOf(volumesFrom);
+      this.volumesFrom = NullSafeCopies.copyOf(volumesFrom);
       return this;
    }
 
@@ -301,6 +306,17 @@ public class DockerTemplateOptions extends TemplateOptions implements Cloneable 
     */
    public DockerTemplateOptions privileged(boolean privileged) {
       this.privileged = privileged;
+      return this;
+   }
+
+   /**
+    * Keep {@code STDIN} open when running interactive workloads in the container.
+    *
+    * @param openStdin Whether the container should keep STDIN open
+    * @return this instance
+    */
+   public DockerTemplateOptions openStdin(boolean openStdin) {
+      this.openStdin = openStdin;
       return this;
    }
 
@@ -346,6 +362,8 @@ public class DockerTemplateOptions extends TemplateOptions implements Cloneable 
    public Map<String, String> getExtraHosts() { return extraHosts; }
 
    public boolean getPrivileged() { return privileged; }
+
+   public boolean getOpenStdin() { return openStdin; }
 
    public Config.Builder getConfigBuilder() { return configBuilder; }
 
@@ -477,6 +495,14 @@ public class DockerTemplateOptions extends TemplateOptions implements Cloneable 
       public static DockerTemplateOptions privileged(boolean privileged) {
          DockerTemplateOptions options = new DockerTemplateOptions();
          return options.privileged(privileged);
+      }
+
+      /**
+       * @see DockerTemplateOptions#openStdin(boolean)
+       */
+      public static DockerTemplateOptions openStdin(boolean openStdin) {
+         DockerTemplateOptions options = new DockerTemplateOptions();
+         return options.openStdin(openStdin);
       }
 
       /**

@@ -16,6 +16,7 @@
  */
 package org.jclouds.azurecompute.arm.functions;
 import com.google.common.base.Function;
+import org.jclouds.azurecompute.arm.util.GetEnumValue;
 import org.jclouds.http.HttpResponse;
 
 import javax.inject.Singleton;
@@ -29,22 +30,18 @@ public class ParseJobStatus implements Function<HttpResponse, ParseJobStatus.Job
       DONE,
       IN_PROGRESS,
       FAILED,
+      NO_CONTENT,
       UNRECOGNIZED;
 
-      public static JobStatus fromString(final String text) {
-         if (text != null) {
-            for (JobStatus status : JobStatus.values()) {
-               if (text.equalsIgnoreCase(status.name())) {
-                  return status;
-               }
-            }
-         }
-         return UNRECOGNIZED;
+      public static JobStatus fromValue(final String text) {
+         return (JobStatus) GetEnumValue.fromValueOrDefault(text, JobStatus.UNRECOGNIZED);
       }
    }
    public JobStatus apply(final HttpResponse from) {
       if (from.getStatusCode() == 202 ){
          return JobStatus.IN_PROGRESS;
+      } else if (from.getStatusCode() == 204) {
+         return JobStatus.NO_CONTENT;
       } else if (from.getStatusCode() == 200 ){
          return JobStatus.DONE;
       } else {

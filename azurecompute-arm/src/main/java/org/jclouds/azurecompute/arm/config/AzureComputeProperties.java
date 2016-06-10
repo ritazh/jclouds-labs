@@ -31,4 +31,14 @@ public class AzureComputeProperties {
 
    public static final String TCP_RULE_REGEXP = "jclouds.azurecompute.arm.tcp.rule.regexp";
 
+   public static final String STORAGE_API_VERSION = "2015-06-15";
+
+   public static final String RESOURCE_GROUP_NAME = "jclouds.azurecompute.arm.operation.resourcegroup";
+
+   public static final String IMAGE_PUBLISHERS = "jclouds.azurecompute.arm.publishers";
+
+   public static final String DEFAULT_IMAGE_LOGIN = "jclouds.azurecompute.arm.defaultimagelogin";
+
+   public static final String TIMEOUT_RESOURCE_DELETED = "jclouds.azurecompute.arm.timeout.resourcedeleted";
+
 }
