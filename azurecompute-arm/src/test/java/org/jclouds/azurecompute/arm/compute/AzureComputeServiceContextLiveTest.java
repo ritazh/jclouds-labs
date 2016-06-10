@@ -74,13 +74,11 @@ public class AzureComputeServiceContextLiveTest extends BaseComputeServiceContex
 
       properties.put(RESOURCE_GROUP_NAME, azureGroup);
       return properties;
-
    }
 
    public AzureComputeServiceContextLiveTest() {
       provider = "azurecompute-arm";
    }
-
 
    @Test
    public void testDefault() throws RunNodesException {
@@ -251,7 +249,7 @@ public class AzureComputeServiceContextLiveTest extends BaseComputeServiceContex
    public void testWindowsNode() throws RunNodesException {
       final String groupName = this.azureGroup;
       final TemplateBuilder templateBuilder = view.getComputeService().templateBuilder();
-      templateBuilder.imageId("westus/MicrosoftWindowsServer/WindowsServer/2016-Technical-Preview-with-Containers");
+      templateBuilder.imageId("global/MicrosoftWindowsServer/WindowsServer/Windows-Server-Technical-Preview");
       templateBuilder.hardwareId("Standard_A0");
       templateBuilder.locationId("westus");
       final Template template = templateBuilder.build();

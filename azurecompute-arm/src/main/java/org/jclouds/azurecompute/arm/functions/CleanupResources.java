@@ -26,7 +26,6 @@ import javax.inject.Singleton;
 
 import com.google.common.base.Predicate;
 import org.jclouds.azurecompute.arm.AzureComputeApi;
-import org.jclouds.azurecompute.arm.compute.config.AzureComputeServiceContextModule;
 import org.jclouds.compute.reference.ComputeServiceConstants;
 import org.jclouds.logging.Logger;
 
@@ -42,20 +41,15 @@ public class CleanupResources implements Function<String, Boolean> {
    protected Logger logger = Logger.NULL;
 
    protected final AzureComputeApi api;
-   private final String azureGroup;
-   private final AzureComputeServiceContextModule.AzureComputeConstants azureComputeConstants;
    private Predicate<URI> nodeTerminated;
    private Predicate<URI> resourceDeleted;
 
    @Inject
    public CleanupResources(AzureComputeApi azureComputeApi,
-                           final AzureComputeServiceContextModule.AzureComputeConstants azureComputeConstants,
                            @Named(TIMEOUT_NODE_TERMINATED) Predicate<URI> nodeTerminated,
                            @Named(TIMEOUT_RESOURCE_DELETED) Predicate<URI> resourceDeleted) {
 
       this.api = azureComputeApi;
-      this.azureComputeConstants = azureComputeConstants;
-      this.azureGroup = this.azureComputeConstants.azureResourceGroup();
       this.nodeTerminated = nodeTerminated;
       this.resourceDeleted = resourceDeleted;
    }
@@ -69,29 +63,29 @@ public class CleanupResources implements Function<String, Boolean> {
       String group = id.substring(0, index);
 
       // Delete VM
-      URI uri = api.getVirtualMachineApi(azureGroup).delete(id);
+      URI uri = api.getVirtualMachineApi(group).delete(id);
       if (uri != null){
          boolean jobDone = nodeTerminated.apply(uri);
 
          if (jobDone) {
             // Delete storage account
-            api.getStorageAccountApi(azureGroup).delete(storageAccountName);
+            api.getStorageAccountApi(group).delete(storageAccountName);
 
             // Delete NIC
-            uri = api.getNetworkInterfaceCardApi(azureGroup).delete(id + "nic");
+            uri = api.getNetworkInterfaceCardApi(group).delete(id + "nic");
             if (uri != null){
                jobDone = resourceDeleted.apply(uri);
                if (jobDone) {
 
                   // Delete deployment
-                  uri = api.getDeploymentApi(azureGroup).delete(id);
+                  uri = api.getDeploymentApi(group).delete(id);
                   jobDone = resourceDeleted.apply(uri);
                   if (jobDone) {
                      // Delete public ip
-                     boolean ipDeleteStatus = api.getPublicIPAddressApi(azureGroup).delete(id + "publicip");
+                     boolean ipDeleteStatus = api.getPublicIPAddressApi(group).delete(id + "publicip");
 
                      // Delete Virtual network
-                     boolean vnetDeleteStatus = api.getVirtualNetworkApi(azureGroup).delete(group + "virtualnetwork");
+                     boolean vnetDeleteStatus = api.getVirtualNetworkApi(group).delete(group + "virtualnetwork");
                      return ipDeleteStatus && vnetDeleteStatus;
 
                   } else {

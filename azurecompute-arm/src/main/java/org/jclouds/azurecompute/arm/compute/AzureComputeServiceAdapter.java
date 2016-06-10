@@ -75,7 +75,7 @@ import static com.google.common.base.Preconditions.checkState;
 @Singleton
 public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeployment, VMHardware, VMImage, Location> {
 
-   private final String azureGroup;
+   private String azureGroup;
    protected final CleanupResources cleanupResources;
 
    @Resource
@@ -92,7 +92,11 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
 
       this.api = api;
       this.azureComputeConstants = azureComputeConstants;
-      this.azureGroup = this.azureComputeConstants.azureResourceGroup();
+
+      this.azureGroup = azureComputeConstants.azureResourceGroup();
+
+      logger.debug("AzureComputeServiceAdapter set azuregroup to: " + azureGroup);
+
       this.cleanupResources = cleanupResources;
    }
 
@@ -111,13 +115,13 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
 
       final String deploymentTemplate = UrlEscapers.urlFormParameterEscaper().escape(deploymentTemplateBuilder.getDeploymentTemplateJson(properties));
 
-      logger.debug("Deployment created with name: %s", name);
+      logger.debug("Deployment created with name: %s group: %s", name, group);
 
 
 
       final Set<VMDeployment> deployments = Sets.newHashSet();
 
-      final DeploymentApi deploymentApi = api.getDeploymentApi(azureGroup);
+      final DeploymentApi deploymentApi = api.getDeploymentApi(group);
 
       if (!retry(new Predicate<String>() {
          @Override
