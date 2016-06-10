@@ -17,7 +17,12 @@
 package org.jclouds.azurecompute.arm.compute;
 
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.inject.Key;
+import com.google.inject.name.Names;
 import org.jclouds.compute.domain.ExecResponse;
 import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.compute.domain.OperatingSystem;
@@ -40,11 +45,14 @@ import org.jclouds.azurecompute.arm.internal.AzureLiveTestUtils;
 
 import com.google.inject.Module;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -143,11 +151,11 @@ public class AzureComputeServiceLiveTest extends BaseComputeServiceLiveTest {
       }
 
    }
-/*
+
    @Test(
          enabled = true
    )
-   public void testConcurrentUseOfComputeServiceToCreateNodes() throws Exception {
+   public void testConcurrentUseOfComputeServiceToCreateNodes()  {
       long timeoutMs = 1200000L;
       ArrayList groups = Lists.newArrayList();
       ArrayList futures = Lists.newArrayList();
@@ -158,8 +166,8 @@ public class AzureComputeServiceLiveTest extends BaseComputeServiceLiveTest {
          var14 = true;
          int compoundFuture = 0;
 
-         while(true) {
-            if(compoundFuture >= 2) {
+         while (true) {
+            if (compoundFuture >= 2) {
                ListenableFuture var16 = Futures.allAsList(futures);
                var16.get(1200000L, TimeUnit.MILLISECONDS);
                var14 = false;
@@ -169,17 +177,19 @@ public class AzureComputeServiceLiveTest extends BaseComputeServiceLiveTest {
             final String group1 = "twin" + compoundFuture;
             groups.add(group1);
             this.template = this.buildTemplate(this.client.templateBuilder());
-            this.template.getOptions().inboundPorts(new int[]{22, 8080}).blockOnPort(22, 300 + compoundFuture);
+            this.template.getOptions().inboundPorts(new int[] {22, 8080}).blockOnPort(22, 300 + compoundFuture);
             ListenableFuture future = userExecutor.submit(new Callable() {
                public NodeMetadata call() throws Exception {
-                  NodeMetadata node = (NodeMetadata)Iterables.getOnlyElement(BaseComputeServiceLiveTest.this.client.createNodesInGroup(group1, 1, BaseComputeServiceLiveTest.this.template));
+                  NodeMetadata node = (NodeMetadata) Iterables.getOnlyElement(AzureComputeServiceLiveTest.this.client.createNodesInGroup(group1, 1, AzureComputeServiceLiveTest.this.template));
                   Logger.getAnonymousLogger().info("Started node " + node.getId());
                   return node;
                }
             });
             futures.add(future);
-            ++compoundFuture;
+            ++ compoundFuture;
          }
+      } catch (Exception e) {
+         System.out.println(e.getMessage());
       } finally {
          if(var14) {
             Iterator var11 = groups.iterator();
@@ -200,6 +210,7 @@ public class AzureComputeServiceLiveTest extends BaseComputeServiceLiveTest {
       }
 
    }
-*/
+
+
 
 }

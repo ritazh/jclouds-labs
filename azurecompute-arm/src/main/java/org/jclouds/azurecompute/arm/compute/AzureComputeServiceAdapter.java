@@ -119,7 +119,7 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
 
       final Set<VMDeployment> deployments = Sets.newHashSet();
 
-      final DeploymentApi deploymentApi = api.getDeploymentApi(group);
+      final DeploymentApi deploymentApi = api.getDeploymentApi(azureGroup);
 
       if (!retry(new Predicate<String>() {
          @Override
