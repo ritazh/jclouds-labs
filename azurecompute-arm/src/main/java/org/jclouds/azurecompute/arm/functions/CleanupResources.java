@@ -26,6 +26,7 @@ import javax.inject.Singleton;
 
 import com.google.common.base.Predicate;
 import org.jclouds.azurecompute.arm.AzureComputeApi;
+import org.jclouds.azurecompute.arm.compute.config.AzureComputeServiceContextModule;
 import org.jclouds.compute.reference.ComputeServiceConstants;
 import org.jclouds.logging.Logger;
 
@@ -36,6 +37,7 @@ import java.net.URI;
 @Singleton
 public class CleanupResources implements Function<String, Boolean> {
 
+   private final AzureComputeServiceContextModule.AzureComputeConstants azureComputeConstants;
    @Resource
    @Named(ComputeServiceConstants.COMPUTE_LOGGER)
    protected Logger logger = Logger.NULL;
@@ -43,12 +45,15 @@ public class CleanupResources implements Function<String, Boolean> {
    protected final AzureComputeApi api;
    private Predicate<URI> nodeTerminated;
    private Predicate<URI> resourceDeleted;
+   String azureGroup;
 
    @Inject
    public CleanupResources(AzureComputeApi azureComputeApi,
+                           AzureComputeServiceContextModule.AzureComputeConstants azureComputeConstants,
                            @Named(TIMEOUT_NODE_TERMINATED) Predicate<URI> nodeTerminated,
                            @Named(TIMEOUT_RESOURCE_DELETED) Predicate<URI> resourceDeleted) {
-
+      this.azureComputeConstants = azureComputeConstants;
+      azureGroup = azureComputeConstants.azureResourceGroup();
       this.api = azureComputeApi;
       this.nodeTerminated = nodeTerminated;
       this.resourceDeleted = resourceDeleted;
@@ -59,8 +64,7 @@ public class CleanupResources implements Function<String, Boolean> {
 
       logger.debug("Destroying %s ...", id);
       String storageAccountName = id.replaceAll("[^A-Za-z0-9 ]", "") + "storage";
-      int index = id.lastIndexOf("-");
-      String group = id.substring(0, index);
+      String group = azureGroup;
 
       // Delete VM
       URI uri = api.getVirtualMachineApi(group).delete(id);
