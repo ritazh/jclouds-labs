@@ -16,6 +16,7 @@
  */
 package org.jclouds.azurecompute.arm.util;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.inject.assistedinject.Assisted;
 
@@ -23,7 +24,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.jclouds.azurecompute.arm.compute.config.AzureComputeServiceContextModule;
 import org.jclouds.azurecompute.arm.compute.extensions.AzureComputeImageExtension;
 import org.jclouds.azurecompute.arm.domain.DeploymentProperties;
-import org.jclouds.compute.options.TemplateOptions;
+import org.jclouds.azurecompute.arm.compute.options.AzureTemplateOptions;
 import org.jclouds.azurecompute.arm.domain.DataDisk;
 import org.jclouds.azurecompute.arm.domain.DeploymentBody;
 import org.jclouds.azurecompute.arm.domain.DeploymentTemplate;
@@ -72,7 +73,7 @@ public class DeploymentTemplateBuilder {
    private final Template template;
    private final Json json;
 
-   private TemplateOptions options;
+   private AzureTemplateOptions options;
    private Iterable<String> tags;
    private Map<String, String> userMetaData;
    private List<ResourceDefinition> resources;
@@ -85,8 +86,8 @@ public class DeploymentTemplateBuilder {
    private static final String DEPLOYMENT_MODE = "Incremental";
    private static final String DEFAULT_DATA_DISK_SIZE = "1023";
 
-   private static final String DEFAULT_vnAddresSpacePrefix = "10.0.0.0/16";
-   private static final String DEFAULT_subnetAddressPrefix = "10.0.0.0/24";
+   private static final String DEFAULT_DEFAULT_VN_ADDRESS_SPACE_PREFIX = "10.0.0.0/16";
+   private static final String DEFAULT_SUBNET_ADDRESS_PREFIX = "10.0.0.0/24";
 
    @Inject
    DeploymentTemplateBuilder(Json json, @Assisted("group") String group, @Assisted("name") String name, @Assisted Template template,
@@ -94,7 +95,7 @@ public class DeploymentTemplateBuilder {
       this.name = name;
       this.group = group;
       this.template = template;
-      this.options = template.getOptions().as(TemplateOptions.class);
+      this.options = template.getOptions().as(AzureTemplateOptions.class);
       this.tags = template.getOptions().getTags();
       this.userMetaData = template.getOptions().getUserMetadata();
       this.variables = new HashMap<String, String>();
@@ -154,6 +155,10 @@ public class DeploymentTemplateBuilder {
       return json.toJson(properties);
    }
 
+   private String getValueOrDefault(String value, String defaultValue){
+      return Strings.isNullOrEmpty(value) ? defaultValue : value;
+   }
+
    private void addStorageResource() {
       String storageAccountName = name.replaceAll("[^A-Za-z0-9 ]", "") + "stor";
 
@@ -188,15 +193,18 @@ public class DeploymentTemplateBuilder {
       variables.put("subnetName", subnetName);
       variables.put("subnetReference", "[concat(variables('virtualNetworkReference'),'/subnets/',variables('subnetName'))]");
 
+      String virtualNetworkAddressPrefix = getValueOrDefault(options.getVirtualNetworkAddressPrefix(), DEFAULT_DEFAULT_VN_ADDRESS_SPACE_PREFIX);
+      String subnetAddressPrefix = getValueOrDefault(options.getSubnetAddressPrefix(), DEFAULT_SUBNET_ADDRESS_PREFIX);
+
       VirtualNetworkProperties properties = VirtualNetworkProperties.builder()
             .addressSpace(
-                  AddressSpace.create(Arrays.asList(DEFAULT_vnAddresSpacePrefix))
+                  AddressSpace.create(Arrays.asList(virtualNetworkAddressPrefix))
             )
             .subnets(
                   Arrays.asList(
                         Subnet.create("[variables('subnetName')]", null, null,
                               SubnetProperties.builder()
-                                    .addressPrefix(DEFAULT_subnetAddressPrefix).build()
+                                    .addressPrefix(subnetAddressPrefix).build()
                         ))
             )
             .build();
@@ -215,11 +223,11 @@ public class DeploymentTemplateBuilder {
 
    private void addPublicIpAddress() {
       String publicIPAddressName = name + "publicip";
-      String dnsLabelPrefix = name; //TODO: read from Azure template properties
+      String dnsLabelPrefix = options.getDNSLabelPrefix();
 
       PublicIPAddressProperties.Builder properties = PublicIPAddressProperties.builder();
 
-      if (!dnsLabelPrefix.isEmpty()) {
+      if (!Strings.isNullOrEmpty(dnsLabelPrefix)) {
          properties.dnsSettings(DnsSettings.builder().domainNameLabel(dnsLabelPrefix).build());
          variables.put("dnsLabelPrefix", dnsLabelPrefix);
       }

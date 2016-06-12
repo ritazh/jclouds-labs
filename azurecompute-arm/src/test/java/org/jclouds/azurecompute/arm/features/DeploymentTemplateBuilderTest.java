@@ -18,6 +18,7 @@ package org.jclouds.azurecompute.arm.features;
 
 import org.jclouds.azurecompute.arm.internal.BaseAzureComputeApiMockTest;
 import org.jclouds.compute.options.TemplateOptions;
+import org.jclouds.azurecompute.arm.compute.options.AzureTemplateOptions;
 import org.jclouds.azurecompute.arm.domain.DeploymentBody;
 import org.jclouds.azurecompute.arm.domain.ImageReference;
 import org.jclouds.azurecompute.arm.domain.IpConfiguration;
@@ -151,7 +152,7 @@ public class DeploymentTemplateBuilderTest extends BaseAzureComputeApiMockTest {
 
       String rsakey = new String("ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAmfk/QSF0pvnrpdz+Ah2KulGruKU+8FFBdlw938MpOysRdmp7uwpH6Z7+5VNGNdxFIAyc/W3UaZXF9hTsU8+78TlwkZpsr2mzU+ycu37XLAQ8Uv7hjsAN0DkKKPrZ9lgUUfZVKV/8E/JIAs03gIbL6zO3y7eYJQ5fNeZb+nji7tQT+YLpGq/FDegvraPKVMQbCSCZhsHyWhdPLyFlu9/30npZ0ahYOPI/KyZxFDtM/pHp88+ZAk9Icq5owaLRWcJQqrBGWqjbZnHtjdDqvHZ+C0wPhdJZPyfkHOrSYTwSQBXfX4JLRRCz3J1jf62MbQWT1o6Y4JEs1ZP1Skxu6zR96Q== mocktest");
 
-      TemplateOptions options = new TemplateOptions();
+      TemplateOptions options = new AzureTemplateOptions();
       options.authorizePublicKey(rsakey);
 
       DeploymentTemplateBuilder builder = getMockDeploymentTemplateBuilderWithOptions(options);
@@ -182,6 +183,40 @@ public class DeploymentTemplateBuilderTest extends BaseAzureComputeApiMockTest {
       assertTrue(variables.containsKey(parseVariableName(resource.name())));
    }
 
+   @Test
+   void testCustomOptions(){
+      final String vnAddressPrefix = "192.168.0.0/16";
+      final String subnetAddressPrefix = "192.168.1.0/24";
+      final String dnsLabelPrefix = "mydnslabel";
+
+      TemplateOptions options = new AzureTemplateOptions()
+            .virtualNetworkAddressPrefix(vnAddressPrefix)
+            .subnetAddressPrefix(subnetAddressPrefix)
+            .DNSLabelPrefix(dnsLabelPrefix);
+
+      assertEquals(options.as(AzureTemplateOptions.class).getVirtualNetworkAddressPrefix(), vnAddressPrefix);
+      assertEquals(options.as(AzureTemplateOptions.class).getSubnetAddressPrefix(), subnetAddressPrefix);
+      assertEquals(options.as(AzureTemplateOptions.class).getDNSLabelPrefix(), dnsLabelPrefix);
+
+      DeploymentTemplateBuilder builder = getMockDeploymentTemplateBuilderWithOptions(options);
+
+      DeploymentBody deploymentBody = builder.getDeploymentTemplate();
+      List<ResourceDefinition> resources = deploymentBody.template().resources();
+
+      ResourceDefinition networkResource = getResourceByType(resources, "Microsoft.Network/virtualNetworks");
+      assertNotNull(networkResource);
+
+      VirtualNetworkProperties properties = (VirtualNetworkProperties) networkResource.properties();
+      assertEquals(properties.addressSpace().addressPrefixes().get(0), vnAddressPrefix);
+      assertEquals(properties.subnets().get(0).properties().addressPrefix(), subnetAddressPrefix);
+
+      ResourceDefinition publicIpResource = getResourceByType(resources, "Microsoft.Network/publicIPAddresses");
+      assertNotNull(publicIpResource);
+
+      PublicIPAddressProperties ipProperties = (PublicIPAddressProperties) publicIpResource.properties();
+      assertEquals(ipProperties.dnsSettings().domainNameLabel(), dnsLabelPrefix);
+   }
+
    private Template getMockTemplate(TemplateOptions options) {
       Location provider = (new LocationBuilder()).scope(LocationScope.PROVIDER).id("azurecompute-arm").description("azurecompute-arm").build();
       Location region = (new LocationBuilder()).scope(LocationScope.REGION).id("northeurope").description("North Europe").parent(provider).build();
@@ -193,7 +228,7 @@ public class DeploymentTemplateBuilderTest extends BaseAzureComputeApiMockTest {
    }
 
    private DeploymentTemplateBuilder getMockDeploymentTemplateBuilderWithEmptyOptions() {
-      TemplateOptions options = new TemplateOptions();
+      TemplateOptions options = new AzureTemplateOptions();
       Template template = getMockTemplate(options);
       DeploymentTemplateBuilder templateBuilder = api.deploymentTemplateFactory().create(group, "mydeployment", template);
       return templateBuilder;

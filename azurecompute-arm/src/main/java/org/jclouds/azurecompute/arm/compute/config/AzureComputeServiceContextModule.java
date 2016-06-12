@@ -28,6 +28,7 @@ import org.jclouds.azurecompute.arm.compute.functions.DeploymentToNodeMetadata;
 import org.jclouds.azurecompute.arm.compute.functions.VMHardwareToHardware;
 import org.jclouds.azurecompute.arm.compute.functions.LocationToLocation;
 import org.jclouds.azurecompute.arm.compute.strategy.AzurePopulateDefaultLoginCredentialsForImageStrategy;
+import org.jclouds.azurecompute.arm.compute.options.AzureTemplateOptions;
 import org.jclouds.azurecompute.arm.domain.VMDeployment;
 import org.jclouds.azurecompute.arm.domain.VMHardware;
 import org.jclouds.azurecompute.arm.domain.VMImage;
@@ -36,6 +37,7 @@ import org.jclouds.azurecompute.arm.compute.strategy.CreateResourceGroupThenCrea
 import org.jclouds.azurecompute.arm.AzureComputeApi;
 import org.jclouds.azurecompute.arm.functions.ParseJobStatus;
 
+import org.jclouds.compute.options.TemplateOptions;
 import org.jclouds.compute.ComputeServiceAdapter;
 import org.jclouds.compute.config.ComputeServiceAdapterContextModule;
 import org.jclouds.compute.domain.Hardware;
@@ -86,6 +88,7 @@ public class AzureComputeServiceContextModule
       install(new LocationsFromComputeServiceAdapterModule<VMDeployment, VMHardware, VMImage, Location>() {
       });
 
+      bind(TemplateOptions.class).to(AzureTemplateOptions.class);
       bind(PopulateDefaultLoginCredentialsForImageStrategy.class).to(AzurePopulateDefaultLoginCredentialsForImageStrategy.class);
       bind(CreateNodesInGroupThenAddToSet.class).to(CreateResourceGroupThenCreateNodes.class);
       bind(new TypeLiteral<ImageExtension>() {

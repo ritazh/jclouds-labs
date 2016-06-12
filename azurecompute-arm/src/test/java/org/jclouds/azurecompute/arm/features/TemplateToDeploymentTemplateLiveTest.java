@@ -17,6 +17,7 @@
 package org.jclouds.azurecompute.arm.features;
 
 import com.google.common.net.UrlEscapers;
+import org.jclouds.azurecompute.arm.compute.options.AzureTemplateOptions;
 import org.jclouds.compute.options.TemplateOptions;
 import org.jclouds.azurecompute.arm.domain.Deployment;
 import org.jclouds.azurecompute.arm.domain.DeploymentBody;
@@ -81,8 +82,31 @@ public class TemplateToDeploymentTemplateLiveTest extends BaseAzureComputeApiLiv
 
       String rsakey = new String("ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAmfk/QSF0pvnrpdz+Ah2KulGruKU+8FFBdlw938MpOysRdmp7uwpH6Z7+5VNGNdxFIAyc/W3UaZXF9hTsU8+78TlwkZpsr2mzU+ycu37XLAQ8Uv7hjsAN0DkKKPrZ9lgUUfZVKV/8E/JIAs03gIbL6zO3y7eYJQ5fNeZb+nji7tQT+YLpGq/FDegvraPKVMQbCSCZhsHyWhdPLyFlu9/30npZ0ahYOPI/KyZxFDtM/pHp88+ZAk9Icq5owaLRWcJQqrBGWqjbZnHtjdDqvHZ+C0wPhdJZPyfkHOrSYTwSQBXfX4JLRRCz3J1jf62MbQWT1o6Y4JEs1ZP1Skxu6zR96Q== mocktest");
 
-      TemplateOptions options = new TemplateOptions();
+      TemplateOptions options = new AzureTemplateOptions();
       options.authorizePublicKey(rsakey);
+      DeploymentTemplateBuilder templateBuilder = getDeploymentTemplateBuilderWithOptions(options);
+
+      DeploymentBody deploymentTemplateBody = templateBuilder.getDeploymentTemplate();
+
+      DeploymentProperties properties = DeploymentProperties.create(deploymentTemplateBody);
+
+      String deploymentTemplate = templateBuilder.getDeploymentTemplateJson(properties);
+      deploymentTemplate = UrlEscapers.urlFormParameterEscaper().escape(deploymentTemplate);
+
+      Deployment deployment = api().validate(deploymentName, deploymentTemplate);
+      assertNotNull(deployment);
+   }
+
+   @Test(groups = "live")
+   public void testValidateDeploymentTemplateWithCustomOptions() {
+      Long now = System.currentTimeMillis();
+      deploymentName = "jc" + now;
+
+      TemplateOptions options = new AzureTemplateOptions()
+            .DNSLabelPrefix("mydnslabel")
+            .virtualNetworkAddressPrefix("10.0.0.0/20")
+            .subnetAddressPrefix("10.0.0.0/25");
+
       DeploymentTemplateBuilder templateBuilder = getDeploymentTemplateBuilderWithOptions(options);
 
       DeploymentBody deploymentTemplateBody = templateBuilder.getDeploymentTemplate();
@@ -103,7 +127,7 @@ public class TemplateToDeploymentTemplateLiveTest extends BaseAzureComputeApiLiv
 
       String rsakey = new String("ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAmfk/QSF0pvnrpdz+Ah2KulGruKU+8FFBdlw938MpOysRdmp7uwpH6Z7+5VNGNdxFIAyc/W3UaZXF9hTsU8+78TlwkZpsr2mzU+ycu37XLAQ8Uv7hjsAN0DkKKPrZ9lgUUfZVKV/8E/JIAs03gIbL6zO3y7eYJQ5fNeZb+nji7tQT+YLpGq/FDegvraPKVMQbCSCZhsHyWhdPLyFlu9/30npZ0ahYOPI/KyZxFDtM/pHp88+ZAk9Icq5owaLRWcJQqrBGWqjbZnHtjdDqvHZ+C0wPhdJZPyfkHOrSYTwSQBXfX4JLRRCz3J1jf62MbQWT1o6Y4JEs1ZP1Skxu6zR96Q== mocktest");
 
-      TemplateOptions options = new TemplateOptions();
+      TemplateOptions options = new AzureTemplateOptions();
       options.authorizePublicKey(rsakey);
       DeploymentTemplateBuilder templateBuilder = getDeploymentTemplateBuilderWithOptions(options);
 
@@ -168,7 +192,7 @@ public class TemplateToDeploymentTemplateLiveTest extends BaseAzureComputeApiLiv
    }
 
    private DeploymentTemplateBuilder getDeploymentTemplateBuilderWithEmptyOptions() {
-      TemplateOptions options = new TemplateOptions();
+      TemplateOptions options = new AzureTemplateOptions();
       Template template = getTemplate(options);
       DeploymentTemplateBuilder templateBuilder = api.deploymentTemplateFactory().create(resourceGroup, deploymentName, template);
       return templateBuilder;
