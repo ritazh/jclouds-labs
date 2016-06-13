@@ -68,6 +68,8 @@ import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.DEFAULT
 import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.TIMEOUT_RESOURCE_DELETED;
 import org.jclouds.compute.extensions.ImageExtension;
 import org.jclouds.compute.strategy.PopulateDefaultLoginCredentialsForImageStrategy;
+import org.jclouds.azurecompute.arm.compute.AzureComputeService;
+import org.jclouds.compute.ComputeService;
 
 public class AzureComputeServiceContextModule
         extends ComputeServiceAdapterContextModule<VMDeployment, VMHardware, VMImage, Location> {
@@ -85,6 +87,7 @@ public class AzureComputeServiceContextModule
       }).to(DeploymentToNodeMetadata.class);
       bind(new TypeLiteral<Function<Location, org.jclouds.domain.Location>>() {
       }).to(LocationToLocation.class);
+      bind(ComputeService.class).to(AzureComputeService.class);
       install(new LocationsFromComputeServiceAdapterModule<VMDeployment, VMHardware, VMImage, Location>() {
       });
 
