@@ -23,15 +23,14 @@ import com.google.inject.assistedinject.Assisted;
 import org.apache.commons.lang3.StringUtils;
 import org.jclouds.azurecompute.arm.compute.config.AzureComputeServiceContextModule;
 import org.jclouds.azurecompute.arm.compute.extensions.AzureComputeImageExtension;
-import org.jclouds.azurecompute.arm.domain.DeploymentProperties;
 import org.jclouds.azurecompute.arm.compute.options.AzureTemplateOptions;
 import org.jclouds.azurecompute.arm.domain.DataDisk;
 import org.jclouds.azurecompute.arm.domain.DeploymentBody;
+import org.jclouds.azurecompute.arm.domain.DeploymentProperties;
 import org.jclouds.azurecompute.arm.domain.DeploymentTemplate;
 import org.jclouds.azurecompute.arm.domain.DiagnosticsProfile;
 import org.jclouds.azurecompute.arm.domain.DnsSettings;
 import org.jclouds.azurecompute.arm.domain.HardwareProfile;
-import org.jclouds.azurecompute.arm.domain.IdReference;
 import org.jclouds.azurecompute.arm.domain.ImageReference;
 import org.jclouds.azurecompute.arm.domain.IpConfiguration;
 import org.jclouds.azurecompute.arm.domain.IpConfigurationProperties;
@@ -40,16 +39,21 @@ import org.jclouds.azurecompute.arm.domain.NetworkProfile;
 import org.jclouds.azurecompute.arm.domain.OSDisk;
 import org.jclouds.azurecompute.arm.domain.OSProfile;
 import org.jclouds.azurecompute.arm.domain.PublicIPAddressProperties;
-import org.jclouds.azurecompute.arm.domain.ResourceDefinition;
 import org.jclouds.azurecompute.arm.domain.StorageProfile;
 import org.jclouds.azurecompute.arm.domain.StorageService;
-import org.jclouds.azurecompute.arm.domain.StorageService.StorageServiceProperties;
 import org.jclouds.azurecompute.arm.domain.Subnet;
-import org.jclouds.azurecompute.arm.domain.Subnet.SubnetProperties;
 import org.jclouds.azurecompute.arm.domain.VHD;
 import org.jclouds.azurecompute.arm.domain.VirtualMachineProperties;
+import org.jclouds.compute.options.TemplateOptions;
+import org.jclouds.azurecompute.arm.domain.StorageService.StorageServiceProperties;
+import org.jclouds.azurecompute.arm.domain.Subnet.SubnetProperties;
 import org.jclouds.azurecompute.arm.domain.VirtualNetwork.VirtualNetworkProperties;
 import org.jclouds.azurecompute.arm.domain.VirtualNetwork.AddressSpace;
+import org.jclouds.azurecompute.arm.domain.IdReference;
+import org.jclouds.azurecompute.arm.domain.ResourceDefinition;
+import org.jclouds.azurecompute.arm.domain.NetworkSecurityGroupProperties;
+import org.jclouds.azurecompute.arm.domain.NetworkSecurityRule;
+import org.jclouds.azurecompute.arm.domain.NetworkSecurityRuleProperties;
 import org.jclouds.compute.domain.Template;
 import org.jclouds.json.Json;
 
@@ -135,6 +139,7 @@ public class DeploymentTemplateBuilder {
       addStorageResource();
       addVirtualNetworkResource();
       addPublicIpAddress();
+      addNetworkSecurityGroup();
       addNetworkInterfaceCard();
       addVirtualMachine();
 
@@ -263,9 +268,23 @@ public class DeploymentTemplateBuilder {
 
       ipConfigurations.add(ipConfig);
 
-      NetworkInterfaceCardProperties networkInterfaceCardProperties = NetworkInterfaceCardProperties.builder()
-            .ipConfigurations(ipConfigurations)
-            .build();
+      // Check to see if we have defined a network security group
+      IdReference networkSecurityGroup = null;
+      int ports[] = options.getInboundPorts();
+      if ((ports != null) && (ports.length > 0)) {
+         networkSecurityGroup = IdReference.create("[variables('networkSecurityGroupNameReference')]");
+      }
+
+      ArrayList<String> depends = new ArrayList<String>(Arrays.asList("[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]",
+              "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]"));
+
+      NetworkInterfaceCardProperties.Builder networkInterfaceCardPropertiesBuilder = NetworkInterfaceCardProperties.builder();
+      networkInterfaceCardPropertiesBuilder.ipConfigurations(ipConfigurations);
+      if (networkSecurityGroup != null) {
+         networkInterfaceCardPropertiesBuilder.networkSecurityGroup(networkSecurityGroup);
+         depends.add("[concat('Microsoft.Network/networkSecurityGroups/', variables('networkSecurityGroupName'))]");
+      }
+      NetworkInterfaceCardProperties networkInterfaceCardProperties = networkInterfaceCardPropertiesBuilder.build();
 
       String networkInterfaceCardName = name + "nic";
       variables.put("networkInterfaceCardName", networkInterfaceCardName);
@@ -276,12 +295,55 @@ public class DeploymentTemplateBuilder {
             .type("Microsoft.Network/networkInterfaces")
             .location(location)
             .apiVersion(STORAGE_API_VERSION)
-            .dependsOn(Arrays.asList("[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]",
-                  "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]"))
+            .dependsOn(depends)
             .properties(networkInterfaceCardProperties)
             .build();
 
       resources.add(networkInterfaceCard);
+   }
+
+   private void addNetworkSecurityGroup() {
+      int ports[] = options.getInboundPorts();
+      if ((ports != null) && (ports.length > 0)) {
+         variables.put("networkSecurityGroupName", name + "nsg");
+         variables.put("networkSecurityGroupNameReference", "[resourceId('Microsoft.Network/networkSecurityGroups',variables('networkSecurityGroupName'))]");
+
+         List<NetworkSecurityRule> rules = new ArrayList<NetworkSecurityRule>();
+         for (int i = 0; i < ports.length; i++) {
+            NetworkSecurityRuleProperties ruleProperties = NetworkSecurityRuleProperties.builder()
+                    .description("default-allow-port-" + ports[i])
+                    .protocol(NetworkSecurityRuleProperties.Protocol.All)
+                    .access(NetworkSecurityRuleProperties.Access.Allow)
+                    .sourcePortRange("*")
+                    .destinationPortRange("*")
+                    .sourceAddressPrefix("*")
+                    .destinationAddressPrefix("*")
+                    .priority(1234 + i)
+                    .direction(NetworkSecurityRuleProperties.Direction.Inbound)
+                    .build();
+
+            NetworkSecurityRule networkSecurityRule = NetworkSecurityRule.create(
+                    "default-allow-port-" + ports[i],
+                    null,
+                    null,
+                    ruleProperties);
+
+            rules.add(networkSecurityRule);
+         }
+
+         NetworkSecurityGroupProperties networkSecurityGroupProperties = NetworkSecurityGroupProperties.builder()
+                 .securityRules(rules)
+                 .build();
+
+         ResourceDefinition networkSecurityGroup = ResourceDefinition.builder()
+                 .name("[variables('networkSecurityGroupName')]")
+                 .type("Microsoft.Network/networkSecurityGroups").location(location)
+                 .apiVersion(STORAGE_API_VERSION)
+                 .properties(networkSecurityGroupProperties)
+                 .build();
+         resources.add(networkSecurityGroup);
+      }
+
    }
 
    private void addVirtualMachine() {

@@ -18,7 +18,6 @@ package org.jclouds.azurecompute.arm.features;
 
 import com.google.common.net.UrlEscapers;
 import org.jclouds.azurecompute.arm.compute.options.AzureTemplateOptions;
-import org.jclouds.compute.options.TemplateOptions;
 import org.jclouds.azurecompute.arm.domain.Deployment;
 import org.jclouds.azurecompute.arm.domain.DeploymentBody;
 import org.jclouds.azurecompute.arm.domain.DeploymentProperties;
@@ -32,6 +31,7 @@ import org.jclouds.compute.domain.OperatingSystem;
 import org.jclouds.compute.domain.OsFamily;
 import org.jclouds.compute.domain.Template;
 import org.jclouds.compute.domain.internal.TemplateImpl;
+import org.jclouds.compute.options.TemplateOptions;
 import org.jclouds.domain.Location;
 import org.jclouds.domain.LocationBuilder;
 import org.jclouds.domain.LocationScope;
@@ -57,6 +57,28 @@ public class TemplateToDeploymentTemplateLiveTest extends BaseAzureComputeApiLiv
    }
 
    @Test(groups = "live")
+   public void testValidateDeploymentTemplateLinuxNodeWithOptions() {
+      Long now = System.currentTimeMillis();
+      deploymentName = "jc" + now;
+
+      TemplateOptions options = new AzureTemplateOptions();
+      options.inboundPorts(22, 8080);
+
+      DeploymentTemplateBuilder templateBuilder = getDeploymentTemplateBuilderWithOptions(options);
+
+      DeploymentBody deploymentTemplateBody = templateBuilder.getDeploymentTemplate();
+
+      DeploymentProperties properties = DeploymentProperties.create(deploymentTemplateBody);
+
+      String deploymentTemplate = templateBuilder.getDeploymentTemplateJson(properties);
+      deploymentTemplate = UrlEscapers.urlFormParameterEscaper().escape(deploymentTemplate);
+
+      //Validates that template is syntactically correct
+      Deployment deployment = api().validate(deploymentName, deploymentTemplate);
+      assertNotNull(deployment);
+   }
+
+   @Test(groups = "live")
    public void testValidateDeploymentTemplateLinuxNode() {
       Long now = System.currentTimeMillis();
       deploymentName = "jc" + now;
@@ -71,6 +93,30 @@ public class TemplateToDeploymentTemplateLiveTest extends BaseAzureComputeApiLiv
       deploymentTemplate = UrlEscapers.urlFormParameterEscaper().escape(deploymentTemplate);
 
       //Validates that template is syntactically correct
+      Deployment deployment = api().validate(deploymentName, deploymentTemplate);
+      assertNotNull(deployment);
+   }
+
+   @Test(groups = "live")
+   public void testValidateDeploymentTemplateWithCustomOptions() {
+      Long now = System.currentTimeMillis();
+      deploymentName = "jc" + now;
+
+      String rsakey = new String("ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAmfk/QSF0pvnrpdz+Ah2KulGruKU+8FFBdlw938MpOysRdmp7uwpH6Z7+5VNGNdxFIAyc/W3UaZXF9hTsU8+78TlwkZpsr2mzU+ycu37XLAQ8Uv7hjsAN0DkKKPrZ9lgUUfZVKV/8E/JIAs03gIbL6zO3y7eYJQ5fNeZb+nji7tQT+YLpGq/FDegvraPKVMQbCSCZhsHyWhdPLyFlu9/30npZ0ahYOPI/KyZxFDtM/pHp88+ZAk9Icq5owaLRWcJQqrBGWqjbZnHtjdDqvHZ+C0wPhdJZPyfkHOrSYTwSQBXfX4JLRRCz3J1jf62MbQWT1o6Y4JEs1ZP1Skxu6zR96Q== mocktest");
+      TemplateOptions options = new AzureTemplateOptions()
+              .DNSLabelPrefix("mydnslabel")
+              .virtualNetworkAddressPrefix("10.0.0.0/20")
+              .subnetAddressPrefix("10.0.0.0/25")
+              .authorizePublicKey(rsakey);
+      DeploymentTemplateBuilder templateBuilder = getDeploymentTemplateBuilderWithOptions(options);
+
+      DeploymentBody deploymentTemplateBody = templateBuilder.getDeploymentTemplate();
+
+      DeploymentProperties properties = DeploymentProperties.create(deploymentTemplateBody);
+
+      String deploymentTemplate = templateBuilder.getDeploymentTemplateJson(properties);
+      deploymentTemplate = UrlEscapers.urlFormParameterEscaper().escape(deploymentTemplate);
+
       Deployment deployment = api().validate(deploymentName, deploymentTemplate);
       assertNotNull(deployment);
    }
@@ -98,29 +144,6 @@ public class TemplateToDeploymentTemplateLiveTest extends BaseAzureComputeApiLiv
    }
 
    @Test(groups = "live")
-   public void testValidateDeploymentTemplateWithCustomOptions() {
-      Long now = System.currentTimeMillis();
-      deploymentName = "jc" + now;
-
-      TemplateOptions options = new AzureTemplateOptions()
-            .DNSLabelPrefix("mydnslabel")
-            .virtualNetworkAddressPrefix("10.0.0.0/20")
-            .subnetAddressPrefix("10.0.0.0/25");
-
-      DeploymentTemplateBuilder templateBuilder = getDeploymentTemplateBuilderWithOptions(options);
-
-      DeploymentBody deploymentTemplateBody = templateBuilder.getDeploymentTemplate();
-
-      DeploymentProperties properties = DeploymentProperties.create(deploymentTemplateBody);
-
-      String deploymentTemplate = templateBuilder.getDeploymentTemplateJson(properties);
-      deploymentTemplate = UrlEscapers.urlFormParameterEscaper().escape(deploymentTemplate);
-
-      Deployment deployment = api().validate(deploymentName, deploymentTemplate);
-      assertNotNull(deployment);
-   }
-
-   @Test(groups = "live")
    public void testCreateDeploymentTemplateLinuxNode() {
       Long now = System.currentTimeMillis();
       deploymentName = "jc" + now;
@@ -129,6 +152,7 @@ public class TemplateToDeploymentTemplateLiveTest extends BaseAzureComputeApiLiv
 
       TemplateOptions options = new AzureTemplateOptions();
       options.authorizePublicKey(rsakey);
+      options.inboundPorts(22, 8080);
       DeploymentTemplateBuilder templateBuilder = getDeploymentTemplateBuilderWithOptions(options);
 
       DeploymentBody deploymentTemplateBody = templateBuilder.getDeploymentTemplate();
