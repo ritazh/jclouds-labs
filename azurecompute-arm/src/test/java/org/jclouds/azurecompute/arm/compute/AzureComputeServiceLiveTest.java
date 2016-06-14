@@ -81,7 +81,55 @@ public class AzureComputeServiceLiveTest extends BaseComputeServiceLiveTest {
    }
 
    @Test(
-         enabled = true
+           enabled = true
+   )
+   public void testCreateAndRunAService() throws Exception {
+      String group = this.group + "s";
+
+      try {
+         this.client.destroyNodesMatching(NodePredicates.inGroup(group));
+      } catch (Exception var7) {
+
+      }
+
+      try {
+         this.createAndRunAServiceInGroup(group);
+      } finally {
+         this.client.destroyNodesMatching(NodePredicates.inGroup(group));
+      }
+
+   }
+
+   public void testOptionToNotBlock() throws Exception {
+      String group = this.group + "b"; // azure naming 3-24 characters for storage account
+
+      try {
+         this.client.destroyNodesMatching(NodePredicates.inGroup(group));
+      } catch (Exception var11) {
+         ;
+      }
+
+      this.template = this.buildTemplate(this.client.templateBuilder());
+      this.template.getOptions().blockUntilRunning(false).inboundPorts(new int[0]);
+
+      try {
+         long time = System.currentTimeMillis();
+         Set nodes = this.client.createNodesInGroup(group, 1, this.template);
+         NodeMetadata node = (NodeMetadata)Iterables.getOnlyElement(nodes);
+
+         assert node.getStatus() != NodeMetadata.Status.RUNNING : node;
+
+         long duration = (System.currentTimeMillis() - time) / 1000L;
+
+         assert duration < (long)this.nonBlockDurationSeconds : String.format("duration(%d) longer than expected(%d) seconds! ", new Object[]{Long.valueOf(duration), Integer.valueOf(this.nonBlockDurationSeconds)});
+      } finally {
+         this.client.destroyNodesMatching(NodePredicates.inGroup(group));
+      }
+
+   }
+
+   @Test(
+         enabled = false
    )
    public void testAScriptExecutionAfterBootWithBasicTemplate() throws Exception {
       String group = this.group + "r";
@@ -97,8 +145,7 @@ public class AzureComputeServiceLiveTest extends BaseComputeServiceLiveTest {
 
       try {
          Set nodes = this.client.createNodesInGroup(group, 1, this.template);
-         NodeMetadata node = /*this.client.getNodeMetadata("azurecompute-armr-270");*/
-               (NodeMetadata) Iterables.get(nodes, 0);
+         NodeMetadata node = (NodeMetadata) Iterables.get(nodes, 0);
          LoginCredentials good = node.getCredentials();
 //         Credentials credentials = new Credentials("jclouds", "Password1!");
 //         good = LoginCredentials.fromCredentials(credentials);
