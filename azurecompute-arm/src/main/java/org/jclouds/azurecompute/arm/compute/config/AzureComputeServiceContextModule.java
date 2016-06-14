@@ -16,6 +16,7 @@
  */
 package org.jclouds.azurecompute.arm.compute.config;
 
+import javax.annotation.Resource;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
@@ -42,6 +43,7 @@ import org.jclouds.compute.ComputeServiceAdapter;
 import org.jclouds.compute.config.ComputeServiceAdapterContextModule;
 import org.jclouds.compute.domain.Hardware;
 import org.jclouds.compute.domain.NodeMetadata;
+import org.jclouds.compute.reference.ComputeServiceConstants;
 import org.jclouds.compute.strategy.CreateNodesInGroupThenAddToSet;
 import org.jclouds.compute.reference.ComputeServiceConstants.Timeouts;
 import org.jclouds.compute.reference.ComputeServiceConstants.PollPeriod;
@@ -70,9 +72,14 @@ import org.jclouds.compute.extensions.ImageExtension;
 import org.jclouds.compute.strategy.PopulateDefaultLoginCredentialsForImageStrategy;
 import org.jclouds.azurecompute.arm.compute.AzureComputeService;
 import org.jclouds.compute.ComputeService;
+import org.jclouds.logging.Logger;
 
 public class AzureComputeServiceContextModule
         extends ComputeServiceAdapterContextModule<VMDeployment, VMHardware, VMImage, Location> {
+
+   @Resource
+   @Named(ComputeServiceConstants.COMPUTE_LOGGER)
+   protected Logger logger = Logger.NULL;
 
    @Override
    protected void configure() {
@@ -194,7 +201,7 @@ public class AzureComputeServiceContextModule
       @Override
       public boolean apply(URI uri) {
          checkNotNull(uri, "uri cannot be null");
-         return ParseJobStatus.JobStatus.DONE == api.getJobApi().jobStatus(uri);
+         return (ParseJobStatus.JobStatus.DONE == api.getJobApi().jobStatus(uri)) || (ParseJobStatus.JobStatus.NO_CONTENT == api.getJobApi().jobStatus(uri));
       }
 
    }
