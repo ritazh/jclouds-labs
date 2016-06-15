@@ -52,6 +52,8 @@ public class AzureComputeServiceLiveTest extends BaseComputeServiceLiveTest {
 
    public AzureComputeServiceLiveTest() {
       provider = "azurecompute-arm";
+      nonBlockDurationSeconds = 600;
+      group = "az-arm";
    }
 
    @Override
@@ -69,8 +71,9 @@ public class AzureComputeServiceLiveTest extends BaseComputeServiceLiveTest {
       //azureGroup = "jc" + System.getProperty("user.name").substring(0, 3);
       Properties properties = super.setupProperties();
       long scriptTimeout = TimeUnit.MILLISECONDS.convert(20, TimeUnit.MINUTES);
+      long nodeTimeout = TimeUnit.MILLISECONDS.convert(30, TimeUnit.MINUTES);
       properties.setProperty(TIMEOUT_SCRIPT_COMPLETE, scriptTimeout + "");
-      properties.setProperty(TIMEOUT_NODE_RUNNING, scriptTimeout + "");
+      properties.setProperty(TIMEOUT_NODE_RUNNING, nodeTimeout + "");
       //properties.put(RESOURCE_GROUP_NAME, azureGroup);
 
       AzureLiveTestUtils.defaultProperties(properties);
@@ -81,55 +84,7 @@ public class AzureComputeServiceLiveTest extends BaseComputeServiceLiveTest {
    }
 
    @Test(
-           enabled = true
-   )
-   public void testCreateAndRunAService() throws Exception {
-      String group = this.group + "s";
-
-      try {
-         this.client.destroyNodesMatching(NodePredicates.inGroup(group));
-      } catch (Exception var7) {
-
-      }
-
-      try {
-         this.createAndRunAServiceInGroup(group);
-      } finally {
-         this.client.destroyNodesMatching(NodePredicates.inGroup(group));
-      }
-
-   }
-
-   public void testOptionToNotBlock() throws Exception {
-      String group = this.group + "b"; // azure naming 3-24 characters for storage account
-
-      try {
-         this.client.destroyNodesMatching(NodePredicates.inGroup(group));
-      } catch (Exception var11) {
-         ;
-      }
-
-      this.template = this.buildTemplate(this.client.templateBuilder());
-      this.template.getOptions().blockUntilRunning(false).inboundPorts(new int[0]);
-
-      try {
-         long time = System.currentTimeMillis();
-         Set nodes = this.client.createNodesInGroup(group, 1, this.template);
-         NodeMetadata node = (NodeMetadata)Iterables.getOnlyElement(nodes);
-
-         assert node.getStatus() != NodeMetadata.Status.RUNNING : node;
-
-         long duration = (System.currentTimeMillis() - time) / 1000L;
-
-         assert duration < (long)this.nonBlockDurationSeconds : String.format("duration(%d) longer than expected(%d) seconds! ", new Object[]{Long.valueOf(duration), Integer.valueOf(this.nonBlockDurationSeconds)});
-      } finally {
-         this.client.destroyNodesMatching(NodePredicates.inGroup(group));
-      }
-
-   }
-
-   @Test(
-         enabled = false
+         enabled = true
    )
    public void testAScriptExecutionAfterBootWithBasicTemplate() throws Exception {
       String group = this.group + "r";
@@ -173,7 +128,7 @@ public class AzureComputeServiceLiveTest extends BaseComputeServiceLiveTest {
 
          assert node.getCredentials().credential != null : nodes;
 
-         this.weCanCancelTasks(node);
+         //this.weCanCancelTasks(node);
 
          assert response1.getExitStatus() == 0 : node.getId() + ": " + response1;
 

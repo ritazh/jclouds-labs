@@ -145,9 +145,18 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
 
       final VMDeployment deployment = deployments.iterator().next();
 
+      NodeAndInitialCredentials<VMDeployment> credential = null;
 
-      return new NodeAndInitialCredentials<VMDeployment>(deployment, name,
-              LoginCredentials.builder().user(loginUser).identity(loginUser).password(loginPassword).authenticateSudo(true).build());
+      if (template.getOptions().getPublicKey() != null){
+         String privateKey = template.getOptions().getPrivateKey();//this can be null as it will use the key privated in ssh-agent
+         credential = new NodeAndInitialCredentials<VMDeployment>(deployment, name,
+                 LoginCredentials.builder().user(loginUser).privateKey(privateKey).authenticateSudo(true).build());
+      } else {
+         credential = new NodeAndInitialCredentials<VMDeployment>(deployment, name,
+                 LoginCredentials.builder().user(loginUser).password(loginPassword).authenticateSudo(true).build());
+      }
+
+      return credential;
    }
 
    @Override
@@ -175,12 +184,12 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
          }
 */
          VMHardware hwProfile = new VMHardware();
-         hwProfile.name = "Standard_A0";
-         hwProfile.numberOfCores = 1;
-         hwProfile.osDiskSizeInMB = 20480;
-         hwProfile.resourceDiskSizeInMB = 1047552;
-         hwProfile.memoryInMB = 768;
-         hwProfile.maxDataDiskCount = 1;
+         hwProfile.name = "Standard_A5";
+         hwProfile.numberOfCores = 2;
+         hwProfile.osDiskSizeInMB = 1047552;
+         hwProfile.resourceDiskSizeInMB = 138240;
+         hwProfile.memoryInMB = 14336;
+         hwProfile.maxDataDiskCount = 4;
          hwProfile.location = "westus";
          hwProfiles.add(hwProfile);
 
