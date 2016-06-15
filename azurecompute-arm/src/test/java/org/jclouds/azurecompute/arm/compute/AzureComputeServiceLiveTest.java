@@ -96,7 +96,7 @@ public class AzureComputeServiceLiveTest extends BaseComputeServiceLiveTest {
       properties.setProperty(TIMEOUT_PORT_OPEN, scriptTimeout + "");
       properties.setProperty(TIMEOUT_NODE_TERMINATED, scriptTimeout + "");
       properties.setProperty(TIMEOUT_NODE_SUSPENDED, scriptTimeout + "");
-      properties.put(RESOURCE_GROUP_NAME, "a3");
+      properties.put(RESOURCE_GROUP_NAME, "a4");
 //      properties.put("jclouds.max-retries", 5);
 //      properties.put("jclouds.retries-delay-start", 5000L);
 
@@ -109,7 +109,7 @@ public class AzureComputeServiceLiveTest extends BaseComputeServiceLiveTest {
 
    }
 
-/*
+
    @Test(
          enabled = true
    )
@@ -135,7 +135,7 @@ public class AzureComputeServiceLiveTest extends BaseComputeServiceLiveTest {
       this.checkOsMatchesTemplate(node1);
       this.checkOsMatchesTemplate(node2);
    }
-*/
+
 
    @Override
    @Test(
