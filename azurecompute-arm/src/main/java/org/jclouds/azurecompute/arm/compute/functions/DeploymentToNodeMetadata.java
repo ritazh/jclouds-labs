@@ -148,7 +148,16 @@ public class DeploymentToNodeMetadata implements Function<VMDeployment, NodeMeta
           credentials = new Credentials(AZURE_LOGIN_USERNAME, credentials.credential);
       }
       else if (credentials == null) {
-         credentials = new Credentials(AZURE_LOGIN_USERNAME, AZURE_LOGIN_PASSWORD);
+         String username = AZURE_LOGIN_USERNAME;
+         String password = AZURE_LOGIN_PASSWORD;
+         if (username == null) {
+            username = "jclouds";
+         }
+         if (password == null) {
+            password = "Password1!";
+         }
+
+         credentials = new Credentials(username, password);
       }
       builder.credentials(LoginCredentials.fromCredentials(credentials));
 

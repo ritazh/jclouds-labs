@@ -16,30 +16,49 @@
  */
 package org.jclouds.azurecompute.arm.compute;
 
+import com.google.common.base.Preconditions;
+import com.google.common.base.Stopwatch;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ListenableFuture;
+import org.jclouds.compute.JettyStatements;
+import org.jclouds.compute.RunNodesException;
 import org.jclouds.compute.domain.ExecResponse;
 import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.compute.domain.OperatingSystem;
 import org.jclouds.compute.internal.BaseComputeServiceLiveTest;
 import org.jclouds.compute.options.RunScriptOptions;
 import org.jclouds.compute.predicates.NodePredicates;
+import org.jclouds.domain.Location;
 import org.jclouds.domain.LoginCredentials;
+import org.jclouds.scriptbuilder.domain.Statement;
+import org.jclouds.scriptbuilder.domain.Statements;
+import org.jclouds.scriptbuilder.statements.java.InstallJDK;
 import org.jclouds.scriptbuilder.statements.login.AdminAccess;
 import org.jclouds.sshj.config.SshjSshClientModule;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import org.jclouds.providers.ProviderMetadata;
 import org.jclouds.azurecompute.arm.AzureComputeProviderMetadata;
+
+import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.RESOURCE_GROUP_NAME;
 import static org.jclouds.compute.config.ComputeServiceProperties.TIMEOUT_NODE_RUNNING;
+import static org.jclouds.compute.config.ComputeServiceProperties.TIMEOUT_NODE_SUSPENDED;
+import static org.jclouds.compute.config.ComputeServiceProperties.TIMEOUT_NODE_TERMINATED;
+import static org.jclouds.compute.config.ComputeServiceProperties.TIMEOUT_PORT_OPEN;
 import static org.jclouds.compute.config.ComputeServiceProperties.TIMEOUT_SCRIPT_COMPLETE;
 import org.jclouds.azurecompute.arm.internal.AzureLiveTestUtils;
 import com.google.inject.Module;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -52,6 +71,8 @@ public class AzureComputeServiceLiveTest extends BaseComputeServiceLiveTest {
 
    public AzureComputeServiceLiveTest() {
       provider = "azurecompute-arm";
+      nonBlockDurationSeconds = 300;
+      group = "az-u";
    }
 
    @Override
@@ -65,12 +86,20 @@ public class AzureComputeServiceLiveTest extends BaseComputeServiceLiveTest {
       return pm;
    }
 
-   @Override protected Properties setupProperties() {
+   @Override
+   protected Properties setupProperties() {
       //azureGroup = "jc" + System.getProperty("user.name").substring(0, 3);
       Properties properties = super.setupProperties();
-      long scriptTimeout = TimeUnit.MILLISECONDS.convert(20, TimeUnit.MINUTES);
+      long scriptTimeout = TimeUnit.MILLISECONDS.convert(60, TimeUnit.MINUTES);
       properties.setProperty(TIMEOUT_SCRIPT_COMPLETE, scriptTimeout + "");
       properties.setProperty(TIMEOUT_NODE_RUNNING, scriptTimeout + "");
+      properties.setProperty(TIMEOUT_PORT_OPEN, scriptTimeout + "");
+      properties.setProperty(TIMEOUT_NODE_TERMINATED, scriptTimeout + "");
+      properties.setProperty(TIMEOUT_NODE_SUSPENDED, scriptTimeout + "");
+      properties.put(RESOURCE_GROUP_NAME, "a3");
+//      properties.put("jclouds.max-retries", 5);
+//      properties.put("jclouds.retries-delay-start", 5000L);
+
       //properties.put(RESOURCE_GROUP_NAME, azureGroup);
 
       AzureLiveTestUtils.defaultProperties(properties);
@@ -80,110 +109,39 @@ public class AzureComputeServiceLiveTest extends BaseComputeServiceLiveTest {
 
    }
 
+/*
    @Test(
-           enabled = true
+         enabled = true
    )
-   public void testCreateAndRunAService() throws Exception {
-      String group = this.group + "s";
-
-      try {
-         this.client.destroyNodesMatching(NodePredicates.inGroup(group));
-      } catch (Exception var7) {
-
-      }
-
-      try {
-         this.createAndRunAServiceInGroup(group);
-      } finally {
-         this.client.destroyNodesMatching(NodePredicates.inGroup(group));
-      }
-
-   }
-
-   public void testOptionToNotBlock() throws Exception {
-      String group = this.group + "b"; // azure naming 3-24 characters for storage account
-
-      try {
-         this.client.destroyNodesMatching(NodePredicates.inGroup(group));
-      } catch (Exception var11) {
-         ;
-      }
-
+   public void testCreateTwoNo() throws Exception {
       this.template = this.buildTemplate(this.client.templateBuilder());
-      this.template.getOptions().blockUntilRunning(false).inboundPorts(new int[0]);
+      this.template.getOptions().runScript(Statements.newStatementList(new Statement[]{AdminAccess.standard(), InstallJDK.fromOpenJDK()}));
 
       try {
-         long time = System.currentTimeMillis();
-         Set nodes = this.client.createNodesInGroup(group, 1, this.template);
-         NodeMetadata node = (NodeMetadata)Iterables.getOnlyElement(nodes);
-
-         assert node.getStatus() != NodeMetadata.Status.RUNNING : node;
-
-         long duration = (System.currentTimeMillis() - time) / 1000L;
-
-         assert duration < (long)this.nonBlockDurationSeconds : String.format("duration(%d) longer than expected(%d) seconds! ", new Object[]{Long.valueOf(duration), Integer.valueOf(this.nonBlockDurationSeconds)});
-      } finally {
-         this.client.destroyNodesMatching(NodePredicates.inGroup(group));
+         this.nodes = Sets.newTreeSet(this.client.createNodesInGroup(this.group, 2, this.template));
+      } catch (RunNodesException var3) {
+         this.nodes = Sets.newTreeSet(Iterables.concat(var3.getSuccessfulNodes(), var3.getNodeErrors().keySet()));
+         throw var3;
       }
 
+      Assert.assertEquals(this.nodes.size(), 2, "expected two nodes but was " + this.nodes);
+      this.checkNodes(this.nodes, this.group, "bootstrap");
+      NodeMetadata node1 = (NodeMetadata)this.nodes.first();
+      NodeMetadata node2 = (NodeMetadata)this.nodes.last();
+//      this.assertLocationSameOrChild((Location) Preconditions.checkNotNull(node1.getLocation(), "location of %s", new Object[]{node1}), this.template.getLocation());
+//      this.assertLocationSameOrChild((Location)Preconditions.checkNotNull(node2.getLocation(), "location of %s", new Object[]{node2}), this.template.getLocation());
+      this.checkImageIdMatchesTemplate(node1);
+      this.checkImageIdMatchesTemplate(node2);
+      this.checkOsMatchesTemplate(node1);
+      this.checkOsMatchesTemplate(node2);
    }
+*/
 
+   @Override
    @Test(
          enabled = false
    )
-   public void testAScriptExecutionAfterBootWithBasicTemplate() throws Exception {
-      String group = this.group + "r";
-/*
-      try {
-         this.client.destroyNodesMatching(NodePredicates.inGroup(group));
-      } catch (Exception var11) {
-         ;
-      }
-*/
-      this.template = this.buildTemplate(this.client.templateBuilder());
-      this.template.getOptions().blockOnPort(22, 120);
-
-      try {
-         Set nodes = this.client.createNodesInGroup(group, 1, this.template);
-         NodeMetadata node = (NodeMetadata) Iterables.get(nodes, 0);
-         LoginCredentials good = node.getCredentials();
-//         Credentials credentials = new Credentials("jclouds", "Password1!");
-//         good = LoginCredentials.fromCredentials(credentials);
-
-         Iterator response = this.client.runScriptOnNodesMatching(NodePredicates.runningInGroup(group), "hostname", RunScriptOptions.Builder.wrapInInitScript(false).runAsRoot(false).overrideLoginCredentials(good)).entrySet().iterator();
-
-         while (response.hasNext()) {
-            Map.Entry os = (Map.Entry)response.next();
-            this.checkResponseEqualsHostname((ExecResponse)os.getValue(), (NodeMetadata)os.getKey());
-         }
-
-         ExecResponse response1 = this.client.runScriptOnNode(node.getId(), "hostname", RunScriptOptions.Builder.wrapInInitScript(false).runAsRoot(false));
-         this.checkResponseEqualsHostname(response1, node);
-         OperatingSystem os1 = node.getOperatingSystem();
-         this.tryBadPassword(group, good);
-         this.runScriptWithCreds(group, os1, good);
-         this.checkNodes(nodes, group, "runScriptWithCreds");
-         ListenableFuture future = this.client.submitScriptOnNode(node.getId(), AdminAccess.builder().adminUsername("foo").adminHome("/over/ridden/foo").build(), RunScriptOptions.Builder.nameTask("adminUpdate"));
-         response1 = (ExecResponse)future.get(3L, TimeUnit.MINUTES);
-
-         assert response1.getExitStatus() == 0 : node.getId() + ": " + response1;
-
-         node = this.client.getNodeMetadata(node.getId());
-         Assert.assertEquals(node.getCredentials().identity, "foo");
-
-         assert node.getCredentials().credential != null : nodes;
-
-         this.weCanCancelTasks(node);
-
-         assert response1.getExitStatus() == 0 : node.getId() + ": " + response1;
-
-         response1 = this.client.runScriptOnNode(node.getId(), "echo $USER", RunScriptOptions.Builder.wrapInInitScript(false).runAsRoot(false));
-
-         assert response1.getOutput().trim().equals("foo") : node.getId() + ": " + response1;
-      } catch (Exception e) {
-         System.out.println(e.getMessage());
-      }
-
+   public void weCanCancelTasks(NodeMetadata node) throws InterruptedException, ExecutionException {
+      return;
    }
-
 }

@@ -190,9 +190,9 @@ public class DeploymentTemplateBuilder {
    }
 
    private void addVirtualNetworkResource() {
-      String virtualNetworkName = group + "virtualnetwork";
+      String virtualNetworkName = name + "virtualnetwork";
 
-      String subnetName = group + "subnet";
+      String subnetName = name + "subnet";
       variables.put("virtualNetworkName", virtualNetworkName);
       variables.put("virtualNetworkReference", "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]");
       variables.put("subnetName", subnetName);

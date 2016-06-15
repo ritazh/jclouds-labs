@@ -16,6 +16,8 @@
  */
 package org.jclouds.azurecompute.arm.compute.strategy;
 
+import org.jclouds.compute.domain.NodeMetadata;
+import org.jclouds.compute.domain.internal.ImageImpl;
 import org.jclouds.compute.strategy.PopulateDefaultLoginCredentialsForImageStrategy;
 import org.jclouds.domain.Credentials;
 import org.jclouds.domain.LoginCredentials;
@@ -26,7 +28,16 @@ import static org.jclouds.azurecompute.arm.compute.functions.DeploymentToNodeMet
 public class AzurePopulateDefaultLoginCredentialsForImageStrategy implements PopulateDefaultLoginCredentialsForImageStrategy {
    @Override
    public LoginCredentials apply(Object o) {
-      Credentials creds = new Credentials(AZURE_LOGIN_USERNAME, AZURE_LOGIN_PASSWORD);
+      ImageImpl node = (ImageImpl)o;
+      String username = AZURE_LOGIN_USERNAME;
+      String password = AZURE_LOGIN_PASSWORD;
+      if (username == null) {
+         username = "jclouds";
+      }
+      if (password == null) {
+         password = "Password1!";
+      }
+      Credentials creds = new Credentials(username, password);
       LoginCredentials credentials = LoginCredentials.fromCredentials(creds);
       return credentials;
    }

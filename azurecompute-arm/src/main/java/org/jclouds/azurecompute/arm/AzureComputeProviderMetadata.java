@@ -69,8 +69,8 @@ public class AzureComputeProviderMetadata extends BaseProviderMetadata {
       properties.setProperty(TCP_RULE_REGEXP, "tcp_\\d{1,5}-\\d{1,5}");
       properties.put(RESOURCE, "https://management.azure.com/");
       properties.put(CREDENTIAL_TYPE, CLIENT_CREDENTIALS_SECRET.toString());
-      properties.put(RESOURCE_GROUP_NAME, "jcloudsgroup26");
-      properties.put(IMAGE_PUBLISHERS, "Canonical");
+      properties.put(RESOURCE_GROUP_NAME, "jcloudsgroup");
+      properties.put(IMAGE_PUBLISHERS, "Canonical,RedHat");
       properties.put(DEFAULT_IMAGE_LOGIN, "jclouds:Password1!");
       properties.put(TIMEOUT_NODE_TERMINATED, 60 * 10 * 1000);
       return properties;

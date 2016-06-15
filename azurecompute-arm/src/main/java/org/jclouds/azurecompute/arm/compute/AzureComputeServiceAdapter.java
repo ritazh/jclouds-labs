@@ -41,6 +41,7 @@ import org.jclouds.azurecompute.arm.compute.functions.VMImageToImage;
 import org.jclouds.azurecompute.arm.domain.Deployment;
 import org.jclouds.azurecompute.arm.domain.DeploymentBody;
 import org.jclouds.azurecompute.arm.domain.DeploymentProperties;
+import org.jclouds.azurecompute.arm.domain.Publisher;
 import org.jclouds.azurecompute.arm.domain.VMImage;
 import org.jclouds.azurecompute.arm.domain.VMHardware;
 import org.jclouds.azurecompute.arm.domain.Location;
@@ -146,8 +147,18 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
       final VMDeployment deployment = deployments.iterator().next();
 
 
-      return new NodeAndInitialCredentials<VMDeployment>(deployment, name,
-              LoginCredentials.builder().user(loginUser).identity(loginUser).password(loginPassword).authenticateSudo(true).build());
+      NodeAndInitialCredentials<VMDeployment> credential = null;
+
+      if (template.getOptions().getPublicKey() != null){
+         String privateKey = template.getOptions().getPrivateKey();//this can be null as it will use the key privated in ssh-agent
+         credential = new NodeAndInitialCredentials<VMDeployment>(deployment, name,
+         LoginCredentials.builder().user(loginUser).privateKey(privateKey).authenticateSudo(true).build());
+      } else {
+         credential = new NodeAndInitialCredentials<VMDeployment>(deployment, name,
+         LoginCredentials.builder().user(loginUser).password(loginPassword).authenticateSudo(true).build());
+      }
+
+      return credential;
    }
 
    @Override
@@ -175,12 +186,12 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
          }
 */
          VMHardware hwProfile = new VMHardware();
-         hwProfile.name = "Standard_A0";
-         hwProfile.numberOfCores = 1;
-         hwProfile.osDiskSizeInMB = 20480;
-         hwProfile.resourceDiskSizeInMB = 1047552;
-         hwProfile.memoryInMB = 768;
-         hwProfile.maxDataDiskCount = 1;
+         hwProfile.name = "Standard_A5";
+         hwProfile.numberOfCores = 2;
+         hwProfile.osDiskSizeInMB = 1047552;
+         hwProfile.resourceDiskSizeInMB = 138240;
+         hwProfile.memoryInMB = 14336;
+         hwProfile.maxDataDiskCount = 4;
          hwProfile.location = "westus";
          hwProfiles.add(hwProfile);
 
@@ -224,6 +235,7 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
 
    private List<VMImage> listImagesByLocation(String location) {
       final List<VMImage> osImages = Lists.newArrayList();
+      final List<Publisher> publisherList = api.getOSImageApi(location).listPublishers();
       Iterable<String> publishers = Splitter.on(',').trimResults().omitEmptyStrings().split(this.azureComputeConstants.azureImagePublishers());
       for (String publisher : publishers) {
          getImagesFromPublisher(publisher, osImages, location);
