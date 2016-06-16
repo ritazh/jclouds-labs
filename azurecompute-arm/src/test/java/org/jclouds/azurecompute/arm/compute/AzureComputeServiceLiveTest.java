@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
+import org.jclouds.compute.ComputeServiceContext;
 import org.jclouds.compute.JettyStatements;
 import org.jclouds.compute.RunNodesException;
 import org.jclouds.compute.RunScriptOnNodesException;
@@ -31,6 +32,7 @@ import org.jclouds.compute.domain.Template;
 import org.jclouds.compute.internal.BaseComputeServiceLiveTest;
 import org.jclouds.compute.options.RunScriptOptions;
 import org.jclouds.compute.predicates.NodePredicates;
+import org.jclouds.domain.Credentials;
 import org.jclouds.domain.LoginCredentials;
 import org.jclouds.scriptbuilder.domain.Statement;
 import org.jclouds.scriptbuilder.domain.StatementList;
@@ -52,6 +54,8 @@ import static org.jclouds.compute.config.ComputeServiceProperties.TIMEOUT_SCRIPT
 import org.jclouds.azurecompute.arm.internal.AzureLiveTestUtils;
 import com.google.inject.Module;
 
+import java.io.IOException;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TreeSet;
@@ -110,7 +114,7 @@ public class AzureComputeServiceLiveTest extends BaseComputeServiceLiveTest {
 
    }
 
-//   @Override
+   @Override
    protected Template refreshTemplate() {
       return this.template = addRunScriptToTemplateWithDelay(this.buildTemplate(this.client.templateBuilder()));
    }
@@ -166,5 +170,29 @@ public class AzureComputeServiceLiveTest extends BaseComputeServiceLiveTest {
       return this.client.runScriptOnNodesMatching(NodePredicates.runningInGroup(group), Statements.newStatementList(Statements.exec("sleep 25"), InstallJDK.fromOpenJDK()), org.jclouds.compute.options.TemplateOptions.Builder.overrideLoginCredentials(creds).nameTask("runScriptWithCreds"));
    }
 
+   @Override
+   protected void checkNodes(Iterable<? extends NodeMetadata> nodes, String group, String taskName) throws IOException {
+/*
+      Iterator var4 = nodes.iterator();
+
+      while(var4.hasNext()) {
+         NodeMetadata node = (NodeMetadata)var4.next();
+         Assert.assertNotNull(node.getProviderId());
+         Assert.assertNotNull(node.getGroup());
+         Assert.assertEquals(node.getGroup(), group);
+         Assert.assertEquals(node.getStatus(), NodeMetadata.Status.RUNNING);
+         Credentials fromStore = (Credentials)((ComputeServiceContext)this.view).utils().credentialStore().get("node#" + node.getId());
+         Assert.assertEquals(fromStore, node.getCredentials());
+
+         assert node.getPublicAddresses().size() >= 1 || node.getPrivateAddresses().size() >= 1 : "no ips in" + node;
+
+         Assert.assertNotNull(node.getCredentials());
+         if(node.getCredentials().identity != null) {
+            Assert.assertNotNull(node.getCredentials().identity);
+            this.sshPing(node, taskName);
+         }
+      }
+*/
+   }
 
 }
