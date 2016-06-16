@@ -34,6 +34,7 @@ import org.jclouds.azurecompute.arm.domain.HardwareProfile;
 import org.jclouds.azurecompute.arm.domain.ImageReference;
 import org.jclouds.azurecompute.arm.domain.IpConfiguration;
 import org.jclouds.azurecompute.arm.domain.IpConfigurationProperties;
+import org.jclouds.azurecompute.arm.domain.KeyVaultReference;
 import org.jclouds.azurecompute.arm.domain.NetworkInterfaceCardProperties;
 import org.jclouds.azurecompute.arm.domain.NetworkProfile;
 import org.jclouds.azurecompute.arm.domain.OSDisk;
@@ -42,6 +43,7 @@ import org.jclouds.azurecompute.arm.domain.PublicIPAddressProperties;
 import org.jclouds.azurecompute.arm.domain.StorageProfile;
 import org.jclouds.azurecompute.arm.domain.StorageService;
 import org.jclouds.azurecompute.arm.domain.Subnet;
+import org.jclouds.azurecompute.arm.domain.TemplateParameterType;
 import org.jclouds.azurecompute.arm.domain.VHD;
 import org.jclouds.azurecompute.arm.domain.VirtualMachineProperties;
 import org.jclouds.azurecompute.arm.domain.StorageService.StorageServiceProperties;
@@ -144,15 +146,29 @@ public class DeploymentTemplateBuilder {
       addNetworkInterfaceCard();
       addVirtualMachine();
 
+
+      DeploymentTemplate.TemplateParameters templateParameters = DeploymentTemplate.TemplateParameters.create(null);
+      DeploymentTemplate.Parameters parameters = DeploymentTemplate.Parameters.create(null);
+      if (keyVaultInUse()){
+         String[] keyVaultInfo = options.getKeyVaultIdAndSecret().split(":");
+         assert keyVaultInfo.length == 2;
+         String vaultId = keyVaultInfo[0].trim();
+         String secretName = keyVaultInfo[1].trim();
+
+         templateParameters = DeploymentTemplate.TemplateParameters.create(TemplateParameterType.create("securestring"));
+         parameters = DeploymentTemplate.Parameters.create(KeyVaultReference.create(KeyVaultReference.Reference.create(IdReference.create(vaultId), secretName)));
+      }
+
+
       DeploymentTemplate template = DeploymentTemplate.builder()
             .schema("https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#")
             .contentVersion("1.0.0.0")
             .resources(resources)
             .variables(variables)
-            .parameters(DeploymentTemplate.Parameters.create())
+            .parameters(templateParameters)
             .build();
 
-      DeploymentBody body = DeploymentBody.create(template, DEPLOYMENT_MODE, DeploymentTemplate.Parameters.create());
+      DeploymentBody body = DeploymentBody.create(template, DEPLOYMENT_MODE, parameters);
 
       return body;
    }
@@ -356,19 +372,18 @@ public class DeploymentTemplateBuilder {
             .adminUsername(loginUser)
             .computerName(computerName);
 
-      boolean usePublicKey = options.getPublicKey() != null;
+      profileBuilder.adminPassword(loginPassword);
+      //boolean usePublicKey = options.getPublicKey() != null;
 
-      if (usePublicKey) {
-         OSProfile.LinuxConfiguration configuration = OSProfile.LinuxConfiguration.create("true",
+      if (keyVaultInUse()) {
+         OSProfile.LinuxConfiguration configuration = OSProfile.LinuxConfiguration.create("false",
                OSProfile.LinuxConfiguration.SSH.create(Arrays.asList(
                      OSProfile.LinuxConfiguration.SSH.SSHPublicKey.create(
                            "[concat('/home/',variables('loginUser'),'/.ssh/authorized_keys')]",
-                           options.getPublicKey())
+                           "[parameters('publicKeyFromAzureKeyVault')]"
                ))
-         );
+         ));
          profileBuilder.linuxConfiguration(configuration);
-      } else {
-         profileBuilder.adminPassword(loginPassword);
       }
 
       if (!Strings.isNullOrEmpty(options.getCustomData())){
@@ -463,6 +478,7 @@ public class DeploymentTemplateBuilder {
             .diagnosticsProfile(diagnosticsProfile)
             .build();
 
+
       String tagString = StringUtils.join(Lists.newArrayList(tags), ",");
       if (tagString.isEmpty())
          tagString = "jclouds";
@@ -507,4 +523,9 @@ public class DeploymentTemplateBuilder {
       }
       return builder.build();
    }
+
+   private boolean keyVaultInUse(){
+      return !Strings.isNullOrEmpty(options.getKeyVaultIdAndSecret());
+   }
+
 }

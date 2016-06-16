@@ -30,6 +30,8 @@ public class AzureTemplateOptions extends TemplateOptions implements Cloneable {
    private String virtualNetworkAddressPrefix;
    private String subnetAddressPrefix;
    private String DNSLabelPrefix;
+   private String keyVaultIdAndSecret;
+
 
    /**
     * Sets the CIDR block for virtual network
@@ -63,11 +65,19 @@ public class AzureTemplateOptions extends TemplateOptions implements Cloneable {
       return this;
    }
 
+   /**
+    * Sets the KeyVault id and secret separated with ":"
+    */
+   public  AzureTemplateOptions keyVaultIdAndSecret(String keyVaultIdAndSecret) {
+      this.keyVaultIdAndSecret = keyVaultIdAndSecret;
+      return this;
+   }
+
    public String getCustomData() { return customData; }
    public String getVirtualNetworkAddressPrefix() { return virtualNetworkAddressPrefix; }
    public String getSubnetAddressPrefix() { return subnetAddressPrefix; }
    public String getDNSLabelPrefix() { return DNSLabelPrefix; }
-
+   public String getKeyVaultIdAndSecret() { return keyVaultIdAndSecret; }
 
    @Override
    public AzureTemplateOptions clone() {
@@ -85,12 +95,13 @@ public class AzureTemplateOptions extends TemplateOptions implements Cloneable {
          eTo.virtualNetworkAddressPrefix(virtualNetworkAddressPrefix);
          eTo.subnetAddressPrefix(subnetAddressPrefix);
          eTo.DNSLabelPrefix(DNSLabelPrefix);
+         eTo.keyVaultIdAndSecret(keyVaultIdAndSecret);
       }
    }
 
    @Override
    public int hashCode() {
-      return Objects.hashCode(super.hashCode(), virtualNetworkAddressPrefix, subnetAddressPrefix, DNSLabelPrefix);
+      return Objects.hashCode(super.hashCode(), virtualNetworkAddressPrefix, subnetAddressPrefix, DNSLabelPrefix, customData, keyVaultIdAndSecret);
    }
 
    @Override
@@ -109,7 +120,8 @@ public class AzureTemplateOptions extends TemplateOptions implements Cloneable {
             && equal(this.customData, other.customData)
             && equal(this.virtualNetworkAddressPrefix, other.virtualNetworkAddressPrefix)
             && equal(this.subnetAddressPrefix, other.subnetAddressPrefix)
-            && equal(this.DNSLabelPrefix, other.DNSLabelPrefix);
+            && equal(this.DNSLabelPrefix, other.DNSLabelPrefix)
+            && equal(this.keyVaultIdAndSecret, other.keyVaultIdAndSecret);
    }
 
    @Override
@@ -119,6 +131,7 @@ public class AzureTemplateOptions extends TemplateOptions implements Cloneable {
       toString.add("virtualNetworkAddressPrefix", virtualNetworkAddressPrefix);
       toString.add("subnetAddressPrefix", subnetAddressPrefix);
       toString.add("DNSLabelPrefix", DNSLabelPrefix);
+      toString.add("keyVaultIdAndSecret", keyVaultIdAndSecret);
       return toString;
    }
 
@@ -154,6 +167,14 @@ public class AzureTemplateOptions extends TemplateOptions implements Cloneable {
       public static AzureTemplateOptions DNSLabelPrefix(String DNSLabelPrefix) {
          AzureTemplateOptions options = new AzureTemplateOptions();
          return options.DNSLabelPrefix(DNSLabelPrefix);
+      }
+
+      /**
+       * @see AzureTemplateOptions#keyVaultIdAndSecret
+       */
+      public static AzureTemplateOptions keyVaultIdAndSecret(String keyVaultIdAndSecret) {
+         AzureTemplateOptions options = new AzureTemplateOptions();
+         return options.keyVaultIdAndSecret(keyVaultIdAndSecret);
       }
    }
 }

@@ -24,7 +24,6 @@ import org.jclouds.azurecompute.arm.domain.ImageReference;
 import org.jclouds.azurecompute.arm.domain.IpConfiguration;
 import org.jclouds.azurecompute.arm.domain.IpConfigurationProperties;
 import org.jclouds.azurecompute.arm.domain.NetworkInterfaceCardProperties;
-import org.jclouds.azurecompute.arm.domain.OSProfile;
 import org.jclouds.azurecompute.arm.domain.PublicIPAddressProperties;
 import org.jclouds.azurecompute.arm.domain.ResourceDefinition;
 import org.jclouds.azurecompute.arm.domain.StorageService;
@@ -148,63 +147,31 @@ public class DeploymentTemplateBuilderTest extends BaseAzureComputeApiMockTest {
    }
 
    @Test
-   void testVirtualMachineWithSSH() {
-
-      String rsakey = new String("ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAmfk/QSF0pvnrpdz+Ah2KulGruKU+8FFBdlw938MpOysRdmp7uwpH6Z7+5VNGNdxFIAyc/W3UaZXF9hTsU8+78TlwkZpsr2mzU+ycu37XLAQ8Uv7hjsAN0DkKKPrZ9lgUUfZVKV/8E/JIAs03gIbL6zO3y7eYJQ5fNeZb+nji7tQT+YLpGq/FDegvraPKVMQbCSCZhsHyWhdPLyFlu9/30npZ0ahYOPI/KyZxFDtM/pHp88+ZAk9Icq5owaLRWcJQqrBGWqjbZnHtjdDqvHZ+C0wPhdJZPyfkHOrSYTwSQBXfX4JLRRCz3J1jf62MbQWT1o6Y4JEs1ZP1Skxu6zR96Q== mocktest");
-
-      TemplateOptions options = new AzureTemplateOptions();
-      options.authorizePublicKey(rsakey);
-
-      DeploymentTemplateBuilder builder = getMockDeploymentTemplateBuilderWithOptions(options);
-      Template template = builder.getTemplate();
-
-      DeploymentBody deploymentBody = builder.getDeploymentTemplate();
-      List<ResourceDefinition> resources = deploymentBody.template().resources();
-      Map<String, String> variables = deploymentBody.template().variables();
-
-      ResourceDefinition resource = getResourceByType(resources, "Microsoft.Compute/virtualMachines");
-      assertNotNull(resource);
-
-      VirtualMachineProperties properties = (VirtualMachineProperties) resource.properties();
-      assertEquals(properties.hardwareProfile().vmSize(), template.getHardware().getId());
-
-      ImageReference image = properties.storageProfile().imageReference();
-      assertEquals(image.publisher(), template.getImage().getProviderId());
-      assertEquals(image.offer(), template.getImage().getName());
-      assertEquals(image.sku(), template.getImage().getVersion());
-      assertEquals(image.version(), "latest");
-
-      // Check that ssh key is in place
-      OSProfile.LinuxConfiguration osConfig = properties.osProfile().linuxConfiguration();
-      assertEquals(osConfig.disablePasswordAuthentication(), "true");
-      assertTrue(osConfig.ssh().publicKeys().size() > 0);
-      assertEquals(osConfig.ssh().publicKeys().get(0).keyData(), rsakey);
-
-      assertTrue(variables.containsKey(parseVariableName(resource.name())));
-   }
-
-   @Test
    void testCustomOptions(){
       final String vnAddressPrefix = "192.168.0.0/16";
       final String subnetAddressPrefix = "192.168.1.0/24";
       final String dnsLabelPrefix = "mydnslabel";
       final String customData = "echo customData";
       final String customData64 = "ZWNobyBjdXN0b21EYXRh";
+      final String keyvaultString = "/url/to/vault/:publickeysecret";
 
       TemplateOptions options = new AzureTemplateOptions()
             .customData(customData)
             .virtualNetworkAddressPrefix(vnAddressPrefix)
             .subnetAddressPrefix(subnetAddressPrefix)
-            .DNSLabelPrefix(dnsLabelPrefix);
+            .DNSLabelPrefix(dnsLabelPrefix)
+            .keyVaultIdAndSecret(keyvaultString);
 
       assertEquals(options.as(AzureTemplateOptions.class).getCustomData(), customData);
       assertEquals(options.as(AzureTemplateOptions.class).getVirtualNetworkAddressPrefix(), vnAddressPrefix);
       assertEquals(options.as(AzureTemplateOptions.class).getSubnetAddressPrefix(), subnetAddressPrefix);
       assertEquals(options.as(AzureTemplateOptions.class).getDNSLabelPrefix(), dnsLabelPrefix);
+      assertEquals(options.as(AzureTemplateOptions.class).getKeyVaultIdAndSecret(), keyvaultString);
 
       DeploymentTemplateBuilder builder = getMockDeploymentTemplateBuilderWithOptions(options);
 
       DeploymentBody deploymentBody = builder.getDeploymentTemplate();
+
       List<ResourceDefinition> resources = deploymentBody.template().resources();
 
       ResourceDefinition networkResource = getResourceByType(resources, "Microsoft.Network/virtualNetworks");
@@ -225,6 +192,9 @@ public class DeploymentTemplateBuilderTest extends BaseAzureComputeApiMockTest {
 
       VirtualMachineProperties virtualMachineProperties = (VirtualMachineProperties) vmResource.properties();
       assertEquals(virtualMachineProperties.osProfile().customData(), customData64);
+
+      //populated when keyvault is used to get public key.
+      assertNotNull(virtualMachineProperties.osProfile().linuxConfiguration().ssh().publicKeys());
    }
 
    private Template getMockTemplate(TemplateOptions options) {
