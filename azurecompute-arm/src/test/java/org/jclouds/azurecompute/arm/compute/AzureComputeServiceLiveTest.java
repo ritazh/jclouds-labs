@@ -20,6 +20,7 @@ import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import org.jclouds.compute.ComputeServiceContext;
 import org.jclouds.compute.JettyStatements;
 import org.jclouds.compute.RunNodesException;
 import org.jclouds.compute.RunScriptOnNodesException;
@@ -36,7 +37,9 @@ import org.jclouds.scriptbuilder.domain.StatementList;
 import org.jclouds.scriptbuilder.domain.Statements;
 import org.jclouds.scriptbuilder.statements.java.InstallJDK;
 import org.jclouds.scriptbuilder.statements.login.AdminAccess;
+import org.jclouds.ssh.SshClient;
 import org.jclouds.sshj.config.SshjSshClientModule;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 import org.jclouds.providers.ProviderMetadata;
 import org.jclouds.azurecompute.arm.AzureComputeProviderMetadata;
@@ -96,7 +99,7 @@ public class AzureComputeServiceLiveTest extends BaseComputeServiceLiveTest {
       properties.setProperty(TIMEOUT_PORT_OPEN, scriptTimeout + "");
       properties.setProperty(TIMEOUT_NODE_TERMINATED, scriptTimeout + "");
       properties.setProperty(TIMEOUT_NODE_SUSPENDED, scriptTimeout + "");
-      properties.put(RESOURCE_GROUP_NAME, "a2");
+      properties.put(RESOURCE_GROUP_NAME, "a3");
 //      properties.put("jclouds.max-retries", 5);
 //      properties.put("jclouds.retries-delay-start", 5000L);
 
@@ -109,7 +112,7 @@ public class AzureComputeServiceLiveTest extends BaseComputeServiceLiveTest {
 
    }
 
-   @Override
+//   @Override
    protected Template refreshTemplate() {
       return this.template = addRunScriptToTemplateWithDelay(this.buildTemplate(this.client.templateBuilder()));
    }
@@ -165,29 +168,5 @@ public class AzureComputeServiceLiveTest extends BaseComputeServiceLiveTest {
       return this.client.runScriptOnNodesMatching(NodePredicates.runningInGroup(group), Statements.newStatementList(Statements.exec("sleep 25"), InstallJDK.fromOpenJDK()), org.jclouds.compute.options.TemplateOptions.Builder.overrideLoginCredentials(creds).nameTask("runScriptWithCreds"));
    }
 
-   @Override
-   protected void checkNodes(Iterable<? extends NodeMetadata> nodes, String group, String taskName) throws IOException {
-/*
-      Iterator var4 = nodes.iterator();
-
-      while(var4.hasNext()) {
-         NodeMetadata node = (NodeMetadata)var4.next();
-         Assert.assertNotNull(node.getProviderId());
-         Assert.assertNotNull(node.getGroup());
-         Assert.assertEquals(node.getGroup(), group);
-         Assert.assertEquals(node.getStatus(), NodeMetadata.Status.RUNNING);
-         Credentials fromStore = (Credentials)((ComputeServiceContext)this.view).utils().credentialStore().get("node#" + node.getId());
-         Assert.assertEquals(fromStore, node.getCredentials());
-
-         assert node.getPublicAddresses().size() >= 1 || node.getPrivateAddresses().size() >= 1 : "no ips in" + node;
-
-         Assert.assertNotNull(node.getCredentials());
-         if(node.getCredentials().identity != null) {
-            Assert.assertNotNull(node.getCredentials().identity);
-            this.sshPing(node, taskName);
-         }
-      }
-*/
-   }
 
 }

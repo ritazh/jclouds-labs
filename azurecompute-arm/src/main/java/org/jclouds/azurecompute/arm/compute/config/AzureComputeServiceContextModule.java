@@ -24,6 +24,7 @@ import com.google.inject.Provides;
 
 import org.jclouds.azurecompute.arm.compute.AzureComputeServiceAdapter;
 import org.jclouds.azurecompute.arm.compute.extensions.AzureComputeImageExtension;
+import org.jclouds.azurecompute.arm.compute.functions.TemplateOptionsToStatementWithoutPublicKey;
 import org.jclouds.azurecompute.arm.compute.functions.VMImageToImage;
 import org.jclouds.azurecompute.arm.compute.functions.DeploymentToNodeMetadata;
 import org.jclouds.azurecompute.arm.compute.functions.VMHardwareToHardware;
@@ -38,6 +39,7 @@ import org.jclouds.azurecompute.arm.compute.strategy.CreateResourceGroupThenCrea
 import org.jclouds.azurecompute.arm.AzureComputeApi;
 import org.jclouds.azurecompute.arm.functions.ParseJobStatus;
 
+import org.jclouds.compute.functions.TemplateOptionsToStatement;
 import org.jclouds.compute.options.TemplateOptions;
 import org.jclouds.compute.ComputeServiceAdapter;
 import org.jclouds.compute.config.ComputeServiceAdapterContextModule;
@@ -100,6 +102,7 @@ public class AzureComputeServiceContextModule
 
       bind(TemplateOptions.class).to(AzureTemplateOptions.class);
       bind(PopulateDefaultLoginCredentialsForImageStrategy.class).to(AzurePopulateDefaultLoginCredentialsForImageStrategy.class);
+      //bind(TemplateOptionsToStatement.class).to(TemplateOptionsToStatementWithoutPublicKey.class);
       bind(CreateNodesInGroupThenAddToSet.class).to(CreateResourceGroupThenCreateNodes.class);
       bind(new TypeLiteral<ImageExtension>() {
       }).to(AzureComputeImageExtension.class);
