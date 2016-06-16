@@ -22,10 +22,15 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import org.jclouds.compute.JettyStatements;
 import org.jclouds.compute.RunNodesException;
+import org.jclouds.compute.RunScriptOnNodesException;
+import org.jclouds.compute.domain.ExecResponse;
 import org.jclouds.compute.domain.NodeMetadata;
+import org.jclouds.compute.domain.OperatingSystem;
 import org.jclouds.compute.domain.Template;
 import org.jclouds.compute.internal.BaseComputeServiceLiveTest;
 import org.jclouds.compute.options.RunScriptOptions;
+import org.jclouds.compute.predicates.NodePredicates;
+import org.jclouds.domain.LoginCredentials;
 import org.jclouds.scriptbuilder.domain.Statement;
 import org.jclouds.scriptbuilder.domain.StatementList;
 import org.jclouds.scriptbuilder.domain.Statements;
@@ -45,6 +50,7 @@ import static org.jclouds.compute.config.ComputeServiceProperties.TIMEOUT_SCRIPT
 import org.jclouds.azurecompute.arm.internal.AzureLiveTestUtils;
 import com.google.inject.Module;
 
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -150,6 +156,11 @@ public class AzureComputeServiceLiveTest extends BaseComputeServiceLiveTest {
       this.trackAvailabilityOfProcessOnNode(JettyStatements.start(), "start jetty", node);
       this.client.runScriptOnNode(nodeId, JettyStatements.stop(), org.jclouds.compute.options.TemplateOptions.Builder.runAsRoot(false).wrapInInitScript(false));
       this.trackAvailabilityOfProcessOnNode(JettyStatements.start(), "start jetty", node);
+   }
+
+   @Override
+   protected Map<? extends NodeMetadata, ExecResponse> runScriptWithCreds(String group, OperatingSystem os, LoginCredentials creds) throws RunScriptOnNodesException {
+      return this.client.runScriptOnNodesMatching(NodePredicates.runningInGroup(group), Statements.newStatementList(Statements.exec("sleep 25"), InstallJDK.fromOpenJDK()), org.jclouds.compute.options.TemplateOptions.Builder.overrideLoginCredentials(creds).nameTask("runScriptWithCreds"));
    }
 
 }
