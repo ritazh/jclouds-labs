@@ -64,6 +64,7 @@ import java.util.Map;
 
 import com.google.inject.Inject;
 
+import static org.jclouds.azurecompute.arm.compute.extensions.AzureComputeImageExtension.CUSTOM_IMAGE_PREFIX;
 import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.STORAGE_API_VERSION;
 
 public class DeploymentTemplateBuilder {
@@ -167,8 +168,8 @@ public class DeploymentTemplateBuilder {
       String storageAccountName = name.replaceAll("[^A-Za-z0-9 ]", "") + "stor";
 
       String storageName = template.getImage().getName();
-      if (storageName.substring(0, 6).equals("custom")) {
-         storageAccountName = storageName.substring(6); // get group name
+      if (storageName.substring(0, CUSTOM_IMAGE_PREFIX.length()).equals(CUSTOM_IMAGE_PREFIX)) {
+         storageAccountName = storageName.substring(CUSTOM_IMAGE_PREFIX.length()); // get group name
       }
 
       variables.put("storageAccountName", storageAccountName);
@@ -385,8 +386,8 @@ public class DeploymentTemplateBuilder {
       String publisher = template.getImage().getProviderId();
       String storageName = template.getImage().getName();
       String sku = template.getImage().getDescription(); // this is actual VHD
-      if (storageName.substring(0, 6).equals("custom")) {
-         storageName = storageName.substring(6); // get group name
+      if (storageName.substring(0, CUSTOM_IMAGE_PREFIX.length()).equals(CUSTOM_IMAGE_PREFIX)) {
+         storageName = storageName.substring(CUSTOM_IMAGE_PREFIX.length()); // get group name
          cusotomImageUri = sku;
          cusotomImageUri = "https://" + storageName + ".blob.core.windows.net/system/Microsoft.Compute/Images/" + AzureComputeImageExtension.CONTAINER_NAME + "/" + cusotomImageUri;
       }

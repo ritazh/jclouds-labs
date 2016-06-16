@@ -191,14 +191,16 @@ public class DeploymentToNodeMetadata implements Function<VMDeployment, NodeMeta
 
          ImageReference imageReference = from.virtualMachine.properties().storageProfile().imageReference();
 
-         VMImage vmImage = new VMImage();
-         vmImage.publisher = imageReference.publisher();
-         vmImage.offer = imageReference.offer();
-         vmImage.sku = imageReference.sku();
-         vmImage.location = locationName;
-         vmImage.globallyAvailable = true; // TODO: fix this
-         Image image = vmImageToImage.apply(vmImage);
-         builder.imageId(image.getId());
+         if (imageReference != null) {
+            VMImage vmImage = new VMImage();
+            vmImage.publisher = imageReference.publisher();
+            vmImage.offer = imageReference.offer();
+            vmImage.sku = imageReference.sku();
+            vmImage.location = locationName;
+            vmImage.globallyAvailable = true; // TODO: fix this
+            Image image = vmImageToImage.apply(vmImage);
+            builder.imageId(image.getId());
+         }
 
          VMSize myVMSize = null;
          String vmSizeName = from.virtualMachine.properties().hardwareProfile().vmSize();

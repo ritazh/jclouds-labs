@@ -48,6 +48,7 @@ public class AzureComputeImageExtension implements ImageExtension {
    private final String group;
    private final VMImageToImage imageReferenceToImage;
    public static final String CONTAINER_NAME = "vhdsnew";
+   public static final String CUSTOM_IMAGE_PREFIX = "#";
 
    @Inject
    AzureComputeImageExtension(AzureComputeApi api, final AzureComputeServiceContextModule.AzureComputeConstants azureComputeConstants,
@@ -116,7 +117,7 @@ public class AzureComputeImageExtension implements ImageExtension {
 
       VirtualMachine vm = api.getVirtualMachineApi(group).get(id);
       String location = vm.location();
-      final VMImage ref = new VMImage("custom" + group, "custom" + storageAccountName, disks[0], disks[1], location);
+      final VMImage ref = new VMImage(CUSTOM_IMAGE_PREFIX + group, CUSTOM_IMAGE_PREFIX + storageAccountName, disks[0], disks[1], location);
 
       return userExecutor.submit(new Callable<Image>() {
          @Override

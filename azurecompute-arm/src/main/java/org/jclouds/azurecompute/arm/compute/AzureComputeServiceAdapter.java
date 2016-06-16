@@ -18,6 +18,7 @@ package org.jclouds.azurecompute.arm.compute;
 
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.jclouds.azurecompute.arm.compute.extensions.AzureComputeImageExtension.CUSTOM_IMAGE_PREFIX;
 import static org.jclouds.util.Predicates2.retry;
 import java.util.ArrayList;
 
@@ -272,10 +273,10 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
    @Override
    public VMImage getImage(final String id) {
       String[] fields = VMImageToImage.decodeFieldsFromUniqueId(id);
-      if (fields[2].substring(0, 6).equals("custom")) {
-         String storage = fields[2].substring(6, 19);
+      if (fields[2].substring(0, CUSTOM_IMAGE_PREFIX.length()).equals(CUSTOM_IMAGE_PREFIX)) {
+         String storage = fields[2].substring(CUSTOM_IMAGE_PREFIX.length());
          String vhd = fields[3];
-         VMImage ref = new VMImage("custom" + azureGroup, "custom" + storage, vhd, null, fields[0]);
+         VMImage ref = new VMImage(CUSTOM_IMAGE_PREFIX + azureGroup, CUSTOM_IMAGE_PREFIX + storage, vhd, null, fields[0]);
          return ref;
       }
 

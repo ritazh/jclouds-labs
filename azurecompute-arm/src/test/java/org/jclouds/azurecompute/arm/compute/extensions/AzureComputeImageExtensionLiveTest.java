@@ -97,7 +97,7 @@ public class AzureComputeImageExtensionLiveTest extends BaseImageExtensionLiveTe
 
       templateBuilder.osFamily(OsFamily.UBUNTU);
       templateBuilder.osVersionMatches("14.04");
-      templateBuilder.hardwareId("Standard_A0");
+      templateBuilder.hardwareId("Standard_A5");
       templateBuilder.locationId("westus");
       final Template template = templateBuilder.build();
 
@@ -142,7 +142,7 @@ public class AzureComputeImageExtensionLiveTest extends BaseImageExtensionLiveTe
       String imageId = img.getId();
 
       templateBuilder.imageId(imageId);
-      templateBuilder.hardwareId("Standard_A0");
+      templateBuilder.hardwareId("Standard_A5");
       templateBuilder.locationId("westus");
       final Template template2 = templateBuilder.build();
 
