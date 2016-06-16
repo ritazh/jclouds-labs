@@ -188,12 +188,16 @@ public class DeploymentTemplateBuilderTest extends BaseAzureComputeApiMockTest {
       final String vnAddressPrefix = "192.168.0.0/16";
       final String subnetAddressPrefix = "192.168.1.0/24";
       final String dnsLabelPrefix = "mydnslabel";
+      final String customData = "echo customData";
+      final String customData64 = "ZWNobyBjdXN0b21EYXRh";
 
       TemplateOptions options = new AzureTemplateOptions()
+            .customData(customData)
             .virtualNetworkAddressPrefix(vnAddressPrefix)
             .subnetAddressPrefix(subnetAddressPrefix)
             .DNSLabelPrefix(dnsLabelPrefix);
 
+      assertEquals(options.as(AzureTemplateOptions.class).getCustomData(), customData);
       assertEquals(options.as(AzureTemplateOptions.class).getVirtualNetworkAddressPrefix(), vnAddressPrefix);
       assertEquals(options.as(AzureTemplateOptions.class).getSubnetAddressPrefix(), subnetAddressPrefix);
       assertEquals(options.as(AzureTemplateOptions.class).getDNSLabelPrefix(), dnsLabelPrefix);
@@ -215,6 +219,12 @@ public class DeploymentTemplateBuilderTest extends BaseAzureComputeApiMockTest {
 
       PublicIPAddressProperties ipProperties = (PublicIPAddressProperties) publicIpResource.properties();
       assertEquals(ipProperties.dnsSettings().domainNameLabel(), dnsLabelPrefix);
+
+      ResourceDefinition vmResource = getResourceByType(resources, "Microsoft.Compute/virtualMachines");
+      assertNotNull(vmResource);
+
+      VirtualMachineProperties virtualMachineProperties = (VirtualMachineProperties) vmResource.properties();
+      assertEquals(virtualMachineProperties.osProfile().customData(), customData64);
    }
 
    private Template getMockTemplate(TemplateOptions options) {

@@ -62,6 +62,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.google.common.io.BaseEncoding.base64;
 import com.google.inject.Inject;
 
 import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.STORAGE_API_VERSION;
@@ -367,6 +368,11 @@ public class DeploymentTemplateBuilder {
          profileBuilder.linuxConfiguration(configuration);
       } else {
          profileBuilder.adminPassword(loginPassword);
+      }
+
+      if (!Strings.isNullOrEmpty(options.getCustomData())){
+         String encodedCustomData = base64().encode(options.getCustomData().getBytes());
+         profileBuilder.customData(encodedCustomData);
       }
 
       OSProfile osProfile = profileBuilder.build();
