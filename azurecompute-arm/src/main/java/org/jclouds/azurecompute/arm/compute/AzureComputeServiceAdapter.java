@@ -151,7 +151,7 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
       NodeAndInitialCredentials<VMDeployment> credential = null;
 
       if (template.getOptions().getPublicKey() != null){
-         String privateKey = template.getOptions().getPrivateKey(); //this can be null as it will use the key privated in ssh-agent
+         String privateKey = template.getOptions().getPrivateKey();
          credential = new NodeAndInitialCredentials<VMDeployment>(deployment, name,
          LoginCredentials.builder().user(loginUser).privateKey(privateKey).authenticateSudo(true).build());
       } else {

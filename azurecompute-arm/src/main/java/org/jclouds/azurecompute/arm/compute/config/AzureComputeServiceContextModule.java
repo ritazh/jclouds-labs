@@ -49,6 +49,19 @@ import org.jclouds.compute.reference.ComputeServiceConstants;
 import org.jclouds.compute.strategy.CreateNodesInGroupThenAddToSet;
 import org.jclouds.compute.reference.ComputeServiceConstants.Timeouts;
 import org.jclouds.compute.reference.ComputeServiceConstants.PollPeriod;
+
+import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.OPERATION_TIMEOUT;
+import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.OPERATION_POLL_INITIAL_PERIOD;
+import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.OPERATION_POLL_MAX_PERIOD;
+import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.TCP_RULE_FORMAT;
+import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.TCP_RULE_REGEXP;
+import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.RESOURCE_GROUP_NAME;
+import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.IMAGE_PUBLISHERS;
+import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.DEFAULT_IMAGE_LOGIN;
+import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.DEFAULT_VNET_ADDRESS_SPACE_PREFIX;
+import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.DEFAULT_SUBNET_ADDRESS_PREFIX;
+import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.TIMEOUT_RESOURCE_DELETED;
+
 import static org.jclouds.util.Predicates2.retry;
 import static org.jclouds.compute.config.ComputeServiceProperties.TIMEOUT_NODE_TERMINATED;
 
@@ -61,15 +74,6 @@ import com.google.common.annotations.VisibleForTesting;
 import java.net.URI;
 
 
-import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.IMAGE_PUBLISHERS;
-import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.RESOURCE_GROUP_NAME;
-import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.OPERATION_TIMEOUT;
-import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.OPERATION_POLL_INITIAL_PERIOD;
-import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.OPERATION_POLL_MAX_PERIOD;
-import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.TCP_RULE_FORMAT;
-import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.TCP_RULE_REGEXP;
-import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.DEFAULT_IMAGE_LOGIN;
-import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.TIMEOUT_RESOURCE_DELETED;
 import org.jclouds.compute.extensions.ImageExtension;
 import org.jclouds.compute.strategy.PopulateDefaultLoginCredentialsForImageStrategy;
 import org.jclouds.azurecompute.arm.compute.AzureComputeService;
@@ -143,6 +147,14 @@ public class AzureComputeServiceContextModule
       @Inject
       private String azureDefaultImageLoginProperty;
 
+      @Named(DEFAULT_VNET_ADDRESS_SPACE_PREFIX)
+      @Inject
+      private String azureDefaultVnetAddressPrefixProperty;
+
+      @Named(DEFAULT_SUBNET_ADDRESS_PREFIX)
+      @Inject
+      private String azureDefaultSubnetAddressPrefixProperty;
+
       public Long operationTimeout() {
          return Long.parseLong(operationTimeoutProperty);
       }
@@ -157,6 +169,14 @@ public class AzureComputeServiceContextModule
 
       public String azureDefaultImageLogin() {
          return azureDefaultImageLoginProperty;
+      }
+
+      public String azureDefaultVnetAddressPrefixProperty() {
+         return azureDefaultVnetAddressPrefixProperty;
+      }
+
+      public String azureDefaultSubnetAddressPrefixProperty() {
+         return azureDefaultSubnetAddressPrefixProperty;
       }
 
       public Integer operationPollInitialPeriod() {

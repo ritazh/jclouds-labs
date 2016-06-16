@@ -32,7 +32,6 @@ import org.jclouds.azurecompute.arm.domain.NetworkInterfaceCard;
 import org.jclouds.azurecompute.arm.domain.NetworkSecurityGroup;
 import org.jclouds.azurecompute.arm.domain.PublicIPAddress;
 import org.jclouds.azurecompute.arm.domain.VirtualMachine;
-import org.jclouds.azurecompute.arm.domain.VirtualNetwork;
 import org.jclouds.compute.reference.ComputeServiceConstants;
 import org.jclouds.logging.Logger;
 import org.jclouds.azurecompute.arm.domain.StorageService;
@@ -71,56 +70,35 @@ public class CleanupResources implements Function<String, Boolean> {
 
       logger.debug("Destroying %s ...", id);
       String storageAccountName = id.replaceAll("[^A-Za-z0-9 ]", "") + "stor";
-
       String group = azureGroup;
 
-      String deployGroup = "";
-      if (id.contains("-")) {
-         deployGroup = id.substring(0, id.lastIndexOf("-"));
-      } else {
-         deployGroup = azureGroup;
-      }
-
-      // Get VM
       VirtualMachine vm = api.getVirtualMachineApi(group).get(id);
-
       if (vm != null) {
-
-         // Delete VM
          URI uri = api.getVirtualMachineApi(group).delete(id);
          if (uri != null) {
-
             boolean jobDone = nodeTerminated.apply(uri);
             boolean storageAcctDeleteStatus = false;
             boolean deploymentDeleteStatus = false;
 
             if (jobDone) {
-               // Get storage account
                StorageService ss = api.getStorageAccountApi(group).get(storageAccountName);
                if (ss != null) {
-                  // Delete storage account
                   storageAcctDeleteStatus = api.getStorageAccountApi(group).delete(storageAccountName);
                } else {
                   storageAcctDeleteStatus = true;
                }
-               // Get deployment
                Deployment deployment = api.getDeploymentApi(group).get(id);
                if (deployment != null) {
-                  // Delete deployment
                   uri = api.getDeploymentApi(group).delete(id);
                   jobDone = resourceDeleted.apply(uri);
                   if (jobDone) {
                      deploymentDeleteStatus = true;
-
                   }
                } else {
                   deploymentDeleteStatus = true;
                }
-
-                  // Get NIC
                NetworkInterfaceCard nic = api.getNetworkInterfaceCardApi(group).get(id + "nic");
                if (nic != null) {
-                  // Delete NIC
                   uri = api.getNetworkInterfaceCardApi(group).delete(id + "nic");
                   if (uri != null) {
                      jobDone = resourceDeleted.apply(uri);
@@ -131,16 +109,6 @@ public class CleanupResources implements Function<String, Boolean> {
                            ipDeleteStatus = api.getPublicIPAddressApi(group).delete(id + "publicip");
                         } else {
                            ipDeleteStatus = true;
-                        }
-
-                        // Get Virtual network
-                        boolean vnetDeleteStatus = false;
-                        VirtualNetwork vn = api.getVirtualNetworkApi(group).get(id + "virtualnetwork");
-                        if (vn != null) {
-                           // Delete Virtual network
-                           vnetDeleteStatus = api.getVirtualNetworkApi(group).delete(id + "virtualnetwork");
-                        } else {
-                           vnetDeleteStatus = true;
                         }
 
                         // Get NSG
@@ -158,8 +126,7 @@ public class CleanupResources implements Function<String, Boolean> {
                            nsgDeleteStatus = true;
                         }
 
-                        return deploymentDeleteStatus && storageAcctDeleteStatus && ipDeleteStatus && vnetDeleteStatus && nsgDeleteStatus;
-
+                        return deploymentDeleteStatus && storageAcctDeleteStatus && ipDeleteStatus && nsgDeleteStatus;
                      } else {
                         return false;
                      }
@@ -169,9 +136,7 @@ public class CleanupResources implements Function<String, Boolean> {
                } else {
                   return false;
                }
-
-
-               } else {
+            } else {
                return false;
             }
          } else {

@@ -48,6 +48,7 @@ import java.util.logging.Logger;
 
 public class BaseAzureComputeApiLiveTest extends AbstractAzureComputeApiLiveTest {
    public static final String LOCATION = "westeurope";
+   public static final String LOCATIONDESCRIPTION = "West Europe";
 
    public static final String DEFAULT_SUBNET_ADDRESS_SPACE = "10.2.0.0/23";
 
@@ -60,6 +61,8 @@ public class BaseAzureComputeApiLiveTest extends AbstractAzureComputeApiLiveTest
    public static final String NETWORKINTERFACECARD_NAME = "jcloudsNic";
 
    private String resourceGroupName = null;
+
+   private String virtualNetworkName = null;
 
    protected StorageService storageService;
 
@@ -117,6 +120,7 @@ public class BaseAzureComputeApiLiveTest extends AbstractAzureComputeApiLiveTest
       api.getResourceGroupApi().delete(name);
    }
 
+
    @BeforeClass
    @Override
    public void setup() {
@@ -130,6 +134,9 @@ public class BaseAzureComputeApiLiveTest extends AbstractAzureComputeApiLiveTest
       super.tearDown();
       Boolean status = api.getStorageAccountApi(getResourceGroupName()).delete(getStorageServiceName());
       assertTrue(status.booleanValue());
+      Boolean deleteVnetStatus = api.getVirtualNetworkApi(getResourceGroupName()).delete(virtualNetworkName);
+      assertTrue(deleteVnetStatus.booleanValue());
+
       deleteResourceGroup(getResourceGroupName());
    }
 
@@ -173,6 +180,7 @@ public class BaseAzureComputeApiLiveTest extends AbstractAzureComputeApiLiveTest
 
 
       vn = vnApi.createOrUpdate(VIRTUAL_NETWORK_NAME, LOCATION, virtualNetworkProperties);
+      this.virtualNetworkName = virtualNetworkName;
       return vn;
    }
 

@@ -29,7 +29,6 @@ import org.jclouds.azurecompute.arm.domain.ResourceDefinition;
 import org.jclouds.azurecompute.arm.domain.StorageService;
 import org.jclouds.azurecompute.arm.domain.StorageService.StorageServiceProperties;
 import org.jclouds.azurecompute.arm.domain.VirtualMachineProperties;
-import org.jclouds.azurecompute.arm.domain.VirtualNetwork.VirtualNetworkProperties;
 import org.jclouds.azurecompute.arm.util.DeploymentTemplateBuilder;
 import org.jclouds.compute.domain.Hardware;
 import org.jclouds.compute.domain.HardwareBuilder;
@@ -56,6 +55,8 @@ import static org.testng.Assert.fail;
 public class DeploymentTemplateBuilderTest extends BaseAzureComputeApiMockTest {
 
    final String group = "jcgroup";
+   final String vnetName = group + "virtualnetwork";
+   final String subnetId = "";
 
    @Test
    public void testResourceGroup() {
@@ -68,22 +69,6 @@ public class DeploymentTemplateBuilderTest extends BaseAzureComputeApiMockTest {
 
       StorageServiceProperties properties = (StorageServiceProperties) resource.properties();
       assertEquals(properties.accountType(), StorageService.AccountType.Standard_LRS);
-      assertTrue(variables.containsKey(parseVariableName(resource.name())));
-   }
-
-   @Test
-   void testVirtualNetwork() {
-      DeploymentTemplateBuilder builder = getMockDeploymentTemplateBuilderWithEmptyOptions();
-      DeploymentBody deploymentBody = builder.getDeploymentTemplate();
-      List<ResourceDefinition> resources = deploymentBody.template().resources();
-      Map<String, String> variables = deploymentBody.template().variables();
-
-      ResourceDefinition resource = getResourceByType(resources, "Microsoft.Network/virtualNetworks");
-
-      VirtualNetworkProperties properties = (VirtualNetworkProperties) resource.properties();
-      assertTrue(properties.addressSpace().addressPrefixes().size() > 0);
-      assertTrue(properties.subnets().size() > 0);
-
       assertTrue(variables.containsKey(parseVariableName(resource.name())));
    }
 
@@ -148,24 +133,21 @@ public class DeploymentTemplateBuilderTest extends BaseAzureComputeApiMockTest {
 
    @Test
    void testCustomOptions(){
-      final String vnAddressPrefix = "192.168.0.0/16";
-      final String subnetAddressPrefix = "192.168.1.0/24";
       final String dnsLabelPrefix = "mydnslabel";
       final String customData = "echo customData";
       final String customData64 = "ZWNobyBjdXN0b21EYXRh";
       final String keyvaultString = "/url/to/vault/:publickeysecret";
 
-      TemplateOptions options = new AzureTemplateOptions()
+      AzureTemplateOptions options = new AzureTemplateOptions()
             .customData(customData)
-            .virtualNetworkAddressPrefix(vnAddressPrefix)
-            .subnetAddressPrefix(subnetAddressPrefix)
             .DNSLabelPrefix(dnsLabelPrefix)
             .keyVaultIdAndSecret(keyvaultString);
 
+      options.virtualNetworkName(vnetName);
+      options.subnetId(subnetId);
+
       assertEquals(options.as(AzureTemplateOptions.class).getCustomData(), customData);
-      assertEquals(options.as(AzureTemplateOptions.class).getVirtualNetworkAddressPrefix(), vnAddressPrefix);
-      assertEquals(options.as(AzureTemplateOptions.class).getSubnetAddressPrefix(), subnetAddressPrefix);
-      assertEquals(options.as(AzureTemplateOptions.class).getDNSLabelPrefix(), dnsLabelPrefix);
+      assertEquals(options.getDNSLabelPrefix(), dnsLabelPrefix);
       assertEquals(options.as(AzureTemplateOptions.class).getKeyVaultIdAndSecret(), keyvaultString);
 
       DeploymentTemplateBuilder builder = getMockDeploymentTemplateBuilderWithOptions(options);
@@ -173,14 +155,6 @@ public class DeploymentTemplateBuilderTest extends BaseAzureComputeApiMockTest {
       DeploymentBody deploymentBody = builder.getDeploymentTemplate();
 
       List<ResourceDefinition> resources = deploymentBody.template().resources();
-
-      ResourceDefinition networkResource = getResourceByType(resources, "Microsoft.Network/virtualNetworks");
-      assertNotNull(networkResource);
-
-      VirtualNetworkProperties properties = (VirtualNetworkProperties) networkResource.properties();
-      assertEquals(properties.addressSpace().addressPrefixes().get(0), vnAddressPrefix);
-      assertEquals(properties.subnets().get(0).properties().addressPrefix(), subnetAddressPrefix);
-
       ResourceDefinition publicIpResource = getResourceByType(resources, "Microsoft.Network/publicIPAddresses");
       assertNotNull(publicIpResource);
 
@@ -198,6 +172,9 @@ public class DeploymentTemplateBuilderTest extends BaseAzureComputeApiMockTest {
    }
 
    private Template getMockTemplate(TemplateOptions options) {
+      ((AzureTemplateOptions)options).virtualNetworkName(vnetName);
+      ((AzureTemplateOptions)options).subnetId(subnetId);
+
       Location provider = (new LocationBuilder()).scope(LocationScope.PROVIDER).id("azurecompute-arm").description("azurecompute-arm").build();
       Location region = (new LocationBuilder()).scope(LocationScope.REGION).id("northeurope").description("North Europe").parent(provider).build();
       OperatingSystem os = OperatingSystem.builder().name("osName").version("osVersion").description("osDescription").arch("X86_32").build();
@@ -208,13 +185,19 @@ public class DeploymentTemplateBuilderTest extends BaseAzureComputeApiMockTest {
    }
 
    private DeploymentTemplateBuilder getMockDeploymentTemplateBuilderWithEmptyOptions() {
-      TemplateOptions options = new AzureTemplateOptions();
+      AzureTemplateOptions options = new AzureTemplateOptions();
+      options.virtualNetworkName(vnetName);
+      options.subnetId(subnetId);
+
       Template template = getMockTemplate(options);
       DeploymentTemplateBuilder templateBuilder = api.deploymentTemplateFactory().create(group, "mydeployment", template);
       return templateBuilder;
    }
 
    private DeploymentTemplateBuilder getMockDeploymentTemplateBuilderWithOptions(TemplateOptions options) {
+      ((AzureTemplateOptions)options).virtualNetworkName(vnetName);
+      ((AzureTemplateOptions)options).subnetId(subnetId);
+
       Template template = getMockTemplate(options);
       DeploymentTemplateBuilder templateBuilder = api.deploymentTemplateFactory().create(group, "mydeployment", template);
       return templateBuilder;

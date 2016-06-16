@@ -42,14 +42,10 @@ import org.jclouds.azurecompute.arm.domain.OSProfile;
 import org.jclouds.azurecompute.arm.domain.PublicIPAddressProperties;
 import org.jclouds.azurecompute.arm.domain.StorageProfile;
 import org.jclouds.azurecompute.arm.domain.StorageService;
-import org.jclouds.azurecompute.arm.domain.Subnet;
 import org.jclouds.azurecompute.arm.domain.TemplateParameterType;
 import org.jclouds.azurecompute.arm.domain.VHD;
 import org.jclouds.azurecompute.arm.domain.VirtualMachineProperties;
 import org.jclouds.azurecompute.arm.domain.StorageService.StorageServiceProperties;
-import org.jclouds.azurecompute.arm.domain.Subnet.SubnetProperties;
-import org.jclouds.azurecompute.arm.domain.VirtualNetwork.VirtualNetworkProperties;
-import org.jclouds.azurecompute.arm.domain.VirtualNetwork.AddressSpace;
 import org.jclouds.azurecompute.arm.domain.IdReference;
 import org.jclouds.azurecompute.arm.domain.ResourceDefinition;
 import org.jclouds.azurecompute.arm.domain.NetworkSecurityGroupProperties;
@@ -76,6 +72,7 @@ public class DeploymentTemplateBuilder {
    }
 
    private final String name;
+   private final String azureGroup;
    private final String group;
    private final Template template;
    private final Json json;
@@ -91,10 +88,6 @@ public class DeploymentTemplateBuilder {
    private AzureComputeServiceContextModule.AzureComputeConstants azureComputeConstants;
 
    private static final String DEPLOYMENT_MODE = "Incremental";
-   private static final String DEFAULT_DATA_DISK_SIZE = "1023";
-
-   private static final String DEFAULT_DEFAULT_VN_ADDRESS_SPACE_PREFIX = "10.0.0.0/16";
-   private static final String DEFAULT_SUBNET_ADDRESS_PREFIX = "10.0.0.0/24";
 
    @Inject
    DeploymentTemplateBuilder(Json json, @Assisted("group") String group, @Assisted("name") String name, @Assisted Template template,
@@ -111,6 +104,7 @@ public class DeploymentTemplateBuilder {
       this.json = json;
 
       this.azureComputeConstants = azureComputeConstants;
+      this.azureGroup = this.azureComputeConstants.azureResourceGroup();
 
       String[] defaultLogin = this.azureComputeConstants.azureDefaultImageLogin().split(":");
       String defaultUser = null;
@@ -140,7 +134,6 @@ public class DeploymentTemplateBuilder {
    public DeploymentBody getDeploymentTemplate() {
 
       addStorageResource();
-      addVirtualNetworkResource();
       addPublicIpAddress();
       addNetworkSecurityGroup();
       addNetworkInterfaceCard();
@@ -177,10 +170,6 @@ public class DeploymentTemplateBuilder {
       return json.toJson(properties);
    }
 
-   private String getValueOrDefault(String value, String defaultValue){
-      return Strings.isNullOrEmpty(value) ? defaultValue : value;
-   }
-
    private void addStorageResource() {
       String storageAccountName = name.replaceAll("[^A-Za-z0-9 ]", "") + "stor";
 
@@ -204,43 +193,6 @@ public class DeploymentTemplateBuilder {
             .build();
 
       resources.add(storageAccount);
-   }
-
-   private void addVirtualNetworkResource() {
-      String virtualNetworkName = name + "virtualnetwork";
-
-      String subnetName = name + "subnet";
-      variables.put("virtualNetworkName", virtualNetworkName);
-      variables.put("virtualNetworkReference", "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]");
-      variables.put("subnetName", subnetName);
-      variables.put("subnetReference", "[concat(variables('virtualNetworkReference'),'/subnets/',variables('subnetName'))]");
-
-      String virtualNetworkAddressPrefix = getValueOrDefault(options.getVirtualNetworkAddressPrefix(), DEFAULT_DEFAULT_VN_ADDRESS_SPACE_PREFIX);
-      String subnetAddressPrefix = getValueOrDefault(options.getSubnetAddressPrefix(), DEFAULT_SUBNET_ADDRESS_PREFIX);
-
-      VirtualNetworkProperties properties = VirtualNetworkProperties.builder()
-            .addressSpace(
-                  AddressSpace.create(Arrays.asList(virtualNetworkAddressPrefix))
-            )
-            .subnets(
-                  Arrays.asList(
-                        Subnet.create("[variables('subnetName')]", null, null,
-                              SubnetProperties.builder()
-                                    .addressPrefix(subnetAddressPrefix).build()
-                        ))
-            )
-            .build();
-
-
-      ResourceDefinition virtualNetwork = ResourceDefinition.builder()
-            .name("[variables('virtualNetworkName')]")
-            .type("Microsoft.Network/virtualNetworks")
-            .location(location)
-            .apiVersion(STORAGE_API_VERSION)
-            .properties(properties)
-            .build();
-
-      resources.add(virtualNetwork);
    }
 
    private void addPublicIpAddress() {
@@ -274,7 +226,11 @@ public class DeploymentTemplateBuilder {
       List<IpConfiguration> ipConfigurations = new ArrayList<IpConfiguration>();
 
       String ipConfigurationName = name + "ipconfig";
+      String subnetName = options.getSubnetId();
+      String vnetName = options.getVirtualNetworkName();
+
       variables.put("ipConfigurationName", ipConfigurationName);
+      variables.put("subnetReference", subnetName);
 
       IpConfiguration ipConfig = IpConfiguration.create(ipConfigurationName, null, null, null,
             IpConfigurationProperties.builder()
@@ -292,8 +248,7 @@ public class DeploymentTemplateBuilder {
          networkSecurityGroup = IdReference.create("[variables('networkSecurityGroupNameReference')]");
       }
 
-      ArrayList<String> depends = new ArrayList<String>(Arrays.asList("[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]",
-              "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]"));
+      ArrayList<String> depends = new ArrayList<String>(Arrays.asList("[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]"));
 
       NetworkInterfaceCardProperties.Builder networkInterfaceCardPropertiesBuilder = NetworkInterfaceCardProperties.builder();
       networkInterfaceCardPropertiesBuilder.ipConfigurations(ipConfigurations);

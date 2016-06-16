@@ -64,6 +64,7 @@ import java.util.logging.Logger;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.jclouds.compute.options.RunScriptOptions.Builder.nameTask;
 
+
 /**
  * Live tests for the {@link org.jclouds.compute.ComputeService} integration.
  */
@@ -121,17 +122,6 @@ public class AzureComputeServiceLiveTest extends BaseComputeServiceLiveTest {
       template.getOptions().runScript(Statements.newStatementList(new Statement[]{AdminAccess.standard(), Statements.exec("sleep 50"), InstallJDK.fromOpenJDK()}));
       return template;
    }
-
-/*
-   void assertLocationSameOrChild(Location test, Location expected) {
-      if (!test.equals(expected)) {
-         Assert.assertEquals(test.getParent().getId(), expected.getId());
-      } else {
-         Assert.assertEquals(test, expected);
-      }
-
-   }
-   */
 
    @Override
    @Test(
