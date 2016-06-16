@@ -16,7 +16,6 @@
  */
 package org.jclouds.azurecompute.arm.compute.strategy;
 
-import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.compute.domain.internal.ImageImpl;
 import org.jclouds.compute.strategy.PopulateDefaultLoginCredentialsForImageStrategy;
 import org.jclouds.domain.Credentials;

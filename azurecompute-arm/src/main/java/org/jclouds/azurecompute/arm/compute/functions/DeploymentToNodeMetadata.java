@@ -196,6 +196,7 @@ public class DeploymentToNodeMetadata implements Function<VMDeployment, NodeMeta
          vmImage.offer = imageReference.offer();
          vmImage.sku = imageReference.sku();
          vmImage.location = locationName;
+         vmImage.globallyAvailable = true; // TODO: fix this
          Image image = vmImageToImage.apply(vmImage);
          builder.imageId(image.getId());
 

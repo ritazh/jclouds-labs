@@ -44,7 +44,6 @@ import org.jclouds.azurecompute.arm.domain.StorageService;
 import org.jclouds.azurecompute.arm.domain.Subnet;
 import org.jclouds.azurecompute.arm.domain.VHD;
 import org.jclouds.azurecompute.arm.domain.VirtualMachineProperties;
-import org.jclouds.compute.options.TemplateOptions;
 import org.jclouds.azurecompute.arm.domain.StorageService.StorageServiceProperties;
 import org.jclouds.azurecompute.arm.domain.Subnet.SubnetProperties;
 import org.jclouds.azurecompute.arm.domain.VirtualNetwork.VirtualNetworkProperties;

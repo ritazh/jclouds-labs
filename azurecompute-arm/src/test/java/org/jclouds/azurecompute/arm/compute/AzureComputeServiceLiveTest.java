@@ -16,29 +16,22 @@
  */
 package org.jclouds.azurecompute.arm.compute;
 
-import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
-import com.google.common.util.concurrent.ListenableFuture;
 import org.jclouds.compute.JettyStatements;
 import org.jclouds.compute.RunNodesException;
-import org.jclouds.compute.domain.ExecResponse;
 import org.jclouds.compute.domain.NodeMetadata;
-import org.jclouds.compute.domain.OperatingSystem;
+import org.jclouds.compute.domain.Template;
 import org.jclouds.compute.internal.BaseComputeServiceLiveTest;
 import org.jclouds.compute.options.RunScriptOptions;
-import org.jclouds.compute.predicates.NodePredicates;
-import org.jclouds.domain.Location;
-import org.jclouds.domain.LoginCredentials;
 import org.jclouds.scriptbuilder.domain.Statement;
+import org.jclouds.scriptbuilder.domain.StatementList;
 import org.jclouds.scriptbuilder.domain.Statements;
 import org.jclouds.scriptbuilder.statements.java.InstallJDK;
 import org.jclouds.scriptbuilder.statements.login.AdminAccess;
 import org.jclouds.sshj.config.SshjSshClientModule;
-import org.testng.Assert;
 import org.testng.annotations.Test;
 import org.jclouds.providers.ProviderMetadata;
 import org.jclouds.azurecompute.arm.AzureComputeProviderMetadata;
@@ -51,16 +44,14 @@ import static org.jclouds.compute.config.ComputeServiceProperties.TIMEOUT_PORT_O
 import static org.jclouds.compute.config.ComputeServiceProperties.TIMEOUT_SCRIPT_COMPLETE;
 import org.jclouds.azurecompute.arm.internal.AzureLiveTestUtils;
 import com.google.inject.Module;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.NoSuchElementException;
+
 import java.util.Properties;
-import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static org.jclouds.compute.options.RunScriptOptions.Builder.nameTask;
 
 /**
  * Live tests for the {@link org.jclouds.compute.ComputeService} integration.
@@ -68,6 +59,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Test(groups = "live", singleThreaded = true, testName = "AzureComputeServiceLiveTest")
 public class AzureComputeServiceLiveTest extends BaseComputeServiceLiveTest {
    //public String azureGroup;
+   protected int nonBlockDurationSeconds = 30;
 
    public AzureComputeServiceLiveTest() {
       provider = "azurecompute-arm";
@@ -96,7 +88,7 @@ public class AzureComputeServiceLiveTest extends BaseComputeServiceLiveTest {
       properties.setProperty(TIMEOUT_PORT_OPEN, scriptTimeout + "");
       properties.setProperty(TIMEOUT_NODE_TERMINATED, scriptTimeout + "");
       properties.setProperty(TIMEOUT_NODE_SUSPENDED, scriptTimeout + "");
-      properties.put(RESOURCE_GROUP_NAME, "a4");
+      properties.put(RESOURCE_GROUP_NAME, "a2");
 //      properties.put("jclouds.max-retries", 5);
 //      properties.put("jclouds.retries-delay-start", 5000L);
 
@@ -109,33 +101,26 @@ public class AzureComputeServiceLiveTest extends BaseComputeServiceLiveTest {
 
    }
 
-
-   @Test(
-         enabled = true
-   )
-   public void testCreateTwoNo() throws Exception {
-      this.template = this.buildTemplate(this.client.templateBuilder());
-      this.template.getOptions().runScript(Statements.newStatementList(new Statement[]{AdminAccess.standard(), InstallJDK.fromOpenJDK()}));
-
-      try {
-         this.nodes = Sets.newTreeSet(this.client.createNodesInGroup(this.group, 2, this.template));
-      } catch (RunNodesException var3) {
-         this.nodes = Sets.newTreeSet(Iterables.concat(var3.getSuccessfulNodes(), var3.getNodeErrors().keySet()));
-         throw var3;
-      }
-
-      Assert.assertEquals(this.nodes.size(), 2, "expected two nodes but was " + this.nodes);
-      this.checkNodes(this.nodes, this.group, "bootstrap");
-      NodeMetadata node1 = (NodeMetadata)this.nodes.first();
-      NodeMetadata node2 = (NodeMetadata)this.nodes.last();
-//      this.assertLocationSameOrChild((Location) Preconditions.checkNotNull(node1.getLocation(), "location of %s", new Object[]{node1}), this.template.getLocation());
-//      this.assertLocationSameOrChild((Location)Preconditions.checkNotNull(node2.getLocation(), "location of %s", new Object[]{node2}), this.template.getLocation());
-      this.checkImageIdMatchesTemplate(node1);
-      this.checkImageIdMatchesTemplate(node2);
-      this.checkOsMatchesTemplate(node1);
-      this.checkOsMatchesTemplate(node2);
+   @Override
+   protected Template refreshTemplate() {
+      return this.template = addRunScriptToTemplateWithDelay(this.buildTemplate(this.client.templateBuilder()));
    }
 
+   protected static Template addRunScriptToTemplateWithDelay(Template template) {
+      template.getOptions().runScript(Statements.newStatementList(new Statement[]{AdminAccess.standard(), Statements.exec("sleep 50"), InstallJDK.fromOpenJDK()}));
+      return template;
+   }
+
+/*
+   void assertLocationSameOrChild(Location test, Location expected) {
+      if (!test.equals(expected)) {
+         Assert.assertEquals(test.getParent().getId(), expected.getId());
+      } else {
+         Assert.assertEquals(test, expected);
+      }
+
+   }
+   */
 
    @Override
    @Test(
@@ -144,4 +129,27 @@ public class AzureComputeServiceLiveTest extends BaseComputeServiceLiveTest {
    public void weCanCancelTasks(NodeMetadata node) throws InterruptedException, ExecutionException {
       return;
    }
+
+   @Override
+   protected void createAndRunAServiceInGroup(String group) throws RunNodesException {
+      ImmutableMap userMetadata = ImmutableMap.of("test", group);
+      ImmutableSet tags = ImmutableSet.of(group);
+      Stopwatch watch = Stopwatch.createStarted();
+      this.template = this.buildTemplate(this.client.templateBuilder());
+      this.template.getOptions().inboundPorts(new int[]{22, 8080}).blockOnPort(22, 300).userMetadata(userMetadata).tags(tags);
+      NodeMetadata node = (NodeMetadata) Iterables.getOnlyElement(this.client.createNodesInGroup(group, 1, this.template));
+      long createSeconds = watch.elapsed(TimeUnit.SECONDS);
+      String nodeId = node.getId();
+      this.checkUserMetadataContains(node, userMetadata);
+      this.checkTagsInNodeEquals(node, tags);
+      Logger.getAnonymousLogger().info(String.format("<< available node(%s) os(%s) in %ss", new Object[]{node.getId(), node.getOperatingSystem(), Long.valueOf(createSeconds)}));
+      watch.reset().start();
+      this.client.runScriptOnNode(nodeId, new StatementList(Statements.exec("sleep 50"), JettyStatements.install()), nameTask("configure-jetty"));
+      long configureSeconds = watch.elapsed(TimeUnit.SECONDS);
+      Logger.getAnonymousLogger().info(String.format("<< configured node(%s) with %s and jetty %s in %ss", new Object[]{nodeId, this.exec(nodeId, "java -fullversion"), this.exec(nodeId, JettyStatements.version()), Long.valueOf(configureSeconds)}));
+      this.trackAvailabilityOfProcessOnNode(JettyStatements.start(), "start jetty", node);
+      this.client.runScriptOnNode(nodeId, JettyStatements.stop(), org.jclouds.compute.options.TemplateOptions.Builder.runAsRoot(false).wrapInInitScript(false));
+      this.trackAvailabilityOfProcessOnNode(JettyStatements.start(), "start jetty", node);
+   }
+
 }

@@ -29,6 +29,7 @@ import org.jclouds.azurecompute.arm.AzureComputeApi;
 import org.jclouds.azurecompute.arm.compute.config.AzureComputeServiceContextModule;
 import org.jclouds.azurecompute.arm.domain.Deployment;
 import org.jclouds.azurecompute.arm.domain.NetworkInterfaceCard;
+import org.jclouds.azurecompute.arm.domain.NetworkSecurityGroup;
 import org.jclouds.azurecompute.arm.domain.PublicIPAddress;
 import org.jclouds.azurecompute.arm.domain.VirtualMachine;
 import org.jclouds.azurecompute.arm.domain.VirtualNetwork;
@@ -116,9 +117,9 @@ public class CleanupResources implements Function<String, Boolean> {
                   deploymentDeleteStatus = true;
                }
 
-               // Get NIC
+                  // Get NIC
                NetworkInterfaceCard nic = api.getNetworkInterfaceCardApi(group).get(id + "nic");
-               if (nic !=null) {
+               if (nic != null) {
                   // Delete NIC
                   uri = api.getNetworkInterfaceCardApi(group).delete(id + "nic");
                   if (uri != null) {
@@ -126,7 +127,7 @@ public class CleanupResources implements Function<String, Boolean> {
                      if (jobDone) {
                         boolean ipDeleteStatus = false;
                         PublicIPAddress ip = api.getPublicIPAddressApi(group).get(id + "publicip");
-                        if(ip != null) {
+                        if (ip != null) {
                            ipDeleteStatus = api.getPublicIPAddressApi(group).delete(id + "publicip");
                         } else {
                            ipDeleteStatus = true;
@@ -134,15 +135,30 @@ public class CleanupResources implements Function<String, Boolean> {
 
                         // Get Virtual network
                         boolean vnetDeleteStatus = false;
-                        VirtualNetwork vn = api.getVirtualNetworkApi(group).get(deployGroup + "virtualnetwork");
+                        VirtualNetwork vn = api.getVirtualNetworkApi(group).get(id + "virtualnetwork");
                         if (vn != null) {
                            // Delete Virtual network
-                           vnetDeleteStatus = api.getVirtualNetworkApi(group).delete(deployGroup + "virtualnetwork");
+                           vnetDeleteStatus = api.getVirtualNetworkApi(group).delete(id + "virtualnetwork");
                         } else {
                            vnetDeleteStatus = true;
                         }
 
-                        return deploymentDeleteStatus && storageAcctDeleteStatus && ipDeleteStatus && vnetDeleteStatus;
+                        // Get NSG
+                        boolean nsgDeleteStatus = false;
+                        NetworkSecurityGroup nsg = api.getNetworkSecurityGroupApi(group).get(id + "nsg");
+                        if (nsg != null) {
+                           uri = api.getNetworkSecurityGroupApi(group).delete(id + "nsg");
+                           jobDone = resourceDeleted.apply(uri);
+                           if (jobDone) {
+                              nsgDeleteStatus = true;
+
+                           }
+                        }
+                        else {
+                           nsgDeleteStatus = true;
+                        }
+
+                        return deploymentDeleteStatus && storageAcctDeleteStatus && ipDeleteStatus && vnetDeleteStatus && nsgDeleteStatus;
 
                      } else {
                         return false;
@@ -154,7 +170,8 @@ public class CleanupResources implements Function<String, Boolean> {
                   return false;
                }
 
-            } else {
+
+               } else {
                return false;
             }
          } else {
