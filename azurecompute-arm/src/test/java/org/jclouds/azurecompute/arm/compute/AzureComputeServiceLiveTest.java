@@ -107,7 +107,7 @@ public class AzureComputeServiceLiveTest extends BaseComputeServiceLiveTest {
 
    }
 
-   @Override
+//   @Override
    protected Template refreshTemplate() {
       return this.template = addRunScriptToTemplateWithDelay(this.buildTemplate(this.client.templateBuilder()));
    }
