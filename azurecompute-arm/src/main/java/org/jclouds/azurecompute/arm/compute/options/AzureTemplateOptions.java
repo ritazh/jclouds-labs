@@ -26,9 +26,18 @@ import com.google.common.base.Objects;
 public class AzureTemplateOptions extends TemplateOptions implements Cloneable {
 
 
+   private String customData;
    private String virtualNetworkAddressPrefix;
    private String subnetAddressPrefix;
    private String DNSLabelPrefix;
+
+   /**
+    * Sets the CIDR block for virtual network
+    */
+   public  AzureTemplateOptions customData(String customData) {
+      this.customData = customData;
+      return this;
+   }
 
    /**
     * Sets the CIDR block for virtual network
@@ -54,6 +63,7 @@ public class AzureTemplateOptions extends TemplateOptions implements Cloneable {
       return this;
    }
 
+   public String getCustomData() { return customData; }
    public String getVirtualNetworkAddressPrefix() { return virtualNetworkAddressPrefix; }
    public String getSubnetAddressPrefix() { return subnetAddressPrefix; }
    public String getDNSLabelPrefix() { return DNSLabelPrefix; }
@@ -71,6 +81,7 @@ public class AzureTemplateOptions extends TemplateOptions implements Cloneable {
       super.copyTo(to);
       if (to instanceof AzureTemplateOptions) {
          AzureTemplateOptions eTo = AzureTemplateOptions.class.cast(to);
+         eTo.customData(customData);
          eTo.virtualNetworkAddressPrefix(virtualNetworkAddressPrefix);
          eTo.subnetAddressPrefix(subnetAddressPrefix);
          eTo.DNSLabelPrefix(DNSLabelPrefix);
@@ -95,6 +106,7 @@ public class AzureTemplateOptions extends TemplateOptions implements Cloneable {
       }
       AzureTemplateOptions other = (AzureTemplateOptions) obj;
       return super.equals(other)
+            && equal(this.customData, other.customData)
             && equal(this.virtualNetworkAddressPrefix, other.virtualNetworkAddressPrefix)
             && equal(this.subnetAddressPrefix, other.subnetAddressPrefix)
             && equal(this.DNSLabelPrefix, other.DNSLabelPrefix);
@@ -103,6 +115,7 @@ public class AzureTemplateOptions extends TemplateOptions implements Cloneable {
    @Override
    public Objects.ToStringHelper string() {
       Objects.ToStringHelper toString = super.string().omitNullValues();
+      toString.add("customData", customData);
       toString.add("virtualNetworkAddressPrefix", virtualNetworkAddressPrefix);
       toString.add("subnetAddressPrefix", subnetAddressPrefix);
       toString.add("DNSLabelPrefix", DNSLabelPrefix);
@@ -110,6 +123,14 @@ public class AzureTemplateOptions extends TemplateOptions implements Cloneable {
    }
 
    public static class Builder {
+
+      /**
+       * @see AzureTemplateOptions#customData
+       */
+      public static AzureTemplateOptions customData(String customData) {
+         AzureTemplateOptions options = new AzureTemplateOptions();
+         return options.customData(customData);
+      }
 
       /**
        * @see AzureTemplateOptions#virtualNetworkAddressPrefix
