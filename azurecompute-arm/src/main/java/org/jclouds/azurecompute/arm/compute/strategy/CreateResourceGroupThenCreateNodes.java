@@ -61,7 +61,7 @@ public class CreateResourceGroupThenCreateNodes extends CreateNodesWithGroupEnco
 
    private final AzureComputeApi api;
    private final AzureComputeServiceContextModule.AzureComputeConstants azureComputeConstants;
-   private final String azureGroup;
+   private final String azureGroupName;
    private String vnetName;
    private String subnetName;
 
@@ -78,8 +78,7 @@ public class CreateResourceGroupThenCreateNodes extends CreateNodesWithGroupEnco
       this.api = checkNotNull(api, "api cannot be null");
       checkNotNull(userExecutor, "userExecutor cannot be null");
       this.azureComputeConstants = azureComputeConstants;
-      this.azureGroup = this.azureComputeConstants.azureResourceGroup();
-
+      this.azureGroupName = this.azureComputeConstants.azureResourceGroup();
    }
 
    @Override
@@ -90,33 +89,23 @@ public class CreateResourceGroupThenCreateNodes extends CreateNodesWithGroupEnco
       AzureTemplateOptions options = template.getOptions().as(AzureTemplateOptions.class);
       // create resource group for jclouds group if it does not already exist
       ResourceGroupApi resourceGroupApi = api.getResourceGroupApi();
-      ResourceGroup resourceGroup = resourceGroupApi.get(azureGroup);
+      ResourceGroup resourceGroup = resourceGroupApi.get(azureGroupName);
       final String location = template.getLocation().getId();
-      final String resourceGroupName;
 
       if (resourceGroup == null){
          final Map<String, String> tags = ImmutableMap.of("description", "jClouds managed VMs");
-         resourceGroupApi.create(azureGroup, location, tags).name();
+         resourceGroupApi.create(azureGroupName, location, tags).name();
       }
 
-      this.vnetName = this.azureGroup + "virtualnetwork";
-      this.subnetName = this.azureGroup + "subnet";
+      this.vnetName = this.azureGroupName + "virtualnetwork";
+      this.subnetName = this.azureGroupName + "subnet";
 
-      if (options.getVirtualNetworkName() != null && options.getSubnetId() != null) {
+      if (options.getVirtualNetworkName() != null) {
          this.vnetName = options.getVirtualNetworkName();
-         this.subnetName = options.getSubnetId();
       }
 
-      //Subnets belong to a virtual network so that needs to be created first
-      VirtualNetwork vn = getOrCreateVirtualNetwork(this.vnetName, location);
+      this.getOrCreateVirtualNetworkWithSubnet(this.vnetName, this.subnetName, location, options);
 
-      //Subnet needs to be up & running before NIC can be created
-      Subnet subnet = getOrCreateSubnet(this.subnetName, this.vnetName);
-
-      if ( vn != null && subnet != null) {
-         options.virtualNetworkName(vnetName);
-         options.subnetId(subnet.id());
-      }
 
       Map<?, ListenableFuture<Void>> responses = super.execute(group, count, template, goodNodes, badNodes,
               customizationResponses);
@@ -124,37 +113,28 @@ public class CreateResourceGroupThenCreateNodes extends CreateNodesWithGroupEnco
       return responses;
    }
 
-   protected VirtualNetwork getOrCreateVirtualNetwork(final String virtualNetworkName, final String location) {
+   protected void getOrCreateVirtualNetworkWithSubnet(final String virtualNetworkName, final String subnetName, final String location, AzureTemplateOptions options) {
 
-      VirtualNetworkApi vnApi = api.getVirtualNetworkApi(this.azureGroup);
+      //Subnets belong to a virtual network so that needs to be created first
+      VirtualNetworkApi vnApi = api.getVirtualNetworkApi(this.azureGroupName);
       VirtualNetwork vn = vnApi.get(virtualNetworkName);
 
-      if (vn != null) {
-         return vn;
+      if (vn == null) {
+         VirtualNetwork.VirtualNetworkProperties virtualNetworkProperties = VirtualNetwork.VirtualNetworkProperties.builder()
+                 .addressSpace(VirtualNetwork.AddressSpace.create(Arrays.asList(this.azureComputeConstants.azureDefaultVnetAddressPrefixProperty())))
+                 .subnets(
+                         Arrays.asList(
+                                 Subnet.create(this.subnetName, null, null,
+                                         Subnet.SubnetProperties.builder().addressPrefix(this.azureComputeConstants.azureDefaultSubnetAddressPrefixProperty()).build())))
+                 .build();
+         vn = vnApi.createOrUpdate(virtualNetworkName, location, virtualNetworkProperties);
       }
 
-      final VirtualNetwork.VirtualNetworkProperties virtualNetworkProperties =
-              VirtualNetwork.VirtualNetworkProperties.create(null, null,
-                      VirtualNetwork.AddressSpace.create(Arrays.asList(this.azureComputeConstants.azureDefaultVnetAddressPrefixProperty())), null);
-
-
-      vn = vnApi.createOrUpdate(virtualNetworkName, location, virtualNetworkProperties);
-      return vn;
-   }
-
-   protected Subnet getOrCreateSubnet(final String subnetName, final String virtualNetworkName){
-
-      SubnetApi subnetApi = api.getSubnetApi(this.azureGroup, virtualNetworkName);
+      SubnetApi subnetApi = api.getSubnetApi(this.azureGroupName, virtualNetworkName);
       Subnet subnet = subnetApi.get(subnetName);
 
-      if (subnet != null){
-         return subnet;
-      }
+      options.virtualNetworkName(vnetName);
+      options.subnetId(subnet.id());
 
-      Subnet.SubnetProperties  properties = Subnet.SubnetProperties.builder().addressPrefix(this.azureComputeConstants.azureDefaultSubnetAddressPrefixProperty()).build();
-      subnet = subnetApi.createOrUpdate(subnetName, properties);
-
-      return subnet;
    }
-
 }

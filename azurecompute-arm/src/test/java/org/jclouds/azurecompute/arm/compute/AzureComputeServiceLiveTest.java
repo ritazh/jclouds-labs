@@ -20,7 +20,6 @@ import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import org.jclouds.compute.ComputeServiceContext;
 import org.jclouds.compute.JettyStatements;
 import org.jclouds.compute.RunNodesException;
 import org.jclouds.compute.RunScriptOnNodesException;
@@ -30,16 +29,13 @@ import org.jclouds.compute.domain.OperatingSystem;
 import org.jclouds.compute.domain.Template;
 import org.jclouds.compute.internal.BaseComputeServiceLiveTest;
 import org.jclouds.compute.predicates.NodePredicates;
-import org.jclouds.domain.Credentials;
 import org.jclouds.domain.LoginCredentials;
 import org.jclouds.scriptbuilder.domain.Statement;
 import org.jclouds.scriptbuilder.domain.StatementList;
 import org.jclouds.scriptbuilder.domain.Statements;
 import org.jclouds.scriptbuilder.statements.java.InstallJDK;
 import org.jclouds.scriptbuilder.statements.login.AdminAccess;
-import org.jclouds.ssh.SshClient;
 import org.jclouds.sshj.config.SshjSshClientModule;
-import org.testng.Assert;
 import org.testng.annotations.Test;
 import org.jclouds.providers.ProviderMetadata;
 import org.jclouds.azurecompute.arm.AzureComputeProviderMetadata;
@@ -52,9 +48,6 @@ import static org.jclouds.compute.config.ComputeServiceProperties.TIMEOUT_PORT_O
 import static org.jclouds.compute.config.ComputeServiceProperties.TIMEOUT_SCRIPT_COMPLETE;
 import org.jclouds.azurecompute.arm.internal.AzureLiveTestUtils;
 import com.google.inject.Module;
-
-import java.io.IOException;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
@@ -100,7 +93,7 @@ public class AzureComputeServiceLiveTest extends BaseComputeServiceLiveTest {
       properties.setProperty(TIMEOUT_PORT_OPEN, scriptTimeout + "");
       properties.setProperty(TIMEOUT_NODE_TERMINATED, scriptTimeout + "");
       properties.setProperty(TIMEOUT_NODE_SUSPENDED, scriptTimeout + "");
-      properties.put(RESOURCE_GROUP_NAME, "a3");
+      properties.put(RESOURCE_GROUP_NAME, "a14");
 //      properties.put("jclouds.max-retries", 5);
 //      properties.put("jclouds.retries-delay-start", 5000L);
 

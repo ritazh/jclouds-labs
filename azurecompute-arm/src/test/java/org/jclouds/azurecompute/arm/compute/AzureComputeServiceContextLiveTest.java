@@ -22,7 +22,6 @@ import com.google.inject.Module;
 import org.jclouds.azurecompute.arm.AzureComputeProviderMetadata;
 import org.jclouds.azurecompute.arm.compute.options.AzureTemplateOptions;
 import org.jclouds.azurecompute.arm.internal.AzureLiveTestUtils;
-import org.jclouds.azurecompute.arm.util.DeploymentTemplateBuilder;
 import org.jclouds.compute.RunNodesException;
 import org.jclouds.compute.RunScriptOnNodesException;
 import org.jclouds.compute.domain.ComputeMetadata;
@@ -32,7 +31,6 @@ import org.jclouds.compute.domain.OsFamily;
 import org.jclouds.compute.domain.Template;
 import org.jclouds.compute.domain.TemplateBuilder;
 import org.jclouds.compute.internal.BaseComputeServiceContextLiveTest;
-import org.jclouds.compute.options.TemplateOptions;
 import org.jclouds.domain.Credentials;
 import org.jclouds.domain.LoginCredentials;
 import org.jclouds.providers.ProviderMetadata;
@@ -65,7 +63,7 @@ public class AzureComputeServiceContextLiveTest extends BaseComputeServiceContex
    }
 
    @Override protected Properties setupProperties() {
-      azureGroup = "aa" + System.getProperty("user.name").substring(0, 3);
+      azureGroup = "ag" + System.getProperty("user.name").substring(0, 3);
 
       Properties properties = super.setupProperties();
       long scriptTimeout = TimeUnit.MILLISECONDS.convert(60, TimeUnit.MINUTES);
@@ -86,8 +84,15 @@ public class AzureComputeServiceContextLiveTest extends BaseComputeServiceContex
    @Test
    public void testDefault() throws RunNodesException {
       final String groupName = this.azureGroup;
-      TemplateOptions options = new AzureTemplateOptions();
+      AzureTemplateOptions options = new AzureTemplateOptions();
+
+      // this is needed for latest change in core, give owner permission to authorized_keys file
+      //options.overrideLoginUser("jclouds");
       options.authorizePublicKey("key");
+
+      //String keyvault = "/subscriptions/<SUBID>/resourceGroups/<RESOURCEGROUPNAME>/providers/Microsoft.KeyVault/vaults/<VAULTNAME>:<VAULTSECRETNAME>";
+      //options.keyVaultIdAndSecret(keyvault);
+
       options.inboundPorts(22, 8080);
 
       final TemplateBuilder templateBuilder = view.getComputeService().templateBuilder();
