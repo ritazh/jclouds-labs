@@ -195,6 +195,15 @@ public class VirtualMachineApiLiveTest extends BaseAzureComputeApiLiveTest {
    public void testList() {
       List<VirtualMachine> list = api().list();
       VirtualMachine vm = api().get(getName());
+      assertTrue(list.size() > 0);
+      boolean found = false;
+      for (VirtualMachine virtualMachine : list) {
+         if (virtualMachine.name().equals(getName())){
+            found = true;
+            break;
+         }
+      }
+      assertTrue(found);
       assertTrue(list.contains(vm));
    }
 

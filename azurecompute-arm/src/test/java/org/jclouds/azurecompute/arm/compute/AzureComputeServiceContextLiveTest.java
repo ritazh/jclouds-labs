@@ -63,7 +63,7 @@ public class AzureComputeServiceContextLiveTest extends BaseComputeServiceContex
    }
 
    @Override protected Properties setupProperties() {
-      azureGroup = "ag" + System.getProperty("user.name").substring(0, 3);
+      azureGroup = "at" + System.getProperty("user.name").substring(0, 3);
 
       Properties properties = super.setupProperties();
       long scriptTimeout = TimeUnit.MILLISECONDS.convert(60, TimeUnit.MINUTES);
@@ -88,7 +88,7 @@ public class AzureComputeServiceContextLiveTest extends BaseComputeServiceContex
 
       // this is needed for latest change in core, give owner permission to authorized_keys file
       //options.overrideLoginUser("jclouds");
-      options.authorizePublicKey("key");
+      //options.authorizePublicKey("key");
 
       //String keyvault = "/subscriptions/<SUBID>/resourceGroups/<RESOURCEGROUPNAME>/providers/Microsoft.KeyVault/vaults/<VAULTNAME>:<VAULTSECRETNAME>";
       //options.keyVaultIdAndSecret(keyvault);

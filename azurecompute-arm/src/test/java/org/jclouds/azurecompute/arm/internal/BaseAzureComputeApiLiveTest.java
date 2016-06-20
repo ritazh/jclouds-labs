@@ -134,9 +134,6 @@ public class BaseAzureComputeApiLiveTest extends AbstractAzureComputeApiLiveTest
       super.tearDown();
       Boolean status = api.getStorageAccountApi(getResourceGroupName()).delete(getStorageServiceName());
       assertTrue(status.booleanValue());
-      Boolean deleteVnetStatus = api.getVirtualNetworkApi(getResourceGroupName()).delete(virtualNetworkName);
-      assertTrue(deleteVnetStatus.booleanValue());
-
       deleteResourceGroup(getResourceGroupName());
    }
 
