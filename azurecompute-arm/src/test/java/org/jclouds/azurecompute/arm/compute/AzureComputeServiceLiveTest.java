@@ -56,6 +56,8 @@ import java.util.logging.Logger;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.jclouds.compute.options.RunScriptOptions.Builder.nameTask;
+import org.jclouds.logging.slf4j.config.SLF4JLoggingModule;
+import org.jclouds.logging.config.LoggingModule;
 
 
 /**
@@ -70,6 +72,11 @@ public class AzureComputeServiceLiveTest extends BaseComputeServiceLiveTest {
       provider = "azurecompute-arm";
       nonBlockDurationSeconds = 300;
       group = "az-u";
+   }
+
+   @Override
+   protected LoggingModule getLoggingModule() {
+      return new SLF4JLoggingModule();
    }
 
    @Override
@@ -93,7 +100,7 @@ public class AzureComputeServiceLiveTest extends BaseComputeServiceLiveTest {
       properties.setProperty(TIMEOUT_PORT_OPEN, scriptTimeout + "");
       properties.setProperty(TIMEOUT_NODE_TERMINATED, scriptTimeout + "");
       properties.setProperty(TIMEOUT_NODE_SUSPENDED, scriptTimeout + "");
-      properties.put(RESOURCE_GROUP_NAME, "a14");
+      properties.put(RESOURCE_GROUP_NAME, "a2");
 //      properties.put("jclouds.max-retries", 5);
 //      properties.put("jclouds.retries-delay-start", 5000L);
 
@@ -148,7 +155,7 @@ public class AzureComputeServiceLiveTest extends BaseComputeServiceLiveTest {
 
    @Override
    protected Map<? extends NodeMetadata, ExecResponse> runScriptWithCreds(String group, OperatingSystem os, LoginCredentials creds) throws RunScriptOnNodesException {
-      return this.client.runScriptOnNodesMatching(NodePredicates.runningInGroup(group), Statements.newStatementList(Statements.exec("sleep 25"), InstallJDK.fromOpenJDK()), org.jclouds.compute.options.TemplateOptions.Builder.overrideLoginCredentials(creds).nameTask("runScriptWithCreds"));
+      return this.client.runScriptOnNodesMatching(NodePredicates.runningInGroup(group), Statements.newStatementList(Statements.exec("sleep 50"), InstallJDK.fromOpenJDK()), org.jclouds.compute.options.TemplateOptions.Builder.overrideLoginCredentials(creds).nameTask("runScriptWithCreds"));
    }
 
 
