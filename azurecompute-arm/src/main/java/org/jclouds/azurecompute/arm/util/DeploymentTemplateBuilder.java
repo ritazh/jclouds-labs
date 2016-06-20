@@ -226,11 +226,11 @@ public class DeploymentTemplateBuilder {
       List<IpConfiguration> ipConfigurations = new ArrayList<IpConfiguration>();
 
       String ipConfigurationName = name + "ipconfig";
-      String subnetName = options.getSubnetId();
+      String subnetId = options.getSubnetId();
       String vnetName = options.getVirtualNetworkName();
 
       variables.put("ipConfigurationName", ipConfigurationName);
-      variables.put("subnetReference", subnetName);
+      variables.put("subnetReference", subnetId);
 
       IpConfiguration ipConfig = IpConfiguration.create(ipConfigurationName, null, null, null,
             IpConfigurationProperties.builder()
