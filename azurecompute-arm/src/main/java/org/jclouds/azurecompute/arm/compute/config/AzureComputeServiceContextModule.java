@@ -30,6 +30,7 @@ import org.jclouds.azurecompute.arm.compute.functions.VMHardwareToHardware;
 import org.jclouds.azurecompute.arm.compute.functions.LocationToLocation;
 import org.jclouds.azurecompute.arm.compute.strategy.AzurePopulateDefaultLoginCredentialsForImageStrategy;
 import org.jclouds.azurecompute.arm.compute.options.AzureTemplateOptions;
+import org.jclouds.azurecompute.arm.domain.ResourceDefinition;
 import org.jclouds.azurecompute.arm.domain.VMDeployment;
 import org.jclouds.azurecompute.arm.domain.VMHardware;
 import org.jclouds.azurecompute.arm.domain.VMImage;
@@ -62,6 +63,7 @@ import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.DEFAULT
 
 import static org.jclouds.util.Predicates2.retry;
 import static org.jclouds.compute.config.ComputeServiceProperties.TIMEOUT_NODE_TERMINATED;
+import static org.jclouds.compute.config.ComputeServiceProperties.TIMEOUT_IMAGE_AVAILABLE;
 
 import com.google.common.base.Function;
 import com.google.inject.Inject;
@@ -70,6 +72,7 @@ import com.google.common.base.Predicate;
 import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.common.annotations.VisibleForTesting;
 import java.net.URI;
+import java.util.List;
 
 
 import org.jclouds.compute.extensions.ImageExtension;
@@ -211,6 +214,14 @@ public class AzureComputeServiceContextModule
    }
 
    @Provides
+   @Named(TIMEOUT_IMAGE_AVAILABLE)
+   protected Predicate<URI> provideImageAvailablePredicate(final AzureComputeApi api, Timeouts timeouts,
+                                                               PollPeriod pollPeriod) {
+      return retry(new ImageDonePredicate(api), timeouts.imageAvailable, pollPeriod.pollInitialPeriod,
+              pollPeriod.pollMaxPeriod);
+   }
+
+   @Provides
    @Named(TIMEOUT_RESOURCE_DELETED)
    protected Predicate<URI> provideResourceDeletedPredicate(final AzureComputeApi api, Timeouts timeouts,
                                                             PollPeriod pollPeriod) {
@@ -235,4 +246,24 @@ public class AzureComputeServiceContextModule
 
    }
 
+   @VisibleForTesting
+   static class ImageDonePredicate implements Predicate<URI> {
+
+      private final AzureComputeApi api;
+
+      public ImageDonePredicate(AzureComputeApi api) {
+         this.api = checkNotNull(api, "api must not be null");
+      }
+
+      @Override
+      public boolean apply(URI uri) {
+         checkNotNull(uri, "uri cannot be null");
+         List<ResourceDefinition> definitions = api.getJobApi().captureStatus(uri);
+         if (definitions != null) {
+            return true;
+         } else {
+            return false;
+         }
+      }
+   }
 }

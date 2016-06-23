@@ -29,11 +29,14 @@ import org.jclouds.azurecompute.arm.compute.functions.VMImageToImage;
 import org.jclouds.azurecompute.arm.domain.ResourceDefinition;
 import org.jclouds.azurecompute.arm.domain.VMImage;
 import org.jclouds.azurecompute.arm.domain.VirtualMachine;
+import org.jclouds.azurecompute.arm.domain.VirtualMachineInstance;
 import org.jclouds.compute.domain.CloneImageTemplate;
 import org.jclouds.compute.domain.Image;
 import org.jclouds.compute.domain.ImageTemplate;
 import org.jclouds.compute.domain.ImageTemplateBuilder;
 import org.jclouds.compute.extensions.ImageExtension;
+import static org.jclouds.compute.config.ComputeServiceProperties.TIMEOUT_IMAGE_AVAILABLE;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
 import org.jclouds.util.Predicates2;
 
 import java.net.URI;
@@ -44,6 +47,7 @@ import java.util.concurrent.Callable;
 
 public class AzureComputeImageExtension implements ImageExtension {
    private final AzureComputeApi api;
+   private final Predicate<URI> imageAvailablePredicate;
    private final ListeningExecutorService userExecutor;
    private final String group;
    private final VMImageToImage imageReferenceToImage;
@@ -51,13 +55,16 @@ public class AzureComputeImageExtension implements ImageExtension {
    public static final String CUSTOM_IMAGE_PREFIX = "#";
 
    @Inject
-   AzureComputeImageExtension(AzureComputeApi api, final AzureComputeServiceContextModule.AzureComputeConstants azureComputeConstants,
+   AzureComputeImageExtension(AzureComputeApi api,
+                              @Named(TIMEOUT_IMAGE_AVAILABLE) Predicate<URI> imageAvailablePredicate,
+                              final AzureComputeServiceContextModule.AzureComputeConstants azureComputeConstants,
                               @Named(Constants.PROPERTY_USER_THREADS) ListeningExecutorService userExecutor,
                               VMImageToImage imageReferenceToImage) {
       this.userExecutor = userExecutor;
       this.group = azureComputeConstants.azureResourceGroup();
       this.imageReferenceToImage = imageReferenceToImage;
       this.api = api;
+      this.imageAvailablePredicate = imageAvailablePredicate;
    }
 
    @Override
@@ -72,6 +79,27 @@ public class AzureComputeImageExtension implements ImageExtension {
       final String id = cloneTemplate.getSourceNodeId();
       final String storageAccountName = id.replaceAll("[^A-Za-z0-9 ]", "") + "stor";
 
+      // VM needs to be stopped before it can be generalized
+      String status = "";
+      api.getVirtualMachineApi(group).stop(id);
+      //Poll until resource is ready to be used
+      boolean jobDone = Predicates2.retry(new Predicate<String>() {
+         @Override
+         public boolean apply(String name) {
+            String status = "";
+            List<VirtualMachineInstance.VirtualMachineStatus> statuses = api.getVirtualMachineApi(group).getInstanceDetails(name).statuses();
+            for (int c = 0; c < statuses.size(); c++) {
+               if (statuses.get(c).code().substring(0, 10).equals("PowerState")) {
+                  status = statuses.get(c).displayStatus();
+                  break;
+               }
+            }
+            if (status.equals("VM stopped")) {
+               return true;
+            }
+            return false;
+         }
+      }, 60 * 4 * 1000).apply(id);
 
       return userExecutor.submit(new Callable<Image>() {
          @Override
@@ -80,46 +108,38 @@ public class AzureComputeImageExtension implements ImageExtension {
 
             final String[] disks = new String[2];
             URI uri = api.getVirtualMachineApi(group).capture(id, cloneTemplate.getName(), CONTAINER_NAME);
-            if (uri != null){
-               boolean jobDone = Predicates2.retry(new Predicate<URI>() {
-                  @Override public boolean apply(URI uri) {
-                     try {
-                        List<ResourceDefinition> definitions = api.getJobApi().captureStatus(uri);
-                        if (definitions != null) {
-                           for (ResourceDefinition definition : definitions) {
-                              LinkedTreeMap<String, String> properties = (LinkedTreeMap<String, String>) definition.properties();
-                              Object storageObject = properties.get("storageProfile");
-                              LinkedTreeMap<String, String> properties2 = (LinkedTreeMap<String, String>) storageObject;
-                              Object osDiskObject = properties2.get("osDisk");
-                              LinkedTreeMap<String, String> osProperties = (LinkedTreeMap<String, String>) osDiskObject;
-                              Object dataDisksObject = properties2.get("dataDisks");
-                              ArrayList<Object> dataProperties = (ArrayList<Object>) dataDisksObject;
-                              LinkedTreeMap<String, String> datadiskObject = (LinkedTreeMap<String, String>) dataProperties.get(0);
+            if (uri != null) {
+               if (imageAvailablePredicate.apply(uri)) {
+                  try {
+                     List<ResourceDefinition> definitions = api.getJobApi().captureStatus(uri);
+                     if (definitions != null) {
+                        for (ResourceDefinition definition : definitions) {
+                           LinkedTreeMap<String, String> properties = (LinkedTreeMap<String, String>) definition.properties();
+                           Object storageObject = properties.get("storageProfile");
+                           LinkedTreeMap<String, String> properties2 = (LinkedTreeMap<String, String>) storageObject;
+                           Object osDiskObject = properties2.get("osDisk");
+                           LinkedTreeMap<String, String> osProperties = (LinkedTreeMap<String, String>) osDiskObject;
+                           Object dataDisksObject = properties2.get("dataDisks");
+                           ArrayList<Object> dataProperties = (ArrayList<Object>) dataDisksObject;
+                           LinkedTreeMap<String, String> datadiskObject = (LinkedTreeMap<String, String>) dataProperties.get(0);
 
-                              disks[0] = osProperties.get("name");
-                              disks[1] = datadiskObject.get("name");
+                           disks[0] = osProperties.get("name");
+                           disks[1] = datadiskObject.get("name");
 
-                           }
-                           return true;
+                           VirtualMachine vm = api.getVirtualMachineApi(group).get(id);
+                           String location = vm.location();
+                           final VMImage ref = VMImage.create(CUSTOM_IMAGE_PREFIX + group, CUSTOM_IMAGE_PREFIX + storageAccountName, disks[0], disks[1], location, false);
+                           return imageReferenceToImage.apply(ref);
                         }
-                        return false;
                      }
-                     catch (Exception e) {
-                        return false;
-                     }
+                  } catch (Exception e) {
                   }
-               }, 15 * 1000 /* 15 second timeout */).apply(uri);
-
+               }
             }
-
-            VirtualMachine vm = api.getVirtualMachineApi(group).get(id);
-            String location = vm.location();
-            final VMImage ref = VMImage.create(CUSTOM_IMAGE_PREFIX + group, CUSTOM_IMAGE_PREFIX + storageAccountName, disks[0], disks[1], location, false);
-
-            return imageReferenceToImage.apply(ref);
-         }
+            throw new UncheckedTimeoutException("Image was not created within the time limit: "
+                    + cloneTemplate.getName());
+            }
       });
-
    }
 
    @Override
