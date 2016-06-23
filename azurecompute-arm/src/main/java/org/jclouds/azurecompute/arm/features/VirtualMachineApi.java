@@ -20,7 +20,6 @@ import org.jclouds.Fallbacks;
 import org.jclouds.azurecompute.arm.domain.VirtualMachine;
 import org.jclouds.azurecompute.arm.domain.VirtualMachineInstance;
 import org.jclouds.azurecompute.arm.domain.VirtualMachineProperties;
-import org.jclouds.azurecompute.arm.functions.StatusCodeParser;
 import org.jclouds.azurecompute.arm.functions.URIParser;
 import org.jclouds.oauth.v2.filters.OAuthFilter;
 import org.jclouds.rest.annotations.Fallback;
@@ -138,8 +137,7 @@ public interface VirtualMachineApi {
    @Named("generalize")
    @POST
    @Path("/{name}/generalize")
-   @ResponseParser(StatusCodeParser.class)
-   String generalize(@PathParam("name") String name);
+   void generalize(@PathParam("name") String name);
 
    /**
     * Capture the virtual machine image

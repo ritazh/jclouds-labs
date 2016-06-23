@@ -48,7 +48,7 @@ public interface JobApi extends Closeable{
     * Get status of captured custom image after capture call
     */
    @GET
-   @Fallback(Fallbacks.NullOnNotFoundOr404.class)
+   @Fallback(Fallbacks.EmptyListOnNotFoundOr404.class)
    @SelectJson("resources")
    List<ResourceDefinition> captureStatus(@EndpointParam URI jobURI);
 

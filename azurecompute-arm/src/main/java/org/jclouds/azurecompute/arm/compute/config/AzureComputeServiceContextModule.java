@@ -58,6 +58,7 @@ import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.DEFAULT
 import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.DEFAULT_VNET_ADDRESS_SPACE_PREFIX;
 import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.DEFAULT_SUBNET_ADDRESS_PREFIX;
 import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.TIMEOUT_RESOURCE_DELETED;
+import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.DEFAULT_DATADISKSIZE;
 
 import static org.jclouds.util.Predicates2.retry;
 import static org.jclouds.compute.config.ComputeServiceProperties.TIMEOUT_NODE_TERMINATED;
@@ -152,6 +153,10 @@ public class AzureComputeServiceContextModule
       @Inject
       private String azureDefaultSubnetAddressPrefixProperty;
 
+      @Named(DEFAULT_DATADISKSIZE)
+      @Inject
+      private String azureDefaultDataDiskSizeProperty;
+
       public Long operationTimeout() {
          return Long.parseLong(operationTimeoutProperty);
       }
@@ -174,6 +179,10 @@ public class AzureComputeServiceContextModule
 
       public String azureDefaultSubnetAddressPrefixProperty() {
          return azureDefaultSubnetAddressPrefixProperty;
+      }
+
+      public String azureDefaultDataDiskSizeProperty() {
+         return azureDefaultDataDiskSizeProperty;
       }
 
       public Integer operationPollInitialPeriod() {

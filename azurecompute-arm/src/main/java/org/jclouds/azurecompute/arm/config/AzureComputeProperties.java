@@ -45,4 +45,6 @@ public class AzureComputeProperties {
 
    public static final String DEFAULT_SUBNET_ADDRESS_PREFIX = "jclouds.azurecompute.arm.subnet.addressprefix";
 
+   public static final String DEFAULT_DATADISKSIZE = "jclouds.azurecompute.arm.datadisksize";
+
 }

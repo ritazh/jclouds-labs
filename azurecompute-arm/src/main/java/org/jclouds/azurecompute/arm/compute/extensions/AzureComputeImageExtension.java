@@ -62,8 +62,8 @@ public class AzureComputeImageExtension implements ImageExtension {
 
    @Override
    public ImageTemplate buildImageTemplateFromNode(String name, String id) {
-      name = name.toLowerCase();
-      return new ImageTemplateBuilder.CloneImageTemplateBuilder().nodeId(id).name(name).build();
+      String imageName = name.toLowerCase();
+      return new ImageTemplateBuilder.CloneImageTemplateBuilder().nodeId(id).name(imageName).build();
    }
 
    @Override
@@ -72,14 +72,7 @@ public class AzureComputeImageExtension implements ImageExtension {
       String id = cloneTemplate.getSourceNodeId();
       final String storageAccountName = id.replaceAll("[^A-Za-z0-9 ]", "") + "stor";
 
-      boolean generalized = false;
-      while (!generalized) {
-         try {
-            api.getVirtualMachineApi(group).generalize(id);
-         } finally {
-            generalized = true;
-         }
-      }
+      api.getVirtualMachineApi(group).generalize(id);
 
       final String[] disks = new String[2];
       URI uri = api.getVirtualMachineApi(group).capture(id, cloneTemplate.getName(), CONTAINER_NAME);
@@ -117,7 +110,7 @@ public class AzureComputeImageExtension implements ImageExtension {
 
       VirtualMachine vm = api.getVirtualMachineApi(group).get(id);
       String location = vm.location();
-      final VMImage ref = new VMImage(CUSTOM_IMAGE_PREFIX + group, CUSTOM_IMAGE_PREFIX + storageAccountName, disks[0], disks[1], location);
+      final VMImage ref = VMImage.create(CUSTOM_IMAGE_PREFIX + group, CUSTOM_IMAGE_PREFIX + storageAccountName, disks[0], disks[1], location, false);
 
       return userExecutor.submit(new Callable<Image>() {
          @Override

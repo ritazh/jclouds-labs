@@ -17,6 +17,7 @@
 package org.jclouds.azurecompute.arm.features;
 
 import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 import org.jclouds.azurecompute.arm.domain.DataDisk;
 import org.jclouds.azurecompute.arm.domain.DiagnosticsProfile;
 import org.jclouds.azurecompute.arm.domain.HardwareProfile;
@@ -194,17 +195,15 @@ public class VirtualMachineApiLiveTest extends BaseAzureComputeApiLiveTest {
    @Test(dependsOnMethods = "testCreate")
    public void testList() {
       List<VirtualMachine> list = api().list();
-      VirtualMachine vm = api().get(getName());
-      assertTrue(list.size() > 0);
-      boolean found = false;
-      for (VirtualMachine virtualMachine : list) {
-         if (virtualMachine.name().equals(getName())){
-            found = true;
-            break;
+      final VirtualMachine vm = api().get(getName());
+
+      boolean vmPresent = Iterables.any(list, new Predicate<VirtualMachine>() {
+         public boolean apply(VirtualMachine input) {
+            return input.name().equals(vm.name());
          }
-      }
-      assertTrue(found);
-      assertTrue(list.contains(vm));
+      });
+
+      assertTrue(vmPresent);
    }
 
    @Test(dependsOnMethods = {"testRestart", "testList", "testGet"}, alwaysRun = true)

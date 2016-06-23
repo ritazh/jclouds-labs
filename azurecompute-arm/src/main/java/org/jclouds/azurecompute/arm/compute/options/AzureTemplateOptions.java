@@ -34,7 +34,7 @@ public class AzureTemplateOptions extends TemplateOptions implements Cloneable {
 
 
    /**
-    * Sets the CIDR block for virtual network
+    * Custom options for the Azure ARM API
     */
    public  AzureTemplateOptions customData(String customData) {
       this.customData = customData;

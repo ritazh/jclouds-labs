@@ -61,9 +61,6 @@ public class CreateResourceGroupThenCreateNodes extends CreateNodesWithGroupEnco
 
    private final AzureComputeApi api;
    private final AzureComputeServiceContextModule.AzureComputeConstants azureComputeConstants;
-   private final String azureGroupName;
-   private String vnetName;
-   private String subnetName;
 
    @Inject
    protected CreateResourceGroupThenCreateNodes(
@@ -78,13 +75,14 @@ public class CreateResourceGroupThenCreateNodes extends CreateNodesWithGroupEnco
       this.api = checkNotNull(api, "api cannot be null");
       checkNotNull(userExecutor, "userExecutor cannot be null");
       this.azureComputeConstants = azureComputeConstants;
-      this.azureGroupName = this.azureComputeConstants.azureResourceGroup();
    }
 
    @Override
    public Map<?, ListenableFuture<Void>> execute(String group, int count, Template template,
                                                  Set<NodeMetadata> goodNodes, Map<NodeMetadata, Exception> badNodes,
                                                  Multimap<NodeMetadata, CustomizationResponse> customizationResponses) {
+
+      String azureGroupName = this.azureComputeConstants.azureResourceGroup();
 
       AzureTemplateOptions options = template.getOptions().as(AzureTemplateOptions.class);
       // create resource group for jclouds group if it does not already exist
@@ -97,14 +95,14 @@ public class CreateResourceGroupThenCreateNodes extends CreateNodesWithGroupEnco
          resourceGroupApi.create(azureGroupName, location, tags).name();
       }
 
-      this.vnetName = this.azureGroupName + "virtualnetwork";
-      this.subnetName = this.azureGroupName + "subnet";
+      String vnetName = azureGroupName + "virtualnetwork";
+      String subnetName = azureGroupName + "subnet";
 
       if (options.getVirtualNetworkName() != null) {
-         this.vnetName = options.getVirtualNetworkName();
+         vnetName = options.getVirtualNetworkName();
       }
 
-      this.getOrCreateVirtualNetworkWithSubnet(this.vnetName, this.subnetName, location, options);
+      this.getOrCreateVirtualNetworkWithSubnet(vnetName, subnetName, location, options, azureGroupName);
 
 
       Map<?, ListenableFuture<Void>> responses = super.execute(group, count, template, goodNodes, badNodes,
@@ -113,10 +111,12 @@ public class CreateResourceGroupThenCreateNodes extends CreateNodesWithGroupEnco
       return responses;
    }
 
-   protected void getOrCreateVirtualNetworkWithSubnet(final String virtualNetworkName, final String subnetName, final String location, AzureTemplateOptions options) {
+   protected synchronized void getOrCreateVirtualNetworkWithSubnet(
+           final String virtualNetworkName, final String subnetName, final String location,
+           AzureTemplateOptions options, final String azureGroupName) {
 
       //Subnets belong to a virtual network so that needs to be created first
-      VirtualNetworkApi vnApi = api.getVirtualNetworkApi(this.azureGroupName);
+      VirtualNetworkApi vnApi = api.getVirtualNetworkApi(azureGroupName);
       VirtualNetwork vn = vnApi.get(virtualNetworkName);
 
       if (vn == null) {
@@ -124,16 +124,16 @@ public class CreateResourceGroupThenCreateNodes extends CreateNodesWithGroupEnco
                  .addressSpace(VirtualNetwork.AddressSpace.create(Arrays.asList(this.azureComputeConstants.azureDefaultVnetAddressPrefixProperty())))
                  .subnets(
                          Arrays.asList(
-                                 Subnet.create(this.subnetName, null, null,
+                                 Subnet.create(subnetName, null, null,
                                          Subnet.SubnetProperties.builder().addressPrefix(this.azureComputeConstants.azureDefaultSubnetAddressPrefixProperty()).build())))
                  .build();
          vn = vnApi.createOrUpdate(virtualNetworkName, location, virtualNetworkProperties);
       }
 
-      SubnetApi subnetApi = api.getSubnetApi(this.azureGroupName, virtualNetworkName);
+      SubnetApi subnetApi = api.getSubnetApi(azureGroupName, virtualNetworkName);
       Subnet subnet = subnetApi.get(subnetName);
 
-      options.virtualNetworkName(vnetName);
+      options.virtualNetworkName(virtualNetworkName);
       options.subnetId(subnet.id());
 
    }

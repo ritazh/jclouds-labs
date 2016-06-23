@@ -51,7 +51,6 @@ public class CleanupResources implements Function<String, Boolean> {
    protected final AzureComputeApi api;
    private Predicate<URI> nodeTerminated;
    private Predicate<URI> resourceDeleted;
-   String azureGroup;
 
    @Inject
    public CleanupResources(AzureComputeApi azureComputeApi,
@@ -59,7 +58,6 @@ public class CleanupResources implements Function<String, Boolean> {
                            @Named(TIMEOUT_NODE_TERMINATED) Predicate<URI> nodeTerminated,
                            @Named(TIMEOUT_RESOURCE_DELETED) Predicate<URI> resourceDeleted) {
       this.azureComputeConstants = azureComputeConstants;
-      azureGroup = azureComputeConstants.azureResourceGroup();
       this.api = azureComputeApi;
       this.nodeTerminated = nodeTerminated;
       this.resourceDeleted = resourceDeleted;
@@ -70,7 +68,7 @@ public class CleanupResources implements Function<String, Boolean> {
 
       logger.debug("Destroying %s ...", id);
       String storageAccountName = id.replaceAll("[^A-Za-z0-9 ]", "") + "stor";
-      String group = azureGroup;
+      String group = azureComputeConstants.azureResourceGroup();
 
       VirtualMachine vm = api.getVirtualMachineApi(group).get(id);
       if (vm != null) {

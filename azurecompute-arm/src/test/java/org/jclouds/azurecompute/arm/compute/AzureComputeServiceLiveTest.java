@@ -65,7 +65,6 @@ import org.jclouds.logging.config.LoggingModule;
  */
 @Test(groups = "live", singleThreaded = true, testName = "AzureComputeServiceLiveTest")
 public class AzureComputeServiceLiveTest extends BaseComputeServiceLiveTest {
-   //public String azureGroup;
    protected int nonBlockDurationSeconds = 30;
 
    public AzureComputeServiceLiveTest() {
@@ -92,7 +91,6 @@ public class AzureComputeServiceLiveTest extends BaseComputeServiceLiveTest {
 
    @Override
    protected Properties setupProperties() {
-      //azureGroup = "jc" + System.getProperty("user.name").substring(0, 3);
       Properties properties = super.setupProperties();
       long scriptTimeout = TimeUnit.MILLISECONDS.convert(60, TimeUnit.MINUTES);
       properties.setProperty(TIMEOUT_SCRIPT_COMPLETE, scriptTimeout + "");
@@ -101,33 +99,27 @@ public class AzureComputeServiceLiveTest extends BaseComputeServiceLiveTest {
       properties.setProperty(TIMEOUT_NODE_TERMINATED, scriptTimeout + "");
       properties.setProperty(TIMEOUT_NODE_SUSPENDED, scriptTimeout + "");
       properties.put(RESOURCE_GROUP_NAME, "a2");
-//      properties.put("jclouds.max-retries", 5);
-//      properties.put("jclouds.retries-delay-start", 5000L);
-
-      //properties.put(RESOURCE_GROUP_NAME, azureGroup);
 
       AzureLiveTestUtils.defaultProperties(properties);
       checkNotNull(setIfTestSystemPropertyPresent(properties, "oauth.endpoint"), "test.oauth.endpoint");
 
       return properties;
-
    }
 
-   //   @Override
+   @Override
    protected Template refreshTemplate() {
-      return this.template = addRunScriptToTemplateWithDelay(this.buildTemplate(this.client.templateBuilder()));
+      return this.template = addRunScriptToTemplate(this.buildTemplate(this.client.templateBuilder()));
    }
 
-   protected static Template addRunScriptToTemplateWithDelay(Template template) {
+   @Override
+   protected Template addRunScriptToTemplate(Template template) {
       template.getOptions().runScript(Statements.newStatementList(new Statement[]{AdminAccess.standard(), Statements.exec("sleep 50"), InstallJDK.fromOpenJDK()}));
       return template;
    }
 
    @Override
-   @Test(
-           enabled = false
-   )
-   public void weCanCancelTasks(NodeMetadata node) throws InterruptedException, ExecutionException {
+   @Test( enabled = false)
+   protected void weCanCancelTasks(NodeMetadata node) throws InterruptedException, ExecutionException {
       return;
    }
 
@@ -157,6 +149,4 @@ public class AzureComputeServiceLiveTest extends BaseComputeServiceLiveTest {
    protected Map<? extends NodeMetadata, ExecResponse> runScriptWithCreds(String group, OperatingSystem os, LoginCredentials creds) throws RunScriptOnNodesException {
       return this.client.runScriptOnNodesMatching(NodePredicates.runningInGroup(group), Statements.newStatementList(Statements.exec("sleep 50"), InstallJDK.fromOpenJDK()), org.jclouds.compute.options.TemplateOptions.Builder.overrideLoginCredentials(creds).nameTask("runScriptWithCreds"));
    }
-
-
 }

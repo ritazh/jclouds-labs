@@ -19,8 +19,9 @@ package org.jclouds.azurecompute.arm.util;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.inject.assistedinject.Assisted;
+import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 
-import org.apache.commons.lang3.StringUtils;
 import org.jclouds.azurecompute.arm.compute.config.AzureComputeServiceContextModule;
 import org.jclouds.azurecompute.arm.compute.extensions.AzureComputeImageExtension;
 import org.jclouds.azurecompute.arm.compute.options.AzureTemplateOptions;
@@ -140,16 +141,20 @@ public class DeploymentTemplateBuilder {
       addVirtualMachine();
 
 
-      DeploymentTemplate.TemplateParameters templateParameters = DeploymentTemplate.TemplateParameters.create(null);
-      DeploymentTemplate.Parameters parameters = DeploymentTemplate.Parameters.create(null);
+      DeploymentTemplate.TemplateParameters templateParameters = null;
+      DeploymentTemplate.Parameters parameters = null;
+
       if (keyVaultInUse()){
          String[] keyVaultInfo = options.getKeyVaultIdAndSecret().split(":");
-         assert keyVaultInfo.length == 2;
+         Preconditions.checkArgument(keyVaultInfo.length == 2);
          String vaultId = keyVaultInfo[0].trim();
          String secretName = keyVaultInfo[1].trim();
 
          templateParameters = DeploymentTemplate.TemplateParameters.create(TemplateParameterType.create("securestring"));
          parameters = DeploymentTemplate.Parameters.create(KeyVaultReference.create(KeyVaultReference.Reference.create(IdReference.create(vaultId), secretName)));
+      } else {
+         templateParameters = DeploymentTemplate.TemplateParameters.create(null);
+         parameters = DeploymentTemplate.Parameters.create(null);
       }
 
 
@@ -174,7 +179,7 @@ public class DeploymentTemplateBuilder {
       String storageAccountName = name.replaceAll("[^A-Za-z0-9 ]", "") + "stor";
 
       String storageName = template.getImage().getName();
-      if (storageName.substring(0, CUSTOM_IMAGE_PREFIX.length()).equals(CUSTOM_IMAGE_PREFIX)) {
+      if (storageName.startsWith(CUSTOM_IMAGE_PREFIX)) {
          storageAccountName = storageName.substring(CUSTOM_IMAGE_PREFIX.length()); // get group name
       }
 
@@ -287,7 +292,7 @@ public class DeploymentTemplateBuilder {
                     .protocol(NetworkSecurityRuleProperties.Protocol.All)
                     .access(NetworkSecurityRuleProperties.Access.Allow)
                     .sourcePortRange("*")
-                    .destinationPortRange("*")
+                    .destinationPortRange(Integer.toString(ports[i]))
                     .sourceAddressPrefix("*")
                     .destinationAddressPrefix("*")
                     .priority(1234 + i)
@@ -362,7 +367,7 @@ public class DeploymentTemplateBuilder {
       String publisher = template.getImage().getProviderId();
       String storageName = template.getImage().getName();
       String sku = template.getImage().getDescription(); // this is actual VHD
-      if (storageName.substring(0, CUSTOM_IMAGE_PREFIX.length()).equals(CUSTOM_IMAGE_PREFIX)) {
+      if (storageName.startsWith(CUSTOM_IMAGE_PREFIX)) {
          storageName = storageName.substring(CUSTOM_IMAGE_PREFIX.length()); // get group name
          cusotomImageUri = sku;
          cusotomImageUri = "https://" + storageName + ".blob.core.windows.net/system/Microsoft.Compute/Images/" + AzureComputeImageExtension.CONTAINER_NAME + "/" + cusotomImageUri;
@@ -377,12 +382,11 @@ public class DeploymentTemplateBuilder {
       //Create Data Disk(s) and add to list
       final String dataDiskName = name + "datadisk";
       variables.put("dataDiskName", dataDiskName);
-      final String dataDiskSize = "100";
 
       List<DataDisk> dataDisks = new ArrayList<DataDisk>();
       DataDisk dataDisk = DataDisk.builder()
               .name("[variables('dataDiskName')]")
-              .diskSizeGB(dataDiskSize)
+              .diskSizeGB(azureComputeConstants.azureDefaultDataDiskSizeProperty())
               .lun(0)
               .vhd(
                       VHD.create("[concat('http://',variables('storageAccountName'),'.blob.core.windows.net/',variables('storageAccountContainerName'),'/',variables('dataDiskName'),'.vhd')]")
@@ -434,7 +438,7 @@ public class DeploymentTemplateBuilder {
               .build();
 
 
-      String tagString = StringUtils.join(Lists.newArrayList(tags), ",");
+      String tagString = Joiner.on(",").join(Lists.newArrayList(tags));
       if (tagString.isEmpty())
          tagString = "jclouds";
       userMetaData.put("tags", tagString);

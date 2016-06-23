@@ -44,6 +44,3 @@ public abstract class KeyVaultReference {
       return new AutoValue_KeyVaultReference(reference);
    }
 }
-
-
-

@@ -26,6 +26,7 @@ import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.TCP_RUL
 import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.TCP_RULE_REGEXP;
 import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.DEFAULT_VNET_ADDRESS_SPACE_PREFIX;
 import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.DEFAULT_SUBNET_ADDRESS_PREFIX;
+import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.DEFAULT_DATADISKSIZE;
 
 import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.DEFAULT_IMAGE_LOGIN;
 
@@ -72,9 +73,9 @@ public class AzureComputeProviderMetadata extends BaseProviderMetadata {
       properties.put(RESOURCE, "https://management.azure.com/");
       properties.put(CREDENTIAL_TYPE, CLIENT_CREDENTIALS_SECRET.toString());
       properties.put(RESOURCE_GROUP_NAME, "jcloudsgroup");
-      properties.put(IMAGE_PUBLISHERS, "Canonical");
       properties.put(DEFAULT_VNET_ADDRESS_SPACE_PREFIX, "10.0.0.0/16");
       properties.put(DEFAULT_SUBNET_ADDRESS_PREFIX, "10.0.0.0/24");
+      properties.put(DEFAULT_DATADISKSIZE, "100");
       properties.put(IMAGE_PUBLISHERS, "Canonical,RedHat");
       properties.put(DEFAULT_IMAGE_LOGIN, "jclouds:Password1!");
       properties.put(TIMEOUT_NODE_TERMINATED, 60 * 10 * 1000);
