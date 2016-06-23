@@ -17,7 +17,7 @@
 package org.jclouds.azurecompute.arm.features;
 
 import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
+import com.google.gson.internal.LinkedTreeMap;
 import org.jclouds.azurecompute.arm.domain.DataDisk;
 import org.jclouds.azurecompute.arm.domain.DiagnosticsProfile;
 import org.jclouds.azurecompute.arm.domain.HardwareProfile;
@@ -36,6 +36,8 @@ import org.jclouds.azurecompute.arm.domain.VirtualMachineProperties;
 import org.jclouds.azurecompute.arm.functions.ParseJobStatus;
 import org.jclouds.azurecompute.arm.internal.BaseAzureComputeApiLiveTest;
 import org.jclouds.util.Predicates2;
+import org.jclouds.azurecompute.arm.domain.ResourceDefinition;
+import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -151,10 +153,64 @@ public class VirtualMachineApiLiveTest extends BaseAzureComputeApiLiveTest {
 
    }
 
-   @Test(dependsOnMethods = "testStop")
-   public void testRestart() {
-      api().start(getName());
+//   @Test(dependsOnMethods = "testStop")
+//   public void testRestart() {
+//      api().start(getName());
+//
+//      //Poll until resource is ready to be used
+//      boolean jobDone = Predicates2.retry(new Predicate<String>() {
+//         @Override
+//         public boolean apply(String name) {
+//            String status = "";
+//            List<VirtualMachineInstance.VirtualMachineStatus> statuses = api().getInstanceDetails(name).statuses();
+//            for (int c = 0; c < statuses.size(); c++) {
+//               if (statuses.get(c).code().substring(0, 10).equals("PowerState")) {
+//                  status = statuses.get(c).displayStatus();
+//                  break;
+//               }
+//            }
+//            return status.equals("VM running");
+//         }
+//      }, 60 * 4 * 1000).apply(getName());
+//      assertTrue(jobDone, "start operation did not complete in the configured timeout");
+//
+//      api().restart(getName());
+//
+//      //Poll until resource is ready to be used
+//      jobDone = Predicates2.retry(new Predicate<String>() {
+//         @Override
+//         public boolean apply(String name) {
+//            String status = "";
+//            List<VirtualMachineInstance.VirtualMachineStatus> statuses = api().getInstanceDetails(name).statuses();
+//            for (int c = 0; c < statuses.size(); c++) {
+//               if (statuses.get(c).code().substring(0, 10).equals("PowerState")) {
+//                  status = statuses.get(c).displayStatus();
+//                  break;
+//               }
+//            }
+//            return status.equals("VM running");
+//         }
+//      }, 60 * 4 * 1000).apply(getName());
+//      assertTrue(jobDone, "restart operation did not complete in the configured timeout");
+//   }
+//
+//   @Test(dependsOnMethods = "testCreate")
+//   public void testList() {
+//      List<VirtualMachine> list = api().list();
+//      final VirtualMachine vm = api().get(getName());
+//
+//      boolean vmPresent = Iterables.any(list, new Predicate<VirtualMachine>() {
+//         public boolean apply(VirtualMachine input) {
+//            return input.name().equals(vm.name());
+//         }
+//      });
+//
+//      assertTrue(vmPresent);
+//   }
 
+   @Test(dependsOnMethods = "testStop")
+   public void testGeneralize() throws IllegalStateException {
+      api().stop(getName());
       //Poll until resource is ready to be used
       boolean jobDone = Predicates2.retry(new Predicate<String>() {
          @Override
@@ -167,46 +223,55 @@ public class VirtualMachineApiLiveTest extends BaseAzureComputeApiLiveTest {
                   break;
                }
             }
-            return status.equals("VM running");
+            if (status.equals("VM stopped")) {
+               api().generalize(getName()); // IllegalStateException if failed
+               return true;
+            }
+            return false;
          }
       }, 60 * 4 * 1000).apply(getName());
-      assertTrue(jobDone, "start operation did not complete in the configured timeout");
+      assertTrue(jobDone, "stop operation did not complete in the configured timeout");
+   }
 
-      api().restart(getName());
+   @Test(dependsOnMethods = "testGeneralize")
+   public void testCapture() throws IllegalStateException {
+      URI uri = api().capture(getName(), getName(), getName());
+      if (uri != null){
+         boolean jobDone = Predicates2.retry(new Predicate<URI>() {
+            @Override public boolean apply(URI uri) {
+               try {
+                  List<ResourceDefinition> definitions = api.getJobApi().captureStatus(uri);
+                  if (definitions != null) {
+                     for (ResourceDefinition definition : definitions) {
+                        LinkedTreeMap<String, String> properties = (LinkedTreeMap<String, String>) definition.properties();
+                        Object storageObject = properties.get("storageProfile");
+                        LinkedTreeMap<String, String> properties2 = (LinkedTreeMap<String, String>) storageObject;
+                        Object osDiskObject = properties2.get("osDisk");
+                        LinkedTreeMap<String, String> osProperties = (LinkedTreeMap<String, String>) osDiskObject;
+                        Object dataDisksObject = properties2.get("dataDisks");
+                        ArrayList<Object> dataProperties = (ArrayList<Object>) dataDisksObject;
+                        LinkedTreeMap<String, String> datadiskObject = (LinkedTreeMap<String, String>) dataProperties.get(0);
 
-      //Poll until resource is ready to be used
-      jobDone = Predicates2.retry(new Predicate<String>() {
-         @Override
-         public boolean apply(String name) {
-            String status = "";
-            List<VirtualMachineInstance.VirtualMachineStatus> statuses = api().getInstanceDetails(name).statuses();
-            for (int c = 0; c < statuses.size(); c++) {
-               if (statuses.get(c).code().substring(0, 10).equals("PowerState")) {
-                  status = statuses.get(c).displayStatus();
-                  break;
+                        Assert.assertNotNull(osProperties.get("name"));
+                        Assert.assertNotNull(datadiskObject.get("name"));
+                     }
+                     return true;
+                  }
+                  assert true;
+                  return false;
+               }
+               catch (Exception e) {
+                  assert true;
+                  return false;
                }
             }
-            return status.equals("VM running");
-         }
-      }, 60 * 4 * 1000).apply(getName());
-      assertTrue(jobDone, "restart operation did not complete in the configured timeout");
+         }, 15 * 1000 /* 15 second timeout */).apply(uri);
+
+      }
+
    }
 
-   @Test(dependsOnMethods = "testCreate")
-   public void testList() {
-      List<VirtualMachine> list = api().list();
-      final VirtualMachine vm = api().get(getName());
-
-      boolean vmPresent = Iterables.any(list, new Predicate<VirtualMachine>() {
-         public boolean apply(VirtualMachine input) {
-            return input.name().equals(vm.name());
-         }
-      });
-
-      assertTrue(vmPresent);
-   }
-
-   @Test(dependsOnMethods = {"testRestart", "testList", "testGet"}, alwaysRun = true)
+   @Test(dependsOnMethods = "testCapture", alwaysRun = true)
    public void testDelete() throws Exception {
       URI uri = api().delete(getName());
 

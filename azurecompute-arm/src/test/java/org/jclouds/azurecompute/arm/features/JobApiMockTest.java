@@ -18,15 +18,15 @@ package org.jclouds.azurecompute.arm.features;
 
 import java.io.IOException;
 import java.net.URI;
-//import java.util.List;
-//
-//import org.jclouds.azurecompute.arm.domain.ResourceDefinition;
+import java.util.List;
+
+import org.jclouds.azurecompute.arm.domain.ResourceDefinition;
 import org.jclouds.azurecompute.arm.functions.ParseJobStatus.JobStatus;
 import org.jclouds.azurecompute.arm.internal.BaseAzureComputeApiMockTest;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
-//import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.assertTrue;
 
 @Test(groups = "unit", testName = "JobApiMockTest", singleThreaded = true)
 public class JobApiMockTest extends BaseAzureComputeApiMockTest {
@@ -72,25 +72,25 @@ public class JobApiMockTest extends BaseAzureComputeApiMockTest {
 
       assertSent(server, "GET", requestUrl);
    }
-//
-//   public void testCaptureJobStatus() throws IOException, InterruptedException {
-//      server.enqueue(response200());
-//
-//      List<ResourceDefinition> resourceDefinitionsList = api.getJobApi().captureStatus(URI.create(requestUrl));
-//
-//      assertTrue(resourceDefinitionsList.size() > 0);
-//
-//      assertSent(server, "GET", requestUrl);
-//   }
-//
-//   public void testCaptureJobStatusFailed() throws InterruptedException {
-//      server.enqueue(jsonResponse("/resourcegroup.json").setStatus("HTTP/1.1 208 Error"));
-//
-//      List<ResourceDefinition> resourceDefinitionsList = api.getJobApi().captureStatus(URI.create(requestUrl));
-//
-//      assertEquals(resourceDefinitionsList.size(), 0);
-//
-//      assertSent(server, "GET", requestUrl);
-//   }
+
+   public void testCaptureJobStatus() throws IOException, InterruptedException {
+      server.enqueue(jsonResponse("/resourceDefinition.json").setResponseCode(200));
+
+      List<ResourceDefinition> resourceDefinitionsList = api.getJobApi().captureStatus(URI.create(requestUrl));
+
+      assertTrue(resourceDefinitionsList.size() > 0);
+
+      assertSent(server, "GET", requestUrl);
+   }
+
+   public void testCaptureJobStatusFailed() throws InterruptedException {
+      server.enqueue(response404());
+
+      List<ResourceDefinition> resourceDefinitionsList = api.getJobApi().captureStatus(URI.create(requestUrl));
+
+      assertEquals(resourceDefinitionsList.size(), 0);
+
+      assertSent(server, "GET", requestUrl);
+   }
 
 }

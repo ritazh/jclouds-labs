@@ -69,53 +69,54 @@ public class AzureComputeImageExtension implements ImageExtension {
    @Override
    public ListenableFuture<Image> createImage(ImageTemplate template) {
       final CloneImageTemplate cloneTemplate = (CloneImageTemplate) template;
-      String id = cloneTemplate.getSourceNodeId();
+      final String id = cloneTemplate.getSourceNodeId();
       final String storageAccountName = id.replaceAll("[^A-Za-z0-9 ]", "") + "stor";
 
-      api.getVirtualMachineApi(group).generalize(id);
-
-      final String[] disks = new String[2];
-      URI uri = api.getVirtualMachineApi(group).capture(id, cloneTemplate.getName(), CONTAINER_NAME);
-      if (uri != null){
-         boolean jobDone = Predicates2.retry(new Predicate<URI>() {
-            @Override public boolean apply(URI uri) {
-               try {
-                  List<ResourceDefinition> definitions = api.getJobApi().captureStatus(uri);
-                  if (definitions != null) {
-                     for (ResourceDefinition definition : definitions) {
-                        LinkedTreeMap<String, String> properties = (LinkedTreeMap<String, String>) definition.properties();
-                        Object storageObject = properties.get("storageProfile");
-                        LinkedTreeMap<String, String> properties2 = (LinkedTreeMap<String, String>) storageObject;
-                        Object osDiskObject = properties2.get("osDisk");
-                        LinkedTreeMap<String, String> osProperties = (LinkedTreeMap<String, String>) osDiskObject;
-                        Object dataDisksObject = properties2.get("dataDisks");
-                        ArrayList<Object> dataProperties = (ArrayList<Object>) dataDisksObject;
-                        LinkedTreeMap<String, String> datadiskObject = (LinkedTreeMap<String, String>) dataProperties.get(0);
-
-                        disks[0] = osProperties.get("name");
-                        disks[1] = datadiskObject.get("name");
-
-                     }
-                     return true;
-                  }
-                  return false;
-               }
-               catch (Exception e) {
-                  return false;
-               }
-            }
-         }, 15 * 1000 /* 15 second timeout */).apply(uri);
-
-      }
-
-      VirtualMachine vm = api.getVirtualMachineApi(group).get(id);
-      String location = vm.location();
-      final VMImage ref = VMImage.create(CUSTOM_IMAGE_PREFIX + group, CUSTOM_IMAGE_PREFIX + storageAccountName, disks[0], disks[1], location, false);
 
       return userExecutor.submit(new Callable<Image>() {
          @Override
          public Image call() throws Exception {
-               return imageReferenceToImage.apply(ref);
+            api.getVirtualMachineApi(group).generalize(id);
+
+            final String[] disks = new String[2];
+            URI uri = api.getVirtualMachineApi(group).capture(id, cloneTemplate.getName(), CONTAINER_NAME);
+            if (uri != null){
+               boolean jobDone = Predicates2.retry(new Predicate<URI>() {
+                  @Override public boolean apply(URI uri) {
+                     try {
+                        List<ResourceDefinition> definitions = api.getJobApi().captureStatus(uri);
+                        if (definitions != null) {
+                           for (ResourceDefinition definition : definitions) {
+                              LinkedTreeMap<String, String> properties = (LinkedTreeMap<String, String>) definition.properties();
+                              Object storageObject = properties.get("storageProfile");
+                              LinkedTreeMap<String, String> properties2 = (LinkedTreeMap<String, String>) storageObject;
+                              Object osDiskObject = properties2.get("osDisk");
+                              LinkedTreeMap<String, String> osProperties = (LinkedTreeMap<String, String>) osDiskObject;
+                              Object dataDisksObject = properties2.get("dataDisks");
+                              ArrayList<Object> dataProperties = (ArrayList<Object>) dataDisksObject;
+                              LinkedTreeMap<String, String> datadiskObject = (LinkedTreeMap<String, String>) dataProperties.get(0);
+
+                              disks[0] = osProperties.get("name");
+                              disks[1] = datadiskObject.get("name");
+
+                           }
+                           return true;
+                        }
+                        return false;
+                     }
+                     catch (Exception e) {
+                        return false;
+                     }
+                  }
+               }, 15 * 1000 /* 15 second timeout */).apply(uri);
+
+            }
+
+            VirtualMachine vm = api.getVirtualMachineApi(group).get(id);
+            String location = vm.location();
+            final VMImage ref = VMImage.create(CUSTOM_IMAGE_PREFIX + group, CUSTOM_IMAGE_PREFIX + storageAccountName, disks[0], disks[1], location, false);
+
+            return imageReferenceToImage.apply(ref);
          }
       });
 

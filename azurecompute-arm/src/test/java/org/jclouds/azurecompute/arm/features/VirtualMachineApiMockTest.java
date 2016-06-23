@@ -182,6 +182,34 @@ public class VirtualMachineApiMockTest extends BaseAzureComputeApiMockTest {
               "/virtualMachines/windowsmachine/powerOff?api-version=2015-06-15");
    }
 
+   public void testGeneralize() throws Exception {
+      server.enqueue(new MockResponse().setResponseCode(200));
+      final VirtualMachineApi vmAPI = api.getVirtualMachineApi("groupname");
+      vmAPI.generalize("vm"); // IllegalStateException if failed
+      assertSent(server, "POST", "/subscriptions/SUBSCRIPTIONID/resourceGroups/groupname/providers/Microsoft.Compute" +
+              "/virtualMachines/vm/generalize?api-version=2015-06-15");
+   }
+
+   public void testCapture() throws Exception {
+      server.enqueue(response202WithHeader());
+
+      final VirtualMachineApi vmAPI = api.getVirtualMachineApi("groupname");
+      URI uri = vmAPI.capture("vm", "prefix", "container");
+      assertNotNull(uri);
+      assertSent(server, "POST", "/subscriptions/SUBSCRIPTIONID/resourceGroups/groupname/providers/Microsoft.Compute" +
+              "/virtualMachines/vm/capture?api-version=2015-06-15");
+   }
+
+   public void testCapture404() throws Exception {
+      server.enqueue(response404());
+
+      final VirtualMachineApi vmAPI = api.getVirtualMachineApi("groupname");
+      URI uri = vmAPI.capture("vm", "prefix", "container");
+      assertNull(uri);
+      assertSent(server, "POST", "/subscriptions/SUBSCRIPTIONID/resourceGroups/groupname/providers/Microsoft.Compute" +
+              "/virtualMachines/vm/capture?api-version=2015-06-15");
+   }
+
    private VirtualMachineProperties getProperties() {
       HardwareProfile hwProf = HardwareProfile.create("Standard_D1");
       ImageReference imgRef = ImageReference.create("publisher", "offer", "sku", "ver");

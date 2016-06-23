@@ -141,6 +141,9 @@ public interface VirtualMachineApi {
 
    /**
     * Capture the virtual machine image
+    * destinationContainerName: the name of the folder created under the "system" container in the storage account
+    * Folder structure: Microsoft.Computer > Images > destinationContainerName
+    * Within the folder, there will be 1 page blob for the osDisk vhd and 1 block blob for the vmTemplate json file
     */
    @Named("capture")
    @POST
@@ -148,6 +151,7 @@ public interface VirtualMachineApi {
    @MapBinder(BindToJsonPayload.class)
    @Path("/{name}/capture")
    @ResponseParser(URIParser.class)
+   @Fallback(Fallbacks.NullOnNotFoundOr404.class)
    URI capture(@PathParam("name") String name,
                @PayloadParam("vhdPrefix") String vhdPrefix,
                @PayloadParam("destinationContainerName") String destinationContainerName);
