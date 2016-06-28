@@ -193,7 +193,7 @@ public class DeploymentToNodeMetadata implements Function<VMDeployment, NodeMeta
 
          if (imageReference != null) {
             VMImage vmImage = VMImage.create(imageReference.publisher(), imageReference.offer(), imageReference.sku(),
-                    null, locationName, false);
+                    imageReference.version(), locationName, false);
             Image image = vmImageToImage.apply(vmImage);
             builder.imageId(image.getId());
          }
@@ -208,14 +208,15 @@ public class DeploymentToNodeMetadata implements Function<VMDeployment, NodeMeta
             }
          }
 
-         VMHardware hwProfile = new VMHardware();
-         hwProfile.name = myVMSize.name();
-         hwProfile.numberOfCores = myVMSize.numberOfCores();
-         hwProfile.osDiskSizeInMB = myVMSize.osDiskSizeInMB();
-         hwProfile.resourceDiskSizeInMB = myVMSize.resourceDiskSizeInMB();
-         hwProfile.memoryInMB = myVMSize.memoryInMB();
-         hwProfile.maxDataDiskCount = myVMSize.maxDataDiskCount();
-         hwProfile.location = locationName;
+         VMHardware hwProfile = VMHardware.create(
+                 myVMSize.name(),
+                 myVMSize.numberOfCores(),
+                 myVMSize.osDiskSizeInMB(),
+                 myVMSize.resourceDiskSizeInMB(),
+                 myVMSize.memoryInMB(),
+                 myVMSize.maxDataDiskCount(),
+                 locationName,
+                 false);
 
          Hardware hardware = vmHardwareToHardware.apply(hwProfile);
          builder.hardware(hardware);

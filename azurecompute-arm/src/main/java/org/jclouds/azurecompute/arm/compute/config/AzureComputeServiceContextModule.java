@@ -37,6 +37,7 @@ import org.jclouds.azurecompute.arm.domain.VMImage;
 import org.jclouds.azurecompute.arm.domain.Location;
 import org.jclouds.azurecompute.arm.compute.strategy.CreateResourceGroupThenCreateNodes;
 import org.jclouds.azurecompute.arm.AzureComputeApi;
+import org.jclouds.azurecompute.arm.domain.VirtualMachineInstance;
 import org.jclouds.azurecompute.arm.functions.ParseJobStatus;
 import org.jclouds.compute.options.TemplateOptions;
 import org.jclouds.compute.ComputeServiceAdapter;
@@ -61,6 +62,7 @@ import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.DEFAULT
 import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.TIMEOUT_RESOURCE_DELETED;
 import static org.jclouds.azurecompute.arm.config.AzureComputeProperties.DEFAULT_DATADISKSIZE;
 
+import static org.jclouds.compute.config.ComputeServiceProperties.TIMEOUT_NODE_SUSPENDED;
 import static org.jclouds.util.Predicates2.retry;
 import static org.jclouds.compute.config.ComputeServiceProperties.TIMEOUT_NODE_TERMINATED;
 import static org.jclouds.compute.config.ComputeServiceProperties.TIMEOUT_IMAGE_AVAILABLE;
@@ -229,6 +231,18 @@ public class AzureComputeServiceContextModule
               pollPeriod.pollMaxPeriod);
    }
 
+   @Provides
+   @Named(TIMEOUT_NODE_SUSPENDED)
+   protected Predicate<String> provideNodeSuspendedPredicate(final AzureComputeApi api,
+                                                             final AzureComputeServiceContextModule.AzureComputeConstants azureComputeConstants,
+                                                             Timeouts timeouts,
+                                                           PollPeriod pollPeriod) {
+
+      String azureGroup = azureComputeConstants.azureResourceGroup();
+      return retry(new NodeSuspendedPredicate(api, azureGroup), timeouts.nodeSuspended, pollPeriod.pollInitialPeriod,
+              pollPeriod.pollMaxPeriod);
+   }
+
    @VisibleForTesting
    static class ActionDonePredicate implements Predicate<URI> {
 
@@ -259,11 +273,33 @@ public class AzureComputeServiceContextModule
       public boolean apply(URI uri) {
          checkNotNull(uri, "uri cannot be null");
          List<ResourceDefinition> definitions = api.getJobApi().captureStatus(uri);
-         if (definitions != null) {
-            return true;
-         } else {
-            return false;
+         return definitions != null;
+      }
+   }
+
+   @VisibleForTesting
+   static class NodeSuspendedPredicate implements Predicate<String> {
+
+      private final AzureComputeApi api;
+      private final String azureGroup;
+
+      public NodeSuspendedPredicate(AzureComputeApi api, String azureGroup) {
+         this.api = checkNotNull(api, "api must not be null");
+         this.azureGroup = checkNotNull(azureGroup, "azuregroup must not be null");
+      }
+
+      @Override
+      public boolean apply(String name) {
+         checkNotNull(name, "name cannot be null");
+         String status = "";
+         List<VirtualMachineInstance.VirtualMachineStatus> statuses = api.getVirtualMachineApi(this.azureGroup).getInstanceDetails(name).statuses();
+         for (int c = 0; c < statuses.size(); c++) {
+            if (statuses.get(c).code().substring(0, 10).equals("PowerState")) {
+               status = statuses.get(c).displayStatus();
+               break;
+            }
          }
+         return status.equals("VM stopped");
       }
    }
 }

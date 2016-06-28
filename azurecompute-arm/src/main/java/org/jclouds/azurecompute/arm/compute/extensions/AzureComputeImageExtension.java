@@ -29,15 +29,15 @@ import org.jclouds.azurecompute.arm.compute.functions.VMImageToImage;
 import org.jclouds.azurecompute.arm.domain.ResourceDefinition;
 import org.jclouds.azurecompute.arm.domain.VMImage;
 import org.jclouds.azurecompute.arm.domain.VirtualMachine;
-import org.jclouds.azurecompute.arm.domain.VirtualMachineInstance;
 import org.jclouds.compute.domain.CloneImageTemplate;
 import org.jclouds.compute.domain.Image;
 import org.jclouds.compute.domain.ImageTemplate;
 import org.jclouds.compute.domain.ImageTemplateBuilder;
 import org.jclouds.compute.extensions.ImageExtension;
 import static org.jclouds.compute.config.ComputeServiceProperties.TIMEOUT_IMAGE_AVAILABLE;
+import static org.jclouds.compute.config.ComputeServiceProperties.TIMEOUT_NODE_SUSPENDED;
+
 import com.google.common.util.concurrent.UncheckedTimeoutException;
-import org.jclouds.util.Predicates2;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -48,6 +48,7 @@ import java.util.concurrent.Callable;
 public class AzureComputeImageExtension implements ImageExtension {
    private final AzureComputeApi api;
    private final Predicate<URI> imageAvailablePredicate;
+   private final Predicate<String> nodeSuspendedPredicate;
    private final ListeningExecutorService userExecutor;
    private final String group;
    private final VMImageToImage imageReferenceToImage;
@@ -57,6 +58,7 @@ public class AzureComputeImageExtension implements ImageExtension {
    @Inject
    AzureComputeImageExtension(AzureComputeApi api,
                               @Named(TIMEOUT_IMAGE_AVAILABLE) Predicate<URI> imageAvailablePredicate,
+                              @Named(TIMEOUT_NODE_SUSPENDED) Predicate<String> nodeSuspendedPredicate,
                               final AzureComputeServiceContextModule.AzureComputeConstants azureComputeConstants,
                               @Named(Constants.PROPERTY_USER_THREADS) ListeningExecutorService userExecutor,
                               VMImageToImage imageReferenceToImage) {
@@ -65,6 +67,7 @@ public class AzureComputeImageExtension implements ImageExtension {
       this.imageReferenceToImage = imageReferenceToImage;
       this.api = api;
       this.imageAvailablePredicate = imageAvailablePredicate;
+      this.nodeSuspendedPredicate = nodeSuspendedPredicate;
    }
 
    @Override
@@ -83,34 +86,16 @@ public class AzureComputeImageExtension implements ImageExtension {
       String status = "";
       api.getVirtualMachineApi(group).stop(id);
       //Poll until resource is ready to be used
-      boolean jobDone = Predicates2.retry(new Predicate<String>() {
-         @Override
-         public boolean apply(String name) {
-            String status = "";
-            List<VirtualMachineInstance.VirtualMachineStatus> statuses = api.getVirtualMachineApi(group).getInstanceDetails(name).statuses();
-            for (int c = 0; c < statuses.size(); c++) {
-               if (statuses.get(c).code().substring(0, 10).equals("PowerState")) {
-                  status = statuses.get(c).displayStatus();
-                  break;
-               }
-            }
-            if (status.equals("VM stopped")) {
-               return true;
-            }
-            return false;
-         }
-      }, 60 * 4 * 1000).apply(id);
+      if (nodeSuspendedPredicate.apply(id)) {
+         return userExecutor.submit(new Callable<Image>() {
+            @Override
+            public Image call() throws Exception {
+               api.getVirtualMachineApi(group).generalize(id);
 
-      return userExecutor.submit(new Callable<Image>() {
-         @Override
-         public Image call() throws Exception {
-            api.getVirtualMachineApi(group).generalize(id);
-
-            final String[] disks = new String[2];
-            URI uri = api.getVirtualMachineApi(group).capture(id, cloneTemplate.getName(), CONTAINER_NAME);
-            if (uri != null) {
-               if (imageAvailablePredicate.apply(uri)) {
-                  try {
+               final String[] disks = new String[2];
+               URI uri = api.getVirtualMachineApi(group).capture(id, cloneTemplate.getName(), CONTAINER_NAME);
+               if (uri != null) {
+                  if (imageAvailablePredicate.apply(uri)) {
                      List<ResourceDefinition> definitions = api.getJobApi().captureStatus(uri);
                      if (definitions != null) {
                         for (ResourceDefinition definition : definitions) {
@@ -132,14 +117,15 @@ public class AzureComputeImageExtension implements ImageExtension {
                            return imageReferenceToImage.apply(ref);
                         }
                      }
-                  } catch (Exception e) {
                   }
                }
+               throw new UncheckedTimeoutException("Image was not created within the time limit: "
+                       + cloneTemplate.getName());
             }
-            throw new UncheckedTimeoutException("Image was not created within the time limit: "
-                    + cloneTemplate.getName());
-            }
-      });
+         });
+      } else {
+         return null;
+      }
    }
 
    @Override

@@ -62,6 +62,7 @@ import org.jclouds.domain.LoginCredentials;
 import org.jclouds.logging.Logger;
 import org.jclouds.azurecompute.arm.functions.CleanupResources;
 import org.jclouds.azurecompute.arm.domain.VMSize;
+import org.jclouds.azurecompute.arm.domain.Version;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
@@ -176,14 +177,15 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
          Iterable<VMSize> vmSizes = api.getVMSizeApi(location.name()).list();
 
          for (VMSize vmSize : vmSizes){
-            VMHardware hwProfile = new VMHardware();
-            hwProfile.name = vmSize.name();
-            hwProfile.numberOfCores = vmSize.numberOfCores();
-            hwProfile.osDiskSizeInMB = vmSize.osDiskSizeInMB();
-            hwProfile.resourceDiskSizeInMB = vmSize.resourceDiskSizeInMB();
-            hwProfile.memoryInMB = vmSize.memoryInMB();
-            hwProfile.maxDataDiskCount = vmSize.maxDataDiskCount();
-            hwProfile.location = location.name();
+            VMHardware hwProfile = VMHardware.create(
+                    vmSize.name(),
+                    vmSize.numberOfCores(),
+                    vmSize.osDiskSizeInMB(),
+                    vmSize.resourceDiskSizeInMB(),
+                    vmSize.memoryInMB(),
+                    vmSize.maxDataDiskCount(),
+                    location.name(),
+                    false);
             hwProfiles.add(hwProfile);
          }
       }
@@ -195,12 +197,13 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
    private void checkAndSetHwAvailability(List<VMHardware> hwProfiles, Collection<String> locations) {
       Multimap<String, String> hwMap = ArrayListMultimap.create();
       for (VMHardware hw : hwProfiles) {
-         hwMap.put(hw.name, hw.location);
+         hwMap.put(hw.name(), hw.location());
       }
 
-      for (VMHardware hw : hwProfiles) {
-         hw.globallyAvailable = hwMap.get(hw.name).containsAll(locations);
-      }
+      /// TODO
+      //      for (VMHardware hw : hwProfiles) {
+      //         hw.globallyAvailable() = hwMap.get(hw.name()).containsAll(locations);
+      //      }
    }
 
    private void getImagesFromPublisher(String publisherName, List<VMImage> osImagesRef, String location) {
@@ -213,8 +216,11 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
          Iterable<SKU> skuList = osImageApi.listSKUs(publisherName, offer.name());
 
          for (SKU sku : skuList) {
-            VMImage vmImage = VMImage.create(publisherName, offer.name(), sku.name(), null, location, false);
-            osImagesRef.add(vmImage);
+            Iterable<Version> versionList = osImageApi.listVersions(publisherName, offer.name(), sku.name());
+            for (Version version : versionList) {
+               VMImage vmImage = VMImage.create(publisherName, offer.name(), sku.name(), version.name(), location, false);
+               osImagesRef.add(vmImage);
+            }
          }
       }
 
@@ -249,6 +255,10 @@ public class AzureComputeServiceAdapter implements ComputeServiceAdapter<VMDeplo
       for (VMImage image : images) {
          map.put( image.offer() + "/" + image.sku(), image.location());
       }
+      ///TODO
+      //      for (VMImage image : images) {
+      //         image.globallyAvailable() = map.get(image.offer() + "/" + image.sku()).containsAll(locations);
+      //      }
    }
 
    @Override

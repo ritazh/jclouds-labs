@@ -16,12 +16,6 @@
  */
 package org.jclouds.azurecompute.arm.compute;
 
-import com.google.common.base.Stopwatch;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import org.jclouds.compute.JettyStatements;
-import org.jclouds.compute.RunNodesException;
 import org.jclouds.compute.RunScriptOnNodesException;
 import org.jclouds.compute.domain.ExecResponse;
 import org.jclouds.compute.domain.NodeMetadata;
@@ -31,7 +25,6 @@ import org.jclouds.compute.internal.BaseComputeServiceLiveTest;
 import org.jclouds.compute.predicates.NodePredicates;
 import org.jclouds.domain.LoginCredentials;
 import org.jclouds.scriptbuilder.domain.Statement;
-import org.jclouds.scriptbuilder.domain.StatementList;
 import org.jclouds.scriptbuilder.domain.Statements;
 import org.jclouds.scriptbuilder.statements.java.InstallJDK;
 import org.jclouds.scriptbuilder.statements.login.AdminAccess;
@@ -52,10 +45,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static org.jclouds.compute.options.RunScriptOptions.Builder.nameTask;
 import org.jclouds.logging.slf4j.config.SLF4JLoggingModule;
 import org.jclouds.logging.config.LoggingModule;
 
@@ -98,7 +89,7 @@ public class AzureComputeServiceLiveTest extends BaseComputeServiceLiveTest {
       properties.setProperty(TIMEOUT_PORT_OPEN, scriptTimeout + "");
       properties.setProperty(TIMEOUT_NODE_TERMINATED, scriptTimeout + "");
       properties.setProperty(TIMEOUT_NODE_SUSPENDED, scriptTimeout + "");
-      properties.put(RESOURCE_GROUP_NAME, "a2");
+      properties.put(RESOURCE_GROUP_NAME, "a4");
 
       AzureLiveTestUtils.defaultProperties(properties);
       checkNotNull(setIfTestSystemPropertyPresent(properties, "oauth.endpoint"), "test.oauth.endpoint");
@@ -121,28 +112,6 @@ public class AzureComputeServiceLiveTest extends BaseComputeServiceLiveTest {
    @Test( enabled = false)
    protected void weCanCancelTasks(NodeMetadata node) throws InterruptedException, ExecutionException {
       return;
-   }
-
-   @Override
-   protected void createAndRunAServiceInGroup(String group) throws RunNodesException {
-      ImmutableMap userMetadata = ImmutableMap.of("test", group);
-      ImmutableSet tags = ImmutableSet.of(group);
-      Stopwatch watch = Stopwatch.createStarted();
-      this.template = this.buildTemplate(this.client.templateBuilder());
-      this.template.getOptions().inboundPorts(new int[]{22, 8080}).blockOnPort(22, 300).userMetadata(userMetadata).tags(tags);
-      NodeMetadata node = (NodeMetadata) Iterables.getOnlyElement(this.client.createNodesInGroup(group, 1, this.template));
-      long createSeconds = watch.elapsed(TimeUnit.SECONDS);
-      String nodeId = node.getId();
-      this.checkUserMetadataContains(node, userMetadata);
-      this.checkTagsInNodeEquals(node, tags);
-      Logger.getAnonymousLogger().info(String.format("<< available node(%s) os(%s) in %ss", new Object[]{node.getId(), node.getOperatingSystem(), Long.valueOf(createSeconds)}));
-      watch.reset().start();
-      this.client.runScriptOnNode(nodeId, new StatementList(Statements.exec("sleep 50"), JettyStatements.install()), nameTask("configure-jetty"));
-      long configureSeconds = watch.elapsed(TimeUnit.SECONDS);
-      Logger.getAnonymousLogger().info(String.format("<< configured node(%s) with %s and jetty %s in %ss", new Object[]{nodeId, this.exec(nodeId, "java -fullversion"), this.exec(nodeId, JettyStatements.version()), Long.valueOf(configureSeconds)}));
-      this.trackAvailabilityOfProcessOnNode(JettyStatements.start(), "start jetty", node);
-      this.client.runScriptOnNode(nodeId, JettyStatements.stop(), org.jclouds.compute.options.TemplateOptions.Builder.runAsRoot(false).wrapInInitScript(false));
-      this.trackAvailabilityOfProcessOnNode(JettyStatements.start(), "start jetty", node);
    }
 
    @Override

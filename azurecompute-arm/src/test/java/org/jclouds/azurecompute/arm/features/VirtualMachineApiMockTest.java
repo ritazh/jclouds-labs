@@ -197,7 +197,7 @@ public class VirtualMachineApiMockTest extends BaseAzureComputeApiMockTest {
       URI uri = vmAPI.capture("vm", "prefix", "container");
       assertNotNull(uri);
       assertSent(server, "POST", "/subscriptions/SUBSCRIPTIONID/resourceGroups/groupname/providers/Microsoft.Compute" +
-              "/virtualMachines/vm/capture?api-version=2015-06-15");
+              "/virtualMachines/vm/capture?api-version=2015-06-15", "{\"vhdPrefix\":\"prefix\",\"destinationContainerName\":\"container\"}");
    }
 
    public void testCapture404() throws Exception {
@@ -207,7 +207,7 @@ public class VirtualMachineApiMockTest extends BaseAzureComputeApiMockTest {
       URI uri = vmAPI.capture("vm", "prefix", "container");
       assertNull(uri);
       assertSent(server, "POST", "/subscriptions/SUBSCRIPTIONID/resourceGroups/groupname/providers/Microsoft.Compute" +
-              "/virtualMachines/vm/capture?api-version=2015-06-15");
+              "/virtualMachines/vm/capture?api-version=2015-06-15", "{\"vhdPrefix\":\"prefix\",\"destinationContainerName\":\"container\"}");
    }
 
    private VirtualMachineProperties getProperties() {

@@ -104,12 +104,12 @@ public class BaseAzureComputeApiLiveTest extends AbstractAzureComputeApiLiveTest
       if (resourceGroupName == null) {
          resourceGroupName = String.format("%3.24s",
                  System.getProperty("user.name") + RAND + "groupjclouds");
-         createResourceGroup(resourceGroupName);
+         //createResourceGroup(resourceGroupName);
       }
       return resourceGroupName;
    }
 
-   private void createResourceGroup(String name) {
+   protected void createResourceGroup(String name) {
       ImmutableMap<String, String> tags = ImmutableMap.<String, String>builder().build();
 
       final ResourceGroup resourceGroup = api.getResourceGroupApi().create(
@@ -125,6 +125,7 @@ public class BaseAzureComputeApiLiveTest extends AbstractAzureComputeApiLiveTest
    @Override
    public void setup() {
       super.setup();
+      createResourceGroup(getResourceGroupName());
       storageService = getOrCreateStorageService(getStorageServiceName());
    }
 
