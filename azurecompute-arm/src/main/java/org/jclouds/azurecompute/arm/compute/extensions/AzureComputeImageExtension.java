@@ -34,6 +34,9 @@ import org.jclouds.compute.domain.Image;
 import org.jclouds.compute.domain.ImageTemplate;
 import org.jclouds.compute.domain.ImageTemplateBuilder;
 import org.jclouds.compute.extensions.ImageExtension;
+import org.jclouds.azurecompute.arm.compute.config.AzureComputeServiceContextModule.AzureComputeConstants;
+
+import static java.lang.String.format;
 import static org.jclouds.compute.config.ComputeServiceProperties.TIMEOUT_IMAGE_AVAILABLE;
 import static org.jclouds.compute.config.ComputeServiceProperties.TIMEOUT_NODE_SUSPENDED;
 
@@ -49,6 +52,7 @@ public class AzureComputeImageExtension implements ImageExtension {
    private final AzureComputeApi api;
    private final Predicate<URI> imageAvailablePredicate;
    private final Predicate<String> nodeSuspendedPredicate;
+   private final AzureComputeConstants azureComputeConstants;
    private final ListeningExecutorService userExecutor;
    private final String group;
    private final VMImageToImage imageReferenceToImage;
@@ -68,6 +72,7 @@ public class AzureComputeImageExtension implements ImageExtension {
       this.api = api;
       this.imageAvailablePredicate = imageAvailablePredicate;
       this.nodeSuspendedPredicate = nodeSuspendedPredicate;
+      this.azureComputeConstants = azureComputeConstants;
    }
 
    @Override
@@ -124,7 +129,9 @@ public class AzureComputeImageExtension implements ImageExtension {
             }
          });
       } else {
-         return null;
+         final String illegalStateExceptionMessage = format("Node %s was not suspended within %sms.",
+                 id, azureComputeConstants.operationTimeout());
+         throw new IllegalStateException(illegalStateExceptionMessage);
       }
    }
 
