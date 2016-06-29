@@ -49,6 +49,7 @@ import java.util.concurrent.TimeUnit;
 import static com.google.common.base.Preconditions.checkNotNull;
 import org.jclouds.logging.slf4j.config.SLF4JLoggingModule;
 import org.jclouds.logging.config.LoggingModule;
+import org.jclouds.scriptbuilder.ScriptBuilder;
 
 
 /**
@@ -89,7 +90,7 @@ public class AzureComputeServiceLiveTest extends BaseComputeServiceLiveTest {
       properties.setProperty(TIMEOUT_PORT_OPEN, scriptTimeout + "");
       properties.setProperty(TIMEOUT_NODE_TERMINATED, scriptTimeout + "");
       properties.setProperty(TIMEOUT_NODE_SUSPENDED, scriptTimeout + "");
-      properties.put(RESOURCE_GROUP_NAME, "a4");
+      properties.put(RESOURCE_GROUP_NAME, "a1");
 
       AzureLiveTestUtils.defaultProperties(properties);
       checkNotNull(setIfTestSystemPropertyPresent(properties, "oauth.endpoint"), "test.oauth.endpoint");
@@ -104,7 +105,7 @@ public class AzureComputeServiceLiveTest extends BaseComputeServiceLiveTest {
 
    @Override
    protected Template addRunScriptToTemplate(Template template) {
-      template.getOptions().runScript(Statements.newStatementList(new Statement[]{AdminAccess.standard(), Statements.exec("sleep 50"), InstallJDK.fromOpenJDK()}));
+      template.getOptions().runScript(Statements.newStatementList(new Statement[]{AdminAccess.standard(), ScriptBuilder.waitForLockFile("/var/lib/dpkg/lock", 100), InstallJDK.fromOpenJDK()}));
       return template;
    }
 
@@ -116,6 +117,6 @@ public class AzureComputeServiceLiveTest extends BaseComputeServiceLiveTest {
 
    @Override
    protected Map<? extends NodeMetadata, ExecResponse> runScriptWithCreds(String group, OperatingSystem os, LoginCredentials creds) throws RunScriptOnNodesException {
-      return this.client.runScriptOnNodesMatching(NodePredicates.runningInGroup(group), Statements.newStatementList(Statements.exec("sleep 50"), InstallJDK.fromOpenJDK()), org.jclouds.compute.options.TemplateOptions.Builder.overrideLoginCredentials(creds).nameTask("runScriptWithCreds"));
+      return this.client.runScriptOnNodesMatching(NodePredicates.runningInGroup(group), Statements.newStatementList(ScriptBuilder.waitForLockFile("/var/lib/dpkg/lock", 100), InstallJDK.fromOpenJDK()), org.jclouds.compute.options.TemplateOptions.Builder.overrideLoginCredentials(creds).nameTask("runScriptWithCreds"));
    }
 }
