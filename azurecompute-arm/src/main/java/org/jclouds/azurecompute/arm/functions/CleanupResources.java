@@ -79,12 +79,12 @@ public class CleanupResources implements Function<String, Boolean> {
             boolean deploymentDeleteStatus = false;
 
             if (jobDone) {
-               StorageService ss = api.getStorageAccountApi(group).get(storageAccountName);
-               if (ss != null) {
-                  storageAcctDeleteStatus = api.getStorageAccountApi(group).delete(storageAccountName);
-               } else {
-                  storageAcctDeleteStatus = true;
-               }
+//               StorageService ss = api.getStorageAccountApi(group).get(storageAccountName);
+//               if (ss != null) {
+//                  storageAcctDeleteStatus = api.getStorageAccountApi(group).delete(storageAccountName);
+//               } else {
+//                  storageAcctDeleteStatus = true;
+//               }
                Deployment deployment = api.getDeploymentApi(group).get(id);
                if (deployment != null) {
                   uri = api.getDeploymentApi(group).delete(id);
